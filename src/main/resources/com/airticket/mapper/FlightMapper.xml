@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.airticket.mapper.FlightMapper">
+    <resultMap id="FlightWithAssociations" type="com.airticket.model.Flight">
+        <id column="id" property="id"/>
+        <result column="flight_number" property="flightNumber"/>
+        <result column="airline_id" property="airlineId"/>
+        <result column="departure_airport_id" property="departureAirportId"/>
+        <result column="arrival_airport_id" property="arrivalAirportId"/>
+        <result column="departure_time" property="departureTimeUtc" typeHandler="org.apache.ibatis.type.InstantTypeHandler"/>
+        <result column="arrival_time" property="arrivalTimeUtc" typeHandler="org.apache.ibatis.type.InstantTypeHandler"/>
+        <result column="total_seats" property="totalSeats"/>
+        <result column="available_seats" property="availableSeats"/>
+        <result column="price" property="price"/>
+        <result column="status" property="status"/>
+        <result column="aircraft_type" property="aircraftType"/>
+        <result column="created_at" property="createdAt" typeHandler="org.apache.ibatis.type.InstantTypeHandler"/>
+        <result column="updated_at" property="updatedAt" typeHandler="org.apache.ibatis.type.InstantTypeHandler"/>
+
+        <association property="airline" javaType="com.airticket.model.Airline">
+            <id column="airline_id" property="id"/>
+            <result column="airlineCode" property="code"/>
+            <result column="airlineName" property="name"/>
+            <result column="airlineLogoUrl" property="logoUrl"/>
+        </association>
+
+        <association property="departureAirport" javaType="com.airticket.model.Airport">
+            <id column="departure_airport_id" property="id"/>
+            <result column="departureAirportCode" property="code"/>
+            <result column="departureAirportName" property="name"/>
+            <result column="departureCity" property="city"/>
+        </association>
+
+        <association property="arrivalAirport" javaType="com.airticket.model.Airport">
+            <id column="arrival_airport_id" property="id"/>
+            <result column="arrivalAirportCode" property="code"/>
+            <result column="arrivalAirportName" property="name"/>
+            <result column="arrivalCity" property="city"/>
+        </association>
+    </resultMap>
+
+    <select id="findAllWithAssociations" resultMap="FlightWithAssociations">
+        SELECT f.*,
+               da.code as departureAirportCode, da.name as departureAirportName, da.city as departureCity,
+               aa.code as arrivalAirportCode, aa.name as arrivalAirportName, aa.city as arrivalCity,
+               al.code as airlineCode, al.name as airlineName, al.logo_url as airlineLogoUrl
+        FROM flights f
+        LEFT JOIN airports da ON f.departure_airport_id = da.id
+        LEFT JOIN airports aa ON f.arrival_airport_id = aa.id
+        LEFT JOIN airlines al ON f.airline_id = al.id
+    </select>
+
+    <select id="searchFlights" resultMap="FlightWithAssociations">
+        SELECT f.*,
+               da.code AS departureAirportCode, da.name AS departureAirportName, da.city AS departureCity,
+               aa.code AS arrivalAirportCode, aa.name AS arrivalAirportName, aa.city AS arrivalCity,
+               al.code AS airlineCode, al.name AS airlineName, al.logo_url AS airlineLogoUrl
+        FROM flights f
+                 LEFT JOIN airports da ON f.departure_airport_id = da.id
+                 LEFT JOIN airports aa ON f.arrival_airport_id = aa.id
+                 LEFT JOIN airlines al ON f.airline_id = al.id
+        WHERE (TRIM(LOWER(da.city)) = TRIM(LOWER(#{departureCity})) OR TRIM(UPPER(da.code)) = TRIM(UPPER(#{departureCity})))
+          AND (TRIM(LOWER(aa.city)) = TRIM(LOWER(#{arrivalCity})) OR TRIM(UPPER(aa.code)) = TRIM(UPPER(#{arrivalCity})))
+  <![CDATA[
+          AND DATE(CONVERT_TZ(f.departure_time, '+00:00', '+08:00')) = #{departureDate}
+  ]]>
+  ORDER BY f.departure_time ASC
+    </select>
+
+    <select id="findFlightsFromCity" resultMap="FlightWithAssociations">
+        SELECT f.*,
+               da.code AS departureAirportCode,
+               da.name AS departureAirportName,
+               da.city AS departureCity,
+               aa.code AS arrivalAirportCode,
+               aa.name AS arrivalAirportName,
+               aa.city AS arrivalCity,
+               al.code AS airlineCode,
+               al.name AS airlineName,
+               al.logo_url AS airlineLogoUrl
+        FROM flights f
+                 LEFT JOIN airports da ON f.departure_airport_id = da.id
+                 LEFT JOIN airports aa ON f.arrival_airport_id = aa.id
+                 LEFT JOIN airlines al ON f.airline_id = al.id
+        WHERE (TRIM(LOWER(da.city)) = TRIM(LOWER(#{departureCity}))
+            OR TRIM(UPPER(da.code)) = TRIM(UPPER(#{departureCity})))
+          AND DATE(CONVERT_TZ(f.departure_time, '+00:00', '+08:00')) = #{departureDate}
+        ORDER BY f.departure_time ASC
+    </select>
+
+    <select id="findFlightsToCity" resultMap="FlightWithAssociations">
+        SELECT f.*,
+               da.code AS departureAirportCode,
+               da.name AS departureAirportName,
+               da.city AS departureCity,
+               aa.code AS arrivalAirportCode,
+               aa.name AS arrivalAirportName,
+               aa.city AS arrivalCity,
+               al.code AS airlineCode,
+               al.name AS airlineName,
+               al.logo_url AS airlineLogoUrl
+        FROM flights f
+                 LEFT JOIN airports da ON f.departure_airport_id = da.id
+                 LEFT JOIN airports aa ON f.arrival_airport_id = aa.id
+                 LEFT JOIN airlines al ON f.airline_id = al.id
+        WHERE (TRIM(LOWER(aa.city)) = TRIM(LOWER(#{arrivalCity}))
+            OR TRIM(UPPER(aa.code)) = TRIM(UPPER(#{arrivalCity})))
+          AND DATE(CONVERT_TZ(f.departure_time, '+00:00', '+08:00')) = #{departureDate}
+          AND f.departure_time >= #{earliestDepartureTime}
+        ORDER BY f.departure_time ASC
+    </select>
+
+    <!-- Find flights departing from a specific city that arrive at the target city -->
+    <select id="findConnectingFlightsFromCityToCity" resultMap="FlightWithAssociations">
+        SELECT f.*,
+               da.code AS departureAirportCode,
+               da.name AS departureAirportName,
+               da.city AS departureCity,
+               aa.code AS arrivalAirportCode,
+               aa.name AS arrivalAirportName,
+               aa.city AS arrivalCity,
+               al.code AS airlineCode,
+               al.name AS airlineName,
+               al.logo_url AS airlineLogoUrl
+        FROM flights f
+                 LEFT JOIN airports da ON f.departure_airport_id = da.id
+                 LEFT JOIN airports aa ON f.arrival_airport_id = aa.id
+                 LEFT JOIN airlines al ON f.airline_id = al.id
+        WHERE (TRIM(LOWER(da.city)) = TRIM(LOWER(#{departureCity}))
+            OR TRIM(UPPER(da.code)) = TRIM(UPPER(#{departureCity})))
+          AND (TRIM(LOWER(aa.city)) = TRIM(LOWER(#{arrivalCity}))
+            OR TRIM(UPPER(aa.code)) = TRIM(UPPER(#{arrivalCity})))
+          AND DATE(CONVERT_TZ(f.departure_time, '+00:00', '+08:00')) = #{departureDate}
+          AND f.departure_time >= #{earliestDepartureTime}
+        ORDER BY f.departure_time ASC
+    </select>
+</mapper>

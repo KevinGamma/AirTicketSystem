@@ -1,0 +1,60 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    include: alipay
+  datasource:
+    url: jdbc:mysql://localhost:3306/air_ticket_system?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+      write-durations-as-timestamps: false
+      
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+    
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+mybatis:
+  type-aliases-package: com.airticket.model
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.airticket: debug
+    org.springframework.security: debug
+
+jwt:
+  secret: airTicketSystemSecretKey2024ForHMACAlgorithmWithAtLeast256Bits
+  expiration: 86400000
+
+service:
+  fees:
+    reschedule-base-fee: 200.00
+    reschedule-percentage-fee: 0.10
+    refund-base-fee: 300.00
+    refund-percentage-fee: 0.15
+    high-fee-threshold-hours: 24
+    high-reschedule-base-fee: 400.00
+    high-reschedule-percentage-fee: 0.20
+    high-refund-base-fee: 500.00
+    high-refund-percentage-fee: 0.25
+
+app:
+  upload:
+    dir: uploads
+  base:
+    url: http://localhost:8080
