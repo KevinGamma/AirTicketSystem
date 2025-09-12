@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Instant;
 import java.time.ZoneId;
-import com.airticket.util.TimeZoneUtil;
 
 @Configuration
 public class DataInitializer {

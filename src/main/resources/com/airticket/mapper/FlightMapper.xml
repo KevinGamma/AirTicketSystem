@@ -61,10 +61,14 @@
                  LEFT JOIN airlines al ON f.airline_id = al.id
         WHERE (TRIM(LOWER(da.city)) = TRIM(LOWER(#{departureCity})) OR TRIM(UPPER(da.code)) = TRIM(UPPER(#{departureCity})))
           AND (TRIM(LOWER(aa.city)) = TRIM(LOWER(#{arrivalCity})) OR TRIM(UPPER(aa.code)) = TRIM(UPPER(#{arrivalCity})))
-  <![CDATA[
-          AND DATE(CONVERT_TZ(f.departure_time, '+00:00', '+08:00')) = #{departureDate}
-  ]]>
-  ORDER BY f.departure_time ASC
+          AND (
+              DATE(CONVERT_TZ(f.departure_time, '+00:00', '+08:00')) = #{departureDate}
+              OR DATE(f.departure_time) = #{departureDate}
+              OR DATE(DATE_ADD(f.departure_time, INTERVAL 8 HOUR)) = #{departureDate}
+          )
+          AND f.departure_time > NOW()
+          AND f.status != 'CANCELLED'
+        ORDER BY f.departure_time ASC
     </select>
 
     <select id="findFlightsFromCity" resultMap="FlightWithAssociations">

@@ -16,8 +16,7 @@ public class AirlineService {
     
     @Autowired
     private AirlineMapper airlineMapper;
-    
-    // 中国航空公司代码映射
+
     private static final Map<String, String> AIRLINE_CODE_PATTERNS = new HashMap<>();
     
     static {
@@ -61,12 +60,10 @@ public class AirlineService {
 
     @Transactional
     public Airline createAirline(Airline airline) {
-        // 验证航空公司代码格式
         if (airline.getCode() == null || !isValidAirlineCode(airline.getCode())) {
             throw new IllegalArgumentException("Invalid airline code format");
         }
-        
-        // 检查代码是否已存在
+
         if (airlineMapper.findByCode(airline.getCode()) != null) {
             throw new IllegalArgumentException("Airline code already exists");
         }
@@ -81,13 +78,11 @@ public class AirlineService {
         if (existing == null) {
             throw new IllegalArgumentException("Airline not found");
         }
-        
-        // 验证航空公司代码格式
+
         if (!isValidAirlineCode(airline.getCode())) {
             throw new IllegalArgumentException("Invalid airline code format");
         }
-        
-        // 如果代码有变更，检查新代码是否已存在
+
         if (!existing.getCode().equals(airline.getCode())) {
             if (airlineMapper.findByCode(airline.getCode()) != null) {
                 throw new IllegalArgumentException("Airline code already exists");
@@ -114,24 +109,20 @@ public class AirlineService {
         airlineMapper.updateActiveStatus(id, active);
     }
 
-    // 验证航班号是否与航空公司代码匹配
     public boolean validateFlightNumber(String flightNumber, String airlineCode) {
         if (flightNumber == null || airlineCode == null) {
             return false;
         }
-        
-        // 航班号格式：航空公司代码 + 数字，如 CA1234
+
         String pattern = "^" + airlineCode.toUpperCase() + "\\d+$";
         return Pattern.matches(pattern, flightNumber.toUpperCase());
     }
-    
-    // 从航班号提取航空公司代码
+
     public String extractAirlineCodeFromFlightNumber(String flightNumber) {
         if (flightNumber == null || flightNumber.length() < 3) {
             return null;
         }
-        
-        // 尝试匹配2位代码
+
         String twoCharCode = flightNumber.substring(0, 2).toUpperCase();
         if (AIRLINE_CODE_PATTERNS.containsKey(twoCharCode)) {
             return twoCharCode;
@@ -142,20 +133,16 @@ public class AirlineService {
     
     private boolean isValidAirlineCode(String code) {
         if (code == null) return false;
-        // 中国航空公司代码通常是2位字母或字母数字组合
         return Pattern.matches("^[A-Z0-9]{2}$", code.toUpperCase());
     }
 
-    // 初始化默认航空公司数据
     @Transactional
     public void initializeDefaultAirlines() {
-        // 检查是否已有数据
         List<Airline> existing = airlineMapper.findAll();
         if (!existing.isEmpty()) {
             return;
         }
-        
-        // 添加主要中国航空公司
+
         Map<String, String[]> airlines = new HashMap<>();
         airlines.put("CA", new String[]{"中国国际航空", "中国国际航空股份有限公司"});
         airlines.put("MU", new String[]{"中国东方航空", "中国东方航空股份有限公司"});

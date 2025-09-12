@@ -2,10 +2,6 @@ package com.airticket.dto;
 
 import java.math.BigDecimal;
 
-/**
- * Payment Request DTO
- * 支付请求数据传输对象
- */
 public class PaymentRequest {
     private Long ticketId;                  // 票据ID
     private BigDecimal amount;              // 支付金额

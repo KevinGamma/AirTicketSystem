@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/flights")
@@ -32,6 +34,9 @@ public class FlightController {
     
     @Autowired
     private FlightMapper flightMapper;
+    
+    @Autowired
+    private com.airticket.service.AirportService airportService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<FlightDisplayDto>>> getAllFlights() {
@@ -49,6 +54,70 @@ public class FlightController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(ApiResponse.success(FlightDisplayDto.fromFlight(flight)));
+    }
+
+    @GetMapping("/debug/airports")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDebugAirportsInfo() {
+        try {
+            List<Flight> allFlights = flightService.getAllFlights();
+            
+            Map<String, Object> debugInfo = new HashMap<>();
+            debugInfo.put("totalFlights", allFlights.size());
+            
+            // Get all unique departure airports
+            Map<String, Object> departureAirports = new HashMap<>();
+            allFlights.stream()
+                .filter(f -> f.getDepartureAirport() != null)
+                .map(f -> f.getDepartureAirport())
+                .distinct()
+                .forEach(airport -> {
+                    Map<String, Object> airportInfo = new HashMap<>();
+                    airportInfo.put("id", airport.getId());
+                    airportInfo.put("code", airport.getCode());
+                    airportInfo.put("name", airport.getName());
+                    airportInfo.put("city", airport.getCity());
+                    departureAirports.put("ID_" + airport.getId(), airportInfo);
+                });
+            
+            debugInfo.put("departureAirports", departureAirports);
+            
+            // Get all unique arrival airports
+            Map<String, Object> arrivalAirports = new HashMap<>();
+            allFlights.stream()
+                .filter(f -> f.getArrivalAirport() != null)
+                .map(f -> f.getArrivalAirport())
+                .distinct()
+                .forEach(airport -> {
+                    Map<String, Object> airportInfo = new HashMap<>();
+                    airportInfo.put("id", airport.getId());
+                    airportInfo.put("code", airport.getCode());
+                    airportInfo.put("name", airport.getName());
+                    airportInfo.put("city", airport.getCity());
+                    arrivalAirports.put("ID_" + airport.getId(), airportInfo);
+                });
+            
+            debugInfo.put("arrivalAirports", arrivalAirports);
+            
+            // Sample flights with departure times
+            List<Map<String, Object>> sampleFlights = allFlights.stream()
+                .limit(5)
+                .map(f -> {
+                    Map<String, Object> flightInfo = new HashMap<>();
+                    flightInfo.put("flightNumber", f.getFlightNumber());
+                    flightInfo.put("departureCity", f.getDepartureAirport() != null ? f.getDepartureAirport().getCity() : null);
+                    flightInfo.put("arrivalCity", f.getArrivalAirport() != null ? f.getArrivalAirport().getCity() : null);
+                    flightInfo.put("departureTime", f.getDepartureTimeUtc());
+                    flightInfo.put("status", f.getStatus());
+                    return flightInfo;
+                })
+                .toList();
+            
+            debugInfo.put("sampleFlights", sampleFlights);
+            
+            return ResponseEntity.ok(ApiResponse.success(debugInfo));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Debug failed: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/search")
@@ -102,17 +171,30 @@ public class FlightController {
     private String getAirportCity(Long airportId) {
         if (airportId == null) return null;
         
-        // Simple mapping based on the data we saw earlier
-        switch (airportId.intValue()) {
-            case 1: return "北京";
-            case 2: return "上海";
-            case 3: return "广州";
-            case 4: return "洛杉矶";
-            case 5: return "纽约";
-            case 6: return "东京";
-            case 7: return "首尔";
-            case 8: return "新加坡";
-            default: return "未知";
+        try {
+            // Look up airport from database to get actual city name
+            com.airticket.model.Airport airport = airportService.findById(airportId);
+            if (airport != null && airport.getCity() != null) {
+                System.out.println("DEBUG: Airport ID " + airportId + " -> City: '" + airport.getCity() + "'");
+                return airport.getCity();
+            } else {
+                System.err.println("WARNING: Airport with ID " + airportId + " not found in database");
+                return null;
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR: Failed to lookup airport ID " + airportId + ": " + e.getMessage());
+            // Fallback to hardcoded mapping as backup
+            switch (airportId.intValue()) {
+                case 1: return "北京";
+                case 2: return "上海"; 
+                case 3: return "广州";
+                case 4: return "洛杉矶";
+                case 5: return "纽约";
+                case 6: return "东京";
+                case 7: return "首尔";
+                case 8: return "新加坡";
+                default: return "Unknown_" + airportId;
+            }
         }
     }
 

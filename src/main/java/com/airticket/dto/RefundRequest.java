@@ -3,7 +3,8 @@ package com.airticket.dto;
 public class RefundRequest {
     private String reason;
 
-    public RefundRequest() {}
+    public RefundRequest() {
+    }
 
     public RefundRequest(String reason) {
         this.reason = reason;

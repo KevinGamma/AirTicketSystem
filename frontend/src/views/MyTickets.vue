@@ -3745,7 +3745,7 @@ ${rescheduleRequests.map((req, index) =>
       
       if (shouldRefund) {
         const refundAmount = Math.abs(this.serviceFee - Math.abs(fareDifference))
-        return `提交申请 (将退款¥${refundAmount})`
+        return `提交申请 (将退款¥${(refundAmount-120)})`
       } else if (totalCost > 0) {
         return `提交申请 (需支付¥${totalCost})`
       } else {

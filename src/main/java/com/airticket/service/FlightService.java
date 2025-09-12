@@ -86,6 +86,11 @@ public class FlightService {
         
         System.out.println("=== END AIRPORT DEBUG ===\n");
         
+        System.out.println("=== EXECUTING SQL SEARCH ===");
+        System.out.println("SQL parameters: departureCity='" + request.getDepartureCity() + 
+                          "', arrivalCity='" + request.getArrivalCity() + 
+                          "', departureDate=" + request.getDepartureDate());
+        
         List<Flight> flights = flightMapper.searchFlights(
             request.getDepartureCity(),
             request.getArrivalCity(),
@@ -109,6 +114,28 @@ public class FlightService {
             System.out.println("  - Departure city match: '" + request.getDepartureCity() + "'");  
             System.out.println("  - Arrival city match: '" + request.getArrivalCity() + "'");
             System.out.println("  - Departure date match: " + request.getDepartureDate());
+            
+            // Additional debugging - check if any flights match without date filter
+            System.out.println("\n=== DEBUGGING: Check if flights exist without date filter ===");
+            List<Flight> allRouteFlights = allFlights.stream()
+                .filter(f -> f.getDepartureAirport() != null && f.getDepartureAirport().getCity() != null)
+                .filter(f -> f.getArrivalAirport() != null && f.getArrivalAirport().getCity() != null)
+                .filter(f -> f.getDepartureAirport().getCity().trim().equalsIgnoreCase(request.getDepartureCity().trim()))
+                .filter(f -> f.getArrivalAirport().getCity().trim().equalsIgnoreCase(request.getArrivalCity().trim()))
+                .toList();
+            System.out.println("Flights matching route (without date): " + allRouteFlights.size());
+            
+            if (allRouteFlights.size() > 0) {
+                System.out.println("Sample flight dates for this route:");
+                allRouteFlights.stream().limit(5).forEach(f -> {
+                    System.out.println("  - " + f.getFlightNumber() + " departs: " + f.getDepartureTimeUtc() + 
+                                      " (Date part: " + f.getDepartureTimeUtc().toString().substring(0, 10) + ")");
+                });
+                System.out.println("Search date: " + request.getDepartureDate());
+                System.out.println("Possible issue: Date format mismatch between search parameter and stored dates");
+            } else {
+                System.out.println("No flights found for this route at all - check city name matching");
+            }
         }
         
         List<Flight> filteredFlights = flights.stream()

@@ -58,17 +58,14 @@ public class AirportService {
         if (airport.getCountry() == null || airport.getCountry().trim().isEmpty()) {
             throw new IllegalArgumentException("Country is required");
         }
-        
-        // Ensure code is uppercase
+
         airport.setCode(airport.getCode().toUpperCase());
-        
-        // Check if airport code already exists
+
         Airport existing = airportMapper.findByCode(airport.getCode());
         if (existing != null) {
             throw new IllegalArgumentException("Airport code " + airport.getCode() + " already exists");
         }
-        
-        // Set creation time
+
         airport.setCreatedAt(Instant.now());
         
         airportMapper.insert(airport);
@@ -81,8 +78,7 @@ public class AirportService {
         if (existingAirport == null) {
             throw new IllegalArgumentException("Airport with id " + id + " not found");
         }
-        
-        // Validate required fields
+
         if (airport.getCode() == null || airport.getCode().trim().isEmpty()) {
             throw new IllegalArgumentException("Airport code is required");
         }
@@ -95,19 +91,16 @@ public class AirportService {
         if (airport.getCountry() == null || airport.getCountry().trim().isEmpty()) {
             throw new IllegalArgumentException("Country is required");
         }
-        
-        // Ensure code is uppercase
+
         airport.setCode(airport.getCode().toUpperCase());
-        
-        // Check if airport code already exists for a different airport
+
         Airport existingByCode = airportMapper.findByCode(airport.getCode());
         if (existingByCode != null && !existingByCode.getId().equals(id)) {
             throw new IllegalArgumentException("Airport code " + airport.getCode() + " already exists");
         }
-        
-        // Update the airport
+
         airport.setId(id);
-        airport.setCreatedAt(existingAirport.getCreatedAt()); // Preserve creation time
+        airport.setCreatedAt(existingAirport.getCreatedAt());
         
         airportMapper.update(airport);
         return airport;
@@ -119,22 +112,17 @@ public class AirportService {
         if (existingAirport == null) {
             throw new IllegalArgumentException("Airport with id " + id + " not found");
         }
-        
-        // TODO: Check if airport is referenced by any flights before deleting
-        // This would require checking the flights table
-        
+
         return airportMapper.deleteById(id) > 0;
     }
     
     @Transactional
     public void initializeCommonAirports() {
-        // Check if airports are already initialized
         List<Airport> existing = airportMapper.findAll();
         if (!existing.isEmpty()) {
-            return; // Already initialized
+            return;
         }
-        
-        // Initialize common Chinese domestic airports
+
         Airport[] domesticAirports = {
             new Airport("PEK", "北京首都国际机场", "北京", "中国", "Asia/Shanghai"),
             new Airport("PKX", "北京大兴国际机场", "北京", "中国", "Asia/Shanghai"),
@@ -158,8 +146,7 @@ public class AirportService {
             new Airport("LHW", "兰州中川国际机场", "兰州", "中国", "Asia/Shanghai"),
             new Airport("NNG", "南宁吴圩国际机场", "南宁", "中国", "Asia/Shanghai")
         };
-        
-        // Initialize common international airports
+
         Airport[] internationalAirports = {
             new Airport("NRT", "成田国际机场", "东京", "日本", "Asia/Tokyo"),
             new Airport("HND", "羽田机场", "东京", "日本", "Asia/Tokyo"),
@@ -182,14 +169,12 @@ public class AirportService {
             new Airport("YYZ", "多伦多皮尔逊国际机场", "多伦多", "加拿大", "America/Toronto"),
             new Airport("DXB", "迪拜国际机场", "迪拜", "阿联酋", "Asia/Dubai")
         };
-        
-        // Insert domestic airports
+
         for (Airport airport : domesticAirports) {
             airport.setCreatedAt(Instant.now());
             airportMapper.insert(airport);
         }
-        
-        // Insert international airports
+
         for (Airport airport : internationalAirports) {
             airport.setCreatedAt(Instant.now());
             airportMapper.insert(airport);
