@@ -35,7 +35,7 @@ public class ReschedulePaymentMonitorService {
     @Autowired
     private AlipayService alipayService;
 
-    @Scheduled(fixedDelay = 10000) // 10 seconds
+    @Scheduled(fixedDelay = 10000) 
     public void monitorPendingReschedulePayments() {
         runPaymentMonitoring();
     }

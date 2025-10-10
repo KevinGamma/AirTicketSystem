@@ -24,12 +24,12 @@
               
               <div v-if="ticket" class="order-details">
                 <div class="flight-summary">
-                  <!-- Connecting Flight Badge -->
+                  
                   <div v-if="isConnectingFlight" class="connecting-badge">
                     <el-tag type="success" size="small">联程航班</el-tag>
                   </div>
                   
-                  <!-- All Flights Display -->
+                  
                   <div 
                     v-for="(flight, index) in allFlights" 
                     :key="flight?.id || index"
@@ -60,7 +60,7 @@
                       </div>
                     </div>
                     
-                    <!-- Layover indicator for connecting flights -->
+                    
                     <div 
                       v-if="isConnectingFlight && index < allFlights.length - 1" 
                       class="layover-indicator"
@@ -214,7 +214,7 @@ import {
 } from '@element-plus/icons-vue'
 import api from '../api'
 import dayjs from 'dayjs'
-import { getAircraftDisplayName } from '../utils/aircraftUtils'
+import { getAircraftDisplayName } from '@/utils/aircraftUtils'
 
 export default {
   name: 'PaymentPage',
@@ -239,39 +239,39 @@ export default {
     }
   },
   computed: {
-    // The ticket.price already includes fuel surcharge, so totalAmount is just ticket.price
+    
     totalAmount() {
       return this.ticket ? this.ticket.price : 0
     },
     
-    // Calculate base ticket price by subtracting fuel surcharge from total
-    // Note: ticket.price from the backend already includes fuel surcharge
+    
+    
     baseTicketPrice() {
       if (!this.ticket) return 0
       return this.ticket.price - this.fuelSurcharge
     },
     
-    // Check if this is a connecting flight ticket
+    
     isConnectingFlight() {
       return this.ticket && this.ticket.connectingFlights && this.ticket.connectingFlights.length > 0
     },
     
-    // Calculate fuel surcharge based on flight type
-    // NOTE: Backend adds both fuel surcharge (70 RMB) + airport construction fee (50 RMB) = 120 RMB total per flight
+    
+    
     fuelSurcharge() {
       if (!this.ticket) return 0
       
       if (this.isConnectingFlight) {
-        // Connecting flights: 120 RMB per flight segment (70 fuel + 50 airport construction)
-        const totalFlights = 1 + (this.ticket.connectingFlights?.length || 0) // Main flight + connecting flights
+        
+        const totalFlights = 1 + (this.ticket.connectingFlights?.length || 0) 
         return totalFlights * 120
       } else {
-        // Direct flights: 120 RMB (70 fuel + 50 airport construction)
+        
         return 120
       }
     },
     
-    // Get all flights for display
+    
     allFlights() {
       if (!this.ticket) return []
       
@@ -279,7 +279,7 @@ export default {
       if (this.isConnectingFlight) {
         flights.push(...(this.ticket.connectingFlights || []))
       }
-      return flights.filter(f => f) // Remove any null/undefined flights
+      return flights.filter(f => f) 
     }
   },
   methods: {
@@ -300,7 +300,7 @@ export default {
           if (this.ticket.status === 'PAID') {
             ElMessage.info('此机票已支付')
             this.$router.push('/my-tickets')
-            return
+
           }
         }
       } catch (error) {
@@ -811,19 +811,9 @@ export default {
   transition: all 0.2s ease;
 }
 
-.payment-option:hover:not(.disabled) {
-  border-color: #1565C0;
-  background: #f8f9ff;
-}
-
 .payment-option.active {
   border-color: #1565C0;
   background: #f0f7ff;
-}
-
-.payment-option.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .payment-icon {
@@ -944,15 +934,6 @@ export default {
 .processing-text p {
   margin: 4px 0;
   color: #666;
-}
-
-.sandbox-tip {
-  font-family: 'Monaco', monospace;
-  background: #f0f7ff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #1565C0;
 }
 
 .dialog-footer {

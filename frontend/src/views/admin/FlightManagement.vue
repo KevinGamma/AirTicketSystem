@@ -76,7 +76,7 @@
       </el-table-column>
     </el-table>
 
-    <!-- Flight Dialog -->
+    
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="flightForm" :rules="rules" ref="flightFormRef" label-width="140px">
         <el-form-item :label="$t('admin.airline')" prop="airlineId">
@@ -196,7 +196,7 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import {Plus} from "@element-plus/icons-vue";
 
-// Extend dayjs with UTC plugin
+
 dayjs.extend(utc)
 
 export default {
@@ -263,7 +263,7 @@ export default {
                 callback(new Error(this.$t('admin.pastArrivalTimeError')))
                 return
               }
-              // Check if arrival time is after departure time
+              
               if (this.flightForm.departureTime && new Date(this.flightForm.departureTime) >= arrivalTime) {
                 callback(new Error(this.$t('admin.invalidTimeError')))
                 return
@@ -285,7 +285,7 @@ export default {
   },
   methods: {
     disabledDate(time) {
-      // Disable all dates before today
+      
       return time.getTime() < Date.now() - 24 * 60 * 60 * 1000
     },
 
@@ -293,7 +293,7 @@ export default {
       const now = new Date()
       const selectedDate = new Date(time)
       
-      // If the selected date is today, disable times before current time
+      
       if (selectedDate.toDateString() === now.toDateString()) {
         return {
           disabledHours: () => {
@@ -337,7 +337,7 @@ export default {
         }
       } catch (error) {
         console.log('API failed, using sample data for testing')
-        // Add sample data with different date formats to test our parsing
+        
         this.flights = [
           {
             id: 1,
@@ -345,7 +345,7 @@ export default {
             airline: { id: 1, code: 'CA', name: '中国国际航空', logoUrl: null },
             departureAirport: { id: 1, code: 'PEK', name: '北京首都国际机场', city: '北京' },
             arrivalAirport: { id: 2, code: 'PVG', name: '上海浦东国际机场', city: '上海' },
-            departureTimeUtc: '2025-08-25T10:30:00', // ISO format
+            departureTimeUtc: '2025-08-25T10:30:00', 
             arrivalTimeUtc: null,
             departureTime: null,
             arrivalTime: null,
@@ -363,7 +363,7 @@ export default {
             arrivalAirport: { id: 2, code: 'PVG', name: '上海浦东国际机场', city: '上海' },
             departureTimeUtc: null,
             arrivalTimeUtc: null,
-            departureTime: '2025-08-25 14:20:00', // Space-separated format
+            departureTime: '2025-08-25 14:20:00', 
             arrivalTime: '2025-08-25 16:45:00',
             totalSeats: 160,
             availableSeats: 32,
@@ -377,7 +377,7 @@ export default {
             airline: { id: 3, code: 'CZ', name: '中国南方航空', logoUrl: null },
             departureAirport: { id: 1, code: 'PEK', name: '北京首都国际机场', city: '北京' },
             arrivalAirport: { id: 3, code: 'CAN', name: '广州白云国际机场', city: '广州' },
-            departureTimeUtc: '2025-08-26T07:45:00.123Z', // ISO with milliseconds and Z
+            departureTimeUtc: '2025-08-26T07:45:00.123Z', 
             arrivalTimeUtc: '2025-08-26T11:30:00.456Z',
             departureTime: null,
             arrivalTime: null,
@@ -395,7 +395,7 @@ export default {
             arrivalAirport: { id: 2, code: 'PVG', name: '上海浦东国际机场', city: '上海' },
             departureTimeUtc: null,
             arrivalTimeUtc: null,
-            departureTime: 1724571600000, // Timestamp in milliseconds
+            departureTime: 1724571600000, 
             arrivalTime: 1724581200000,
             totalSeats: 180,
             availableSeats: 55,
@@ -411,7 +411,7 @@ export default {
             arrivalAirport: { id: 1, code: 'PEK', name: '北京首都国际机场', city: '北京' },
             departureTimeUtc: null,
             arrivalTimeUtc: null,
-            departureTime: null, // Null values to test fallback
+            departureTime: null, 
             arrivalTime: null,
             totalSeats: 150,
             availableSeats: 38,
@@ -420,7 +420,7 @@ export default {
             status: 'DELAYED'
           }
         ]
-        // Don't show error message when using sample data
+        
         console.log('Loaded sample flight data:', this.flights)
       } finally {
         this.loading = false
@@ -434,13 +434,13 @@ export default {
           this.flights = response.data.data
         }
       } catch (error) {
-        // Silent refresh - don't show error message for background updates
+        
         console.warn('Failed to refresh flights:', error)
       }
     },
 
     startAutoRefresh() {
-      // Refresh flight data every 30 seconds for real-time status updates
+      
       this.refreshTimer = setInterval(() => {
         this.refreshFlights()
       }, 30000)
@@ -518,18 +518,18 @@ export default {
         await this.$refs.flightFormRef.validate()
         this.saving = true
         
-        // Convert local times to UTC for backend storage
+        
         const convertedDepartureTime = this.convertLocalToUtc(this.flightForm.departureTime)
         const convertedArrivalTime = this.convertLocalToUtc(this.flightForm.arrivalTime)
         
-        // Check if times are valid
+        
         if (!convertedDepartureTime || !convertedArrivalTime) {
           ElMessage.error('出发时间和到达时间不能为空')
           this.saving = false
           return
         }
         
-        // Only include fields that the backend expects, exclude nested objects and computed fields
+        
         const flightData = {
           flightNumber: this.flightForm.flightNumber,
           airlineId: this.flightForm.airlineId,
@@ -542,24 +542,24 @@ export default {
           aircraftType: this.flightForm.aircraftType
         }
         
-        // Include id for updates
+        
         if (this.isEdit && this.flightForm.id) {
           flightData.id = this.flightForm.id
         }
         
-        // For new flights, set availableSeats to totalSeats
-        // For edits, only update availableSeats if totalSeats changed
+        
+        
         if (!this.isEdit) {
           flightData.availableSeats = this.flightForm.totalSeats
         } else {
-          // For edits, preserve existing availableSeats unless totalSeats changed
+          
           const originalFlight = this.flights.find(f => f.id === this.flightForm.id)
           if (originalFlight && originalFlight.totalSeats !== this.flightForm.totalSeats) {
-            // Adjust available seats proportionally if total seats changed
+            
             const bookedSeats = originalFlight.totalSeats - originalFlight.availableSeats
             flightData.availableSeats = Math.max(0, this.flightForm.totalSeats - bookedSeats)
           }
-          // Otherwise, let the backend handle availableSeats preservation
+          
         }
         
         if (this.isEdit) {
@@ -573,21 +573,46 @@ export default {
         this.dialogVisible = false
         this.loadFlights()
         
-        // Notify store about flight data change
+        
         console.log('[FlightManagement] Dispatching notifyFlightDataUpdate after flight save/create')
         this.$store.dispatch('notifyFlightDataUpdate')
         
-        // Also trigger a localStorage event for cross-tab communication
+        
         const timestamp = Date.now()
         localStorage.setItem('flightDataUpdated', timestamp.toString())
         console.log('[FlightManagement] localStorage flight update event triggered:', timestamp)
       } catch (error) {
         console.error('Save flight error:', error)
+        let errorMessage = this.$t('admin.saveFlightFailed')
+        
         if (error.response && error.response.data && error.response.data.message) {
-          ElMessage.error(this.$t('admin.saveFlightFailed') + ': ' + error.response.data.message)
-        } else {
-          ElMessage.error(this.$t('admin.saveFlightFailed'))
+          const serverMessage = error.response.data.message
+          
+          
+          if (serverMessage.includes('Duplicate entry') && serverMessage.includes('flight_number')) {
+            
+            const flightNumberMatch = serverMessage.match(/'([^']+)' for key 'flights\.flight_number'/)
+            const flightNumber = flightNumberMatch ? flightNumberMatch[1] : this.flightForm.flightNumber
+            errorMessage = this.$t('admin.duplicateFlightNumber', { flightNumber })
+            
+
+            this.flightNumberError = this.$t('admin.duplicateFlightNumberField')
+          } else if (serverMessage.includes('flight.duplicate.flightNumber')) {
+
+            const flightNumber = this.flightForm.flightNumber
+            errorMessage = this.$t('admin.duplicateFlightNumber', { flightNumber })
+            this.flightNumberError = this.$t('admin.duplicateFlightNumberField')
+          } else if (serverMessage.includes('flight.invalidFlightNumber')) {
+
+            errorMessage = this.$t('admin.invalidFlightNumberFormat')
+            this.flightNumberError = this.$t('admin.invalidFlightNumberFormat')
+          } else {
+
+            errorMessage = errorMessage + ': ' + serverMessage
+          }
         }
+        
+        ElMessage.error(errorMessage)
       } finally {
         this.saving = false
       }
@@ -605,11 +630,11 @@ export default {
         ElMessage.success(this.$t('admin.flightCancelledSuccess'))
         this.loadFlights()
         
-        // Notify store about flight data change
+
         console.log('[FlightManagement] Dispatching notifyFlightDataUpdate after flight cancel')
         this.$store.dispatch('notifyFlightDataUpdate')
         
-        // Also trigger a localStorage event for cross-tab communication
+
         const timestamp = Date.now()
         localStorage.setItem('flightDataUpdated', timestamp.toString())
         console.log('[FlightManagement] localStorage flight update event triggered:', timestamp)
@@ -632,11 +657,11 @@ export default {
         ElMessage.success(this.$t('admin.flightDeletedSuccess'))
         this.loadFlights()
         
-        // Notify store about flight data change
+
         console.log('[FlightManagement] Dispatching notifyFlightDataUpdate after flight delete')
         this.$store.dispatch('notifyFlightDataUpdate')
         
-        // Also trigger a localStorage event for cross-tab communication
+
         const timestamp = Date.now()
         localStorage.setItem('flightDataUpdated', timestamp.toString())
         console.log('[FlightManagement] localStorage flight update event triggered:', timestamp)
@@ -681,13 +706,13 @@ export default {
       }
       
       try {
-        // Try parsing as-is first (handles most standard formats)
+
         let parsed = dayjs(dateTime)
         if (parsed.isValid()) {
           return parsed.format('YYYY-MM-DD HH:mm')
         }
         
-        // Try parsing as timestamp (milliseconds) - common in Java backends
+
         if (typeof dateTime === 'number' || /^\d+$/.test(dateTime)) {
           parsed = dayjs(parseInt(dateTime))
           if (parsed.isValid()) {
@@ -695,19 +720,19 @@ export default {
           }
         }
         
-        // Try common date formats that dayjs might not auto-detect
+
         const formats = [
-          'YYYY-MM-DD HH:mm:ss',     // 2025-08-25 14:20:00
-          'YYYY-MM-DDTHH:mm:ss',     // 2025-08-25T14:20:00 
-          'YYYY-MM-DDTHH:mm:ss.SSS', // 2025-08-25T14:20:00.123
-          'YYYY-MM-DDTHH:mm:ss.SSSZ',// 2025-08-25T14:20:00.123Z
-          'YYYY-MM-DDTHH:mm:ssZ',    // 2025-08-25T14:20:00Z
-          'YYYY/MM/DD HH:mm:ss',     // 2025/08/25 14:20:00
-          'DD/MM/YYYY HH:mm:ss',     // 25/08/2025 14:20:00
-          'MM/DD/YYYY HH:mm:ss',     // 08/25/2025 14:20:00
-          'YYYY-MM-DD HH:mm',        // 2025-08-25 14:20
-          'DD-MM-YYYY HH:mm',        // 25-08-2025 14:20
-          'MM-DD-YYYY HH:mm'         // 08-25-2025 14:20
+          'YYYY-MM-DD HH:mm:ss',
+          'YYYY-MM-DDTHH:mm:ss',
+          'YYYY-MM-DDTHH:mm:ss.SSS',
+          'YYYY-MM-DDTHH:mm:ss.SSSZ',
+          'YYYY-MM-DDTHH:mm:ssZ',
+          'YYYY/MM/DD HH:mm:ss',
+          'DD/MM/YYYY HH:mm:ss',
+          'MM/DD/YYYY HH:mm:ss',
+          'YYYY-MM-DD HH:mm',
+          'DD-MM-YYYY HH:mm',
+          'MM-DD-YYYY HH:mm'
         ]
         
         for (const format of formats) {
@@ -728,10 +753,10 @@ export default {
     convertUtcToLocal(utcTime) {
       if (!utcTime) return ''
       try {
-        // Parse the UTC time and convert to local timezone for display in date picker
+
         const utcMoment = dayjs.utc(utcTime)
         if (utcMoment.isValid()) {
-          // Convert to local time and format for the date picker
+
           return utcMoment.local().format('YYYY-MM-DD HH:mm:ss')
         }
         return ''
@@ -744,10 +769,10 @@ export default {
     convertLocalToUtc(localTime) {
       if (!localTime || localTime === '') return null
       try {
-        // Parse the local time from date picker and convert to UTC for backend
+
         const localMoment = dayjs(localTime)
         if (localMoment.isValid()) {
-          // Convert to UTC and return ISO string format
+
           return localMoment.utc().toISOString()
         }
         return null
@@ -761,7 +786,7 @@ export default {
       const selectedModel = this.aircraftModels.find(model => model.code === modelCode)
       if (selectedModel) {
         this.flightForm.totalSeats = selectedModel.totalSeats
-        // Also update available seats for new flights or proportionally for edits
+
         if (!this.isEdit) {
           this.flightForm.availableSeats = selectedModel.totalSeats
         }
@@ -774,33 +799,33 @@ export default {
     },
     
     getCityName(cityName) {
-      // If no city name, return empty string
+
       if (!cityName) return ''
       
-      // Use the city translation from the existing cities mapping
+
       return this.$t(`cities.${cityName}`) !== `cities.${cityName}` 
         ? this.$t(`cities.${cityName}`) 
         : cityName
     },
     
     onAirlineChange() {
-      // Clear flight number error when airline changes
+
       this.flightNumberError = null
       
-      // Auto-generate flight number prefix based on selected airline
+
       const selectedAirline = this.airlines.find(a => a.id === this.flightForm.airlineId)
       if (selectedAirline) {
-        // If there's an existing flight number, extract the numeric part
+
         const existingFlightNumber = this.flightForm.flightNumber || ''
         let numericPart = ''
         
-        // Extract numeric part from existing flight number (remove any existing prefix)
+        
         const match = existingFlightNumber.match(/\d+$/)
         if (match) {
           numericPart = match[0]
         }
         
-        // Set the new flight number with airline code prefix
+        
         this.flightForm.flightNumber = selectedAirline.code + numericPart
       }
       
@@ -808,22 +833,22 @@ export default {
     },
     
     handleFlightNumberInput(value) {
-      // Prevent user from modifying the airline code prefix
+      
       const selectedAirline = this.airlines.find(a => a.id === this.flightForm.airlineId)
       if (selectedAirline && value) {
         const airlineCode = selectedAirline.code
         
-        // If the input doesn't start with the airline code, prepend it
+        
         if (!value.startsWith(airlineCode)) {
-          // Extract any numeric part the user might have typed
+          
           const numericMatch = value.match(/\d+/)
           const numericPart = numericMatch ? numericMatch[0] : ''
           this.flightForm.flightNumber = airlineCode + numericPart
         } else {
-          // Ensure only airline code + numbers
+          
           const allowedPattern = new RegExp(`^${airlineCode}\\d*$`)
           if (!allowedPattern.test(value)) {
-            // Extract numeric part and reconstruct
+            
             const numericMatch = value.slice(airlineCode.length).match(/\d+/)
             const numericPart = numericMatch ? numericMatch[0] : ''
             this.flightForm.flightNumber = airlineCode + numericPart
@@ -850,13 +875,13 @@ export default {
         const airline = this.airlines.find(a => a.id === this.flightForm.airlineId)
         if (!airline) return
         
-        // Check if flight number starts with airline code
+        
         if (!this.flightForm.flightNumber.startsWith(airline.code)) {
           this.flightNumberError = this.$t('admin.flightNumberMustStartWith', { code: airline.code })
           return
         }
         
-        // Check if there are at least some digits after the airline code
+        
         const numericPart = this.flightForm.flightNumber.slice(airline.code.length)
         if (!numericPart || !/^\d+$/.test(numericPart)) {
           this.flightNumberError = this.$t('admin.flightNumberMustHaveNumbers')

@@ -24,7 +24,7 @@ public class TicketExpirationService {
     @Autowired
     private FlightService flightService;
     
-    @Scheduled(fixedRate = 30000) // Run every 30 seconds
+    @Scheduled(fixedRate = 30000) 
     @Transactional
     public void cancelExpiredTickets() {
         try {
@@ -36,10 +36,10 @@ public class TicketExpirationService {
             for (Ticket ticket : bookedTickets) {
                 try {
                     if (isTicketExpired(ticket, now)) {
-                        // Release the seat
+                        
                         flightService.releaseSeat(ticket.getFlightId());
                         
-                        // Cancel the ticket
+                        
                         ticket.setStatus("CANCELLED");
                         ticketMapper.updateStatus(ticket);
                         
@@ -66,19 +66,19 @@ public class TicketExpirationService {
             return false;
         }
         
-        // 改签票不会过期 (no expiration for reschedule tickets)
+        
         if ("PENDING_RESCHEDULE".equals(ticket.getStatus())) {
             return false;
         }
         
-        // Ticket expires 10 minutes after booking
+        
         Instant paymentDeadline = ticket.getBookingTime().plusSeconds(10 * 60);
         
-        // Also check if flight departure is within 40 minutes
+        
         if (ticket.getFlight() != null && ticket.getFlight().getDepartureTimeUtc() != null) {
             Instant flightDeadline = ticket.getFlight().getDepartureTimeUtc().minusSeconds(40 * 60);
             
-            // Use the earlier deadline
+            
             if (flightDeadline.isBefore(paymentDeadline)) {
                 paymentDeadline = flightDeadline;
             }

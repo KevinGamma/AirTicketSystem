@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-page">
-    <!-- Welcome Section -->
+    
     <section class="welcome-section">
       <div class="container">
         <div class="welcome-content">
@@ -30,7 +30,7 @@
       </div>
     </section>
 
-    <!-- 快速操作 -->
+    
     <section class="quick-actions-section">
       <div class="container">
         <div class="quick-actions-grid" :class="{ 'admin-layout': isAdmin }">
@@ -45,7 +45,7 @@
               </div>
             </div>
 
-            <!-- 我的机票 -->
+            
             <div class="quick-action-card" @click="goTo('/my-tickets')" tabindex="0" role="button" :aria-label="$t('dashboard.myTickets')">
               <div class="card-icon-container">
                 <el-icon class="card-icon" :size="48"><Ticket /></el-icon>
@@ -62,7 +62,7 @@
               </div>
             </div>
 
-            <!-- 个人资料 -->
+            
             <div class="quick-action-card" @click="goTo('/profile')" tabindex="0" role="button" :aria-label="$t('dashboard.personalProfile')">
               <div class="card-icon-container">
                 <el-icon class="card-icon" :size="48"><User /></el-icon>
@@ -74,7 +74,7 @@
             </div>
           </template>
 
-          <!-- 管理员快速操作 -->
+          
           <template v-else>
             <div class="quick-action-card" @click="goTo('/admin/statistics')" tabindex="0" role="button">
               <div class="card-icon-container">
@@ -150,7 +150,7 @@
       </div>
     </section>
 
-    <!-- 最近预订 -->
+    
     <section class="recent-bookings-section" v-if="!isAdmin">
       <div class="container">
         <div class="recent-bookings-card">
@@ -197,7 +197,7 @@
             </el-button>
           </div>
 
-          <!-- 订票 -->
+          
           <div v-else class="booking-cards-container">
             <div 
               v-for="ticket in recentTickets" 
@@ -293,7 +293,7 @@
       </div>
     </section>
 
-    <!-- 机票详情 -->
+    
     <el-drawer
       v-model="ticketDetailsVisible"
       title=""
@@ -312,7 +312,7 @@
         <div class="detail-section">
           <h4 class="section-title">航班信息</h4>
           
-          <!-- Single Flight or First Flight of Connecting -->
+          
           <div class="flight-summary-card">
             <div class="flight-summary-header">
               <div class="airline-brand">
@@ -370,7 +370,7 @@
             </div>
           </div>
           
-          <!-- Detailed connecting flights breakdown -->
+          
           <div v-if="isConnectingFlight(selectedTicket)" class="connecting-flights-breakdown">
             <h5 class="breakdown-title">航程详情</h5>
             <div class="flight-segments">
@@ -433,7 +433,7 @@
           </div>
         </div>
 
-        <!-- 预订信息 -->
+        
         <div class="detail-section">
           <h4 class="section-title">订单信息</h4>
           <div class="info-grid">
@@ -539,7 +539,7 @@ export default {
         }
       } catch (error) {
         console.error('Failed to load recent tickets:', error)
-        // Use sample data for development
+        
         this.recentTickets = [
           {
             ticketNumber: 'T001234567',
@@ -597,7 +597,7 @@ export default {
              ['SCHEDULED', 'DELAYED'].includes(ticket.flight?.status)
     },
 
-    // Utility methods
+    
     formatTime(datetime) {
       return dayjs(datetime).format('HH:mm')
     },
@@ -722,7 +722,7 @@ export default {
       return typeMap[ticketType] || '经济舱'
     },
 
-    // Connecting flight utility methods
+    
     isConnectingFlight(ticket) {
       return ticket && ticket.connectingFlights && ticket.connectingFlights.length > 0
     },
@@ -733,7 +733,7 @@ export default {
       if (ticket.connectingFlights && ticket.connectingFlights.length > 0) {
         flights.push(...ticket.connectingFlights)
       }
-      return flights.filter(f => f) // Remove any null/undefined flights
+      return flights.filter(f => f) 
     },
     
     getFirstFlight(ticket) {
@@ -775,21 +775,21 @@ export default {
       return allFlights.map(f => f.flightNumber).join(' → ')
     },
     
-    // Calculate fuel surcharge based on flight type  
+    
     calculateFuelSurcharge(ticket) {
       if (!ticket) return 0
       
       if (this.isConnectingFlight(ticket)) {
-        // Connecting flights: 70 RMB per flight segment
+        
         const totalFlights = 1 + (ticket.connectingFlights?.length || 0)
         return totalFlights * 70
       } else {
-        // Direct flights: 70 RMB
+        
         return 70
       }
     },
     
-    // Calculate base ticket price (total price minus fuel surcharge)
+    
     calculateBaseTicketPrice(ticket) {
       if (!ticket) return 0
       return ticket.price - this.calculateFuelSurcharge(ticket)
@@ -810,13 +810,13 @@ export default {
 </script>
 
 <style scoped>
-/* Page Layout */
+
 .dashboard-page {
   min-height: 100vh;
   background: var(--color-bg-primary);
 }
 
-/* Welcome Section */
+
 .welcome-section {
   padding: var(--space-8) 0 var(--space-6);
   background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-primary) 100%);
@@ -868,7 +868,7 @@ export default {
   transition: var(--transition-fast);
 }
 
-/* Quick Actions Section */
+
 .quick-actions-section {
   padding: 0 0 var(--space-8);
 }
@@ -982,12 +982,12 @@ export default {
   color: var(--color-text-tertiary);
 }
 
-/* Enhanced Search Card */
+
 .search-flights-card {
   grid-column: span 1;
 }
 
-/* Recent Bookings Section */
+
 .recent-bookings-section {
   padding: 0 0 var(--space-8);
 }
@@ -1021,7 +1021,7 @@ export default {
   padding: var(--space-2) var(--space-3);
 }
 
-/* Loading State */
+
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -1052,7 +1052,7 @@ export default {
   gap: var(--space-2);
 }
 
-/* Empty State */
+
 .empty-bookings {
   text-align: center;
   padding: var(--space-12) var(--space-6);
@@ -1085,7 +1085,7 @@ export default {
   padding: var(--space-3) var(--space-6);
 }
 
-/* Booking Cards */
+
 .booking-cards-container {
   display: flex;
   flex-direction: column;
@@ -1114,7 +1114,7 @@ export default {
   outline-offset: 2px;
 }
 
-/* Booking Card Left */
+
 .booking-left {
   display: flex;
   align-items: center;
@@ -1170,7 +1170,7 @@ export default {
   color: var(--color-text-secondary);
 }
 
-/* Booking Card Middle */
+
 .booking-middle {
   flex: 1;
   display: flex;
@@ -1244,7 +1244,7 @@ export default {
   text-align: center;
 }
 
-/* Booking Card Right */
+
 .booking-right {
   display: flex;
   flex-direction: column;
@@ -1279,7 +1279,7 @@ export default {
   align-items: center;
 }
 
-/* Responsive Design */
+
 @media (max-width: 1279px) {
   .quick-actions-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -1370,7 +1370,7 @@ export default {
 }
 
 
-/* Animation enhancements */
+
 @keyframes cardHover {
   from { transform: translateY(0); }
   to { transform: translateY(-2px); }
@@ -1380,13 +1380,13 @@ export default {
   animation: cardHover var(--transition-fast) ease-out forwards;
 }
 
-/* Focus trap for accessibility */
+
 .booking-card:focus-within {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Print styles */
+
 @media print {
   .booking-card {
     border: 1px solid #000;
@@ -1398,7 +1398,7 @@ export default {
   }
 }
 
-/* Ticket Details Drawer */
+
 .ticket-details-drawer :deep(.el-drawer__header) {
   padding: var(--space-6);
   border-bottom: 1px solid var(--color-border-primary);
@@ -1603,7 +1603,7 @@ export default {
   color: var(--color-success);
 }
 
-/* Connecting Flights Styles */
+
 .connecting-indicator {
   font-size: var(--font-size-xs);
   color: var(--color-warning);

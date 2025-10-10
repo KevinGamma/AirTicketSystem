@@ -9,7 +9,6 @@ const api = axios.create({
   }
 })
 
-// Request interceptor
 api.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token')
@@ -23,7 +22,6 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor
 api.interceptors.response.use(
   response => {
     return response
@@ -55,5 +53,4 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
-11
 export default api

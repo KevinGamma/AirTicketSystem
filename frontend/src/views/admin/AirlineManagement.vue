@@ -10,7 +10,7 @@
         </div>
       </template>
 
-      <!-- Airlines Table -->
+      
       <el-table :data="airlines" stripe v-loading="loading">
         <el-table-column prop="code" :label="$t('admin.airlineCode')" width="100" />
         <el-table-column :label="$t('admin.airlineLogo')" width="80">
@@ -62,7 +62,7 @@
       </el-table>
     </el-card>
 
-    <!-- Create/Edit Dialog -->
+    
     <el-dialog
       v-model="dialogVisible"
       :title="dialogMode === 'create' ? $t('admin.createAirline') : $t('admin.editAirline')"
@@ -140,7 +140,7 @@
       </template>
     </el-dialog>
 
-    <!-- View Dialog -->
+    
     <el-dialog v-model="viewDialogVisible" :title="$t('admin.airlineDetails')" width="500px">
       <el-descriptions v-if="selectedAirline" :column="1" border>
         <el-descriptions-item :label="$t('admin.airlineCode')">

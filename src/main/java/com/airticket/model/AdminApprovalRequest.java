@@ -7,18 +7,18 @@ public class AdminApprovalRequest {
     private Long id;
     private Long ticketId;
     private Long userId;
-    private String requestType; // "REFUND" or "RESCHEDULE"
-    private String status; // "PENDING", "APPROVED", "REJECTED", "AWAITING_PAYMENT", "PAYMENT_COMPLETED"
+    private String requestType; 
+    private String status; 
     private String reason;
     private BigDecimal serviceFee;
-    private Long newFlightId; // Only for reschedule requests
+    private Long newFlightId; 
     
-    // Payment-related fields for reschedule operations
-    private BigDecimal totalAmount; // Total additional amount to be paid or refunded
-    private BigDecimal refundAmount; // Amount to be refunded (if negative difference)
-    private String paymentStatus; // "NOT_REQUIRED", "PAYMENT_REQUIRED", "REFUND_REQUIRED", "COMPLETED"
-    private String paymentNumber; // Payment transaction number for additional payment
-    private String refundNumber; // Refund transaction number
+    
+    private BigDecimal totalAmount; 
+    private BigDecimal refundAmount; 
+    private String paymentStatus; 
+    private String paymentNumber; 
+    private String refundNumber; 
     private Long approvedByAdminId;
     private String rejectionReason;
     private LocalDateTime requestTime;
@@ -26,11 +26,11 @@ public class AdminApprovalRequest {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Join fields for display
+    
     private Ticket ticket;
     private User user;
     private User approvedByAdmin;
-    private Flight newFlight; // Only for reschedule requests
+    private Flight newFlight; 
 
     public AdminApprovalRequest() {}
 
@@ -229,7 +229,7 @@ public class AdminApprovalRequest {
         this.refundNumber = refundNumber;
     }
 
-    // Alias methods for backward compatibility
+    
     public BigDecimal getAdditionalFee() {
         return totalAmount;
     }

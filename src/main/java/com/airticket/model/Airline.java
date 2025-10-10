@@ -5,12 +5,12 @@ import java.time.LocalDateTime;
 
 public class Airline {
     private Long id;
-    private String code;           // 航空公司代码，如 CA, MU, CZ 等
-    private String name;           // 航空公司名称
-    private String fullName;       // 航空公司全称
-    private String logoUrl;        // 航空公司Logo URL
-    private String description;    // 描述
-    private Boolean active;        // 是否活跃
+    private String code;           
+    private String name;           
+    private String fullName;       
+    private String logoUrl;        
+    private String description;    
+    private Boolean active;        
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

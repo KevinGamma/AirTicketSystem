@@ -124,7 +124,7 @@ export default {
         
         if (response.data.success) {
           ElMessage.success(this.$t('profile.updateSuccess'))
-          // Clear user data and redirect to login
+          
           this.logout()
           setTimeout(() => {
             this.$router.push('/login')

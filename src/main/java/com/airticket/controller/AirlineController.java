@@ -120,16 +120,16 @@ public class AirlineController {
                 return ResponseEntity.ok(ApiResponse.error("Airline not found"));
             }
 
-            // 验证文件类型
+            
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
                 return ResponseEntity.ok(ApiResponse.error("Only image files are allowed"));
             }
 
-            // 上传文件
+            
             String logoUrl = fileStorageService.storeFile(file, "airlines");
             
-            // 更新航空公司logo
+            
             airline.setLogoUrl(logoUrl);
             airlineService.updateAirline(airline);
 

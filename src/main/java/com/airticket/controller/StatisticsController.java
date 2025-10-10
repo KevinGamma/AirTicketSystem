@@ -94,9 +94,9 @@ public class StatisticsController {
         }
     }
 
-    /**
-     * 获取热门航线排行（用于横向柱状图）
-     */
+    
+
+
     @GetMapping("/popular-routes")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getPopularRoutes(
             @RequestParam(defaultValue = "10") int limit) {

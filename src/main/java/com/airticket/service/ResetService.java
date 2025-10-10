@@ -140,7 +140,7 @@ public class ResetService {
         private int airlineCount;
         private int approvalRequestCount;
 
-        // Getters and Setters
+        
         public int getUserCount() {
             return userCount;
         }

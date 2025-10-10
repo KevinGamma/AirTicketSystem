@@ -121,13 +121,13 @@ export default createStore({
       } else if (state.theme === 'light') {
         isDark = false
       } else {
-        // Auto mode - follow system preference
+        
         isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       }
       
       commit('SET_DARK_MODE', isDark)
       
-      // Update document class
+      
       if (isDark) {
         document.documentElement.classList.add('dark')
       } else {
@@ -136,10 +136,10 @@ export default createStore({
     },
     
     initTheme({ dispatch, state }) {
-      // Initialize theme on app start
+      
       dispatch('updateDarkMode')
       
-      // Listen for system theme changes (only in auto mode)
+      
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if (state.theme === 'auto') {
           dispatch('updateDarkMode')

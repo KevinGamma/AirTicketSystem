@@ -183,27 +183,27 @@ export default {
 
     beforeUpload(file) {
       console.log('Before upload called:', file)
-      return false // Prevent auto upload
+      return false 
     },
 
     processFile(file) {
       console.log('Processing file:', file)
       
-      // Validate file type
+      
       const isImage = file.type.indexOf('image/') === 0
       if (!isImage) {
         ElMessage.error(this.$t('profile.invalidFileType'))
         return false
       }
 
-      // Validate file size (5MB)
+      
       const isLt5M = file.size / 1024 / 1024 < 5
       if (!isLt5M) {
         ElMessage.error(this.$t('profile.fileTooLarge'))
         return false
       }
 
-      // Read file and set image source
+      
       const reader = new FileReader()
       reader.onload = (e) => {
         console.log('File loaded:', e.target.result.substring(0, 100) + '...')
@@ -264,7 +264,7 @@ export default {
       this.uploading = true
       
       try {
-        // Get cropped image data
+        
         const result = this.$refs.cropper.getResult()
         if (!result || !result.canvas) {
           throw new Error('No cropped image available')

@@ -333,4 +333,10 @@ public interface FlightMapper {
     })
     List<Flight> findFlightsByArrivalTimeRange(@Param("startTime") Instant startTime, @Param("endTime") Instant endTime);
 
+    @Select("SELECT COUNT(*) FROM flights WHERE flight_number = #{flightNumber}")
+    int countByFlightNumber(@Param("flightNumber") String flightNumber);
+    
+    @Select("SELECT COUNT(*) FROM flights WHERE flight_number = #{flightNumber} AND id != #{excludeId}")
+    int countByFlightNumberExcludeId(@Param("flightNumber") String flightNumber, @Param("excludeId") Long excludeId);
+
 }

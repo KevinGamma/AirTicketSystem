@@ -133,13 +133,13 @@ export default {
                 callback()
                 return
               }
-              // Email can only contain numbers, letters, @, ., _, -
+              
               const emailPattern = /^[a-zA-Z0-9@._-]+$/
               if (!emailPattern.test(value)) {
                 callback(new Error(this.$t('admin.emailCharactersOnly')))
                 return
               }
-              // Basic email format check
+              
               const basicEmailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
               if (!basicEmailPattern.test(value)) {
                 callback(new Error(this.$t('admin.emailFormatInvalid')))
@@ -157,7 +157,7 @@ export default {
                 callback()
                 return
               }
-              // Phone can only contain digits
+              
               const phonePattern = /^\d+$/
               if (!phonePattern.test(value)) {
                 callback(new Error(this.$t('admin.phoneNumbersOnly')))

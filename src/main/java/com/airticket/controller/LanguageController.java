@@ -36,7 +36,7 @@ public class LanguageController {
                 break;
         }
         
-        // Set the locale for the current thread
+        
         LocaleContextHolder.setLocale(locale);
         
         return ResponseEntity.ok(ApiResponse.success("Language switched to " + locale.getLanguage()));

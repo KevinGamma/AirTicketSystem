@@ -15,10 +15,10 @@ public class ConnectingFlight {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Instant arrivalTimeUtc;
     private int availableSeats;
-    private String type; // "DIRECT", "CONNECTING", or "CONNECTING_INTERCITY_TRANSFER"
-    private String connectionInfo; // Additional info about the connection
-    private String transferNotice; // Important notice about airport transfers
-    private boolean requiresAirportSwitch; // Whether passenger needs to switch airports
+    private String type; 
+    private String connectionInfo; 
+    private String transferNotice; 
+    private boolean requiresAirportSwitch; 
 
     public ConnectingFlight() {}
 
@@ -40,7 +40,7 @@ public class ConnectingFlight {
 
         this.type = flights.size() == 1 ? "DIRECT" : "CONNECTING";
         
-        // Generate connection info and transfer notices for multi-leg flights
+        
         if (flights.size() > 1) {
             StringBuilder info = new StringBuilder();
             StringBuilder notice = new StringBuilder();
@@ -57,14 +57,14 @@ public class ConnectingFlight {
                     String cityName = currentFlight.getArrivalAirport().getCity();
                     
                     if (!currentArrival.equals(nextDeparture)) {
-                        // Different airports in same city
+                        
                         hasAirportSwitch = true;
                         info.append("中转: ").append(currentArrival).append("→").append(nextDeparture);
                         if (cityName != null) {
                             info.append("(").append(cityName).append("同城不同机场)");
                         }
                         
-                        // Add detailed transfer notice
+                        
                         if (notice.length() > 0) notice.append(" ");
                         notice.append("⚠️ 重要提醒：需要在").append(cityName).append("换机场！")
                               .append("从").append(currentArrivalName != null ? currentArrivalName : currentArrival)
@@ -73,7 +73,7 @@ public class ConnectingFlight {
                               .append("(").append(nextDeparture).append(")")
                               .append("，请预留充足的地面交通时间。");
                     } else {
-                        // Same airport
+                        
                         info.append("中转: ").append(currentArrival).append("(同机场)");
                     }
                     if (i < flights.size() - 2) info.append("; ");
@@ -84,7 +84,7 @@ public class ConnectingFlight {
             this.requiresAirportSwitch = hasAirportSwitch;
         }
 
-        // 安全设置时间
+        
         Flight firstFlight = flights.get(0);
         Flight lastFlight = flights.get(flights.size() - 1);
         this.departureTimeUtc = firstFlight.getDepartureTimeUtc();
@@ -95,13 +95,13 @@ public class ConnectingFlight {
             this.totalDurationMinutes = 0;
         }
 
-        // 安全计算总价格
+        
         this.totalPrice = flights.stream()
                 .map(f -> f.getPrice() != null ? f.getPrice() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
 
-        // 安全计算可用座位
+        
         this.availableSeats = flights.stream()
                 .map(f -> f.getAvailableSeats() != null ? f.getAvailableSeats() : 0)
                 .mapToInt(Integer::intValue)
@@ -110,7 +110,7 @@ public class ConnectingFlight {
 
     }
 
-    // ====== Getter & Setter ======
+    
     public List<Flight> getFlights() {
         return flights;
     }

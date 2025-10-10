@@ -171,7 +171,7 @@
 
     <section class="tickets-section">
       <div class="container">
-        <!-- Results Header -->
+        
         <div class="results-header">
           <div class="results-info">
             <span class="results-count">
@@ -396,7 +396,7 @@
               :status="ticket.status"
             />
 
-            <!-- Cross-airport transfer reminder -->
+            
             <div v-if="hasCrossAirportTransfer(ticket)" class="cross-airport-reminder">
               <div class="reminder-header">
                 <el-icon class="warning-icon"><Warning /></el-icon>
@@ -498,7 +498,7 @@
           </div>
         </div>
 
-        <!-- Table View -->
+        
         <div v-else class="tickets-table-container">
           <el-table :data="paginatedTickets" class="tickets-table">
             <el-table-column label="航班号" width="140">
@@ -560,7 +560,7 @@
               <template #default="scope">
                 <div class="flight-status-display">
                   <template v-if="isConnectingFlight(scope.row)">
-                    <!-- Show overall status for connecting flights -->
+                    
                     <el-tag :type="getConnectingFlightStatusType(scope.row)" size="small">
                       {{ getConnectingFlightStatusText(scope.row) }}
                     </el-tag>
@@ -617,7 +617,7 @@
       </div>
     </section>
 
-    <!-- Ticket Details Modal -->
+    
     <el-drawer
       v-model="ticketDetailsVisible"
       title=""
@@ -720,7 +720,7 @@
                 </div>
               </template>
               <template v-else>
-                <!-- Direct flight route -->
+                
                 <div class="route-endpoint departure-endpoint">
                   <div v-if="isInternationalAirport(selectedTicket.flight?.departureAirport)" class="local-time-label-detail">当地时间</div>
                   <div class="time-large">{{ 
@@ -760,7 +760,7 @@
           </div>
         </div>
 
-        <!-- Cross-airport transfer reminder for detailed view -->
+        
         <div v-if="hasCrossAirportTransfer(selectedTicket)" class="cross-airport-reminder detailed">
           <div class="reminder-header">
             <el-icon class="warning-icon"><Warning /></el-icon>
@@ -799,7 +799,7 @@
           </div>
         </div>
 
-        <!-- Passenger Information -->
+        
         <div class="detail-section">
           <h4 class="section-title">乘客信息</h4>
           <div class="info-grid">
@@ -822,7 +822,7 @@
           </div>
         </div>
 
-        <!-- Booking Information -->
+        
         <div class="detail-section">
           <h4 class="section-title">订单信息</h4>
           <div class="info-grid">
@@ -859,7 +859,7 @@
           </div>
         </div>
 
-        <!-- Payment Countdown for BOOKED tickets -->
+        
         <div v-if="selectedTicket && selectedTicket.status === 'BOOKED' && countdownDataLoaded" class="detail-section">
           <h4 class="section-title">支付倒计时</h4>
           <div class="countdown-card" :class="selectedTicketUrgencyClass">
@@ -872,7 +872,7 @@
           </div>
         </div>
         
-        <!-- Loading state for countdown -->
+        
         <div v-if="selectedTicket && selectedTicket.status === 'BOOKED' && !countdownDataLoaded" class="detail-section">
           <h4 class="section-title">支付倒计时</h4>
           <div class="countdown-card urgency-low">
@@ -885,7 +885,7 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
+        
         <div class="detail-actions">
           <el-button 
             v-if="canPay(selectedTicket)" 
@@ -937,10 +937,10 @@
       </div>
     </el-drawer>
 
-    <!-- Reschedule Dialog -->
+    
     <el-dialog v-model="rescheduleDialogVisible" title="改签申请" width="900px" class="reschedule-dialog">
       <div v-if="selectedTicket" class="reschedule-content">
-        <!-- Current Ticket Info -->
+        
         <div class="reschedule-section">
           <h4 class="section-title">当前机票</h4>
           <div class="current-ticket-card">
@@ -953,7 +953,7 @@
               </div>
             </div>
             
-            <!-- Detailed flight segments for connecting flights -->
+            
             <div v-if="isConnectingFlight(selectedTicket)" class="flight-segments-details">
               <div class="segments-header">航班详情</div>
               <div 
@@ -975,7 +975,7 @@
           </div>
         </div>
 
-        <!-- Service Fee Warning -->
+        
         <div v-if="serviceFee" class="reschedule-section">
           <el-alert type="warning" :closable="false" class="fee-alert">
             <template #title>
@@ -1062,7 +1062,7 @@
           </div>
         </div>
 
-        <!-- Available Flights -->
+        
         <div class="reschedule-section">
           <h4 class="section-title">
             选择新航班
@@ -1123,7 +1123,7 @@
           </div>
         </div>
 
-        <!-- Reschedule Reason -->
+        
         <div class="reschedule-section">
           <h4 class="section-title">改签原因</h4>
           <el-radio-group v-model="rescheduleReason" class="reason-radio-group">
@@ -1181,7 +1181,7 @@ import {
   CreditCard,
   Money,
   Check,
-  ArrowRight // eslint-disable-line no-unused-vars
+  ArrowRight
 } from '@element-plus/icons-vue'
 import PaymentCountdown from '../components/PaymentCountdown.vue'
 import api from '../api'
@@ -1189,6 +1189,7 @@ import api from '../api'
 export default {
   name: 'MyTicketsNew',
   components: {
+    ArrowRight,
     Search,
     Refresh,
     RefreshLeft,
@@ -1209,13 +1210,13 @@ export default {
   },
   data() {
     return {
-      // Data state
+      
       tickets: [],
       pendingRequests: [],
       loading: false,
       cancelingRequestId: null,
       
-      // Filter state
+      
       filters: {
         flightNumber: '',
         status: '',
@@ -1223,11 +1224,11 @@ export default {
         dateRange: null
       },
       
-      // View state
-      viewMode: 'card', // 'card' or 'table'
+      
+      viewMode: 'card', 
       showPendingRequests: false,
       
-      // Pagination
+      
       currentPage: 1,
       pageSize: 6,
 
@@ -1244,7 +1245,7 @@ export default {
       loadingFlights: false,
       rescheduleLoading: false,
       
-      // Selected ticket countdown
+      
       selectedTicketCountdown: '00:00',
       selectedTicketMessage: '',
       selectedTicketUrgency: 'LOW',
@@ -1279,7 +1280,7 @@ export default {
     filteredTickets() {
       let filtered = [...this.tickets]
       
-      // Flight number filter
+      
       if (this.filters.flightNumber) {
         filtered = filtered.filter(ticket => 
           ticket.flight?.flightNumber?.toLowerCase()
@@ -1287,23 +1288,23 @@ export default {
         )
       }
       
-      // Status filter
+      
       if (this.filters.status) {
         filtered = filtered.filter(ticket => ticket.status === this.filters.status)
       }
       
-      // Departure city filter
+      
       if (this.filters.departureCity) {
         filtered = filtered.filter(ticket => 
           ticket.flight?.departureAirport?.city === this.filters.departureCity
         )
       }
       
-      // Date range filter
+      
       if (this.filters.dateRange && this.filters.dateRange.length === 2) {
         const [startDate, endDate] = this.filters.dateRange
         filtered = filtered.filter(ticket => {
-          // Use our parseDateTime function to ensure proper timezone conversion
+          
           const parsedDate = this.parseDateTime(ticket.flight?.departureTimeUtc)
           if (!parsedDate) return false
           const departureDate = parsedDate.format('YYYY-MM-DD')
@@ -1312,7 +1313,7 @@ export default {
         })
       }
       
-      // Sort by booking time (latest to earliest) - using parseDateTime for consistency
+      
       return filtered.sort((a, b) => {
         const dateA = this.parseDateTime(a.bookingTime)
         const dateB = this.parseDateTime(b.bookingTime)
@@ -1340,9 +1341,9 @@ export default {
       this.$router.push(path)
     },
     
-    // Filter methods
+    
     handleFilterChange() {
-      this.currentPage = 1 // Reset to first page when filtering
+      this.currentPage = 1 
     },
     
     resetFilters() {
@@ -1355,12 +1356,12 @@ export default {
       this.currentPage = 1
     },
     
-    // Pagination
+    
     handlePageChange(page) {
       this.currentPage = page
     },
     
-    // Data loading
+    
     async loadTickets() {
       try {
         this.loading = true
@@ -1368,14 +1369,14 @@ export default {
         console.log('🎫 Raw API response:', response.data)
         
         if (response.data.success) {
-          // Sort tickets by booking time (most recent first)
+          
           this.tickets = response.data.data.sort((a, b) => {
             const timeA = new Date(a.bookingTime)
             const timeB = new Date(b.bookingTime)
-            return timeB - timeA // Descending order (newest first)
+            return timeB - timeA 
           })
           
-          // Enhanced Debug: Log all ticket time information
+          
           console.log(`✅ Loaded ${this.tickets.length} tickets with enhanced debugging`)
           
           this.tickets.forEach((ticket, index) => {
@@ -1388,7 +1389,7 @@ export default {
               console.log('  - Booking time:', ticket.bookingTime, '| type:', typeof ticket.bookingTime)
               console.log('  - Payment time:', ticket.paymentTime, '| type:', typeof ticket.paymentTime)
               
-              // Test parsing for this ticket
+              
               if (ticket.flight.departureTimeUtc) {
                 const parsed = this.parseDateTime(ticket.flight.departureTimeUtc)
                 console.log('  - Parsed departure result:', parsed ? parsed.format('YYYY-MM-DD HH:mm:ss') : 'FAILED')
@@ -1398,7 +1399,7 @@ export default {
                 console.log('  - Parsed arrival result:', parsed ? parsed.format('YYYY-MM-DD HH:mm:ss') : 'FAILED')
               }
               
-              // Check for connecting flights
+              
               if (ticket.connectingFlights && ticket.connectingFlights.length > 0) {
                 console.log(`  - Has ${ticket.connectingFlights.length} connecting flights:`)
                 ticket.connectingFlights.forEach((cf, cfIndex) => {
@@ -1414,7 +1415,7 @@ export default {
         }
         await this.loadPendingRequests()
         
-        // Check for pending refunds after loading tickets
+        
         setTimeout(() => {
           this.tickets.forEach(ticket => {
             if (ticket.status === 'PAID' || ticket.status === 'PENDING_RESCHEDULE') {
@@ -1471,7 +1472,7 @@ export default {
         ].sort((a, b) => {
           const timeA = new Date(a.bookingTime)
           const timeB = new Date(b.bookingTime)
-          return timeB - timeA // Descending order (newest first)
+          return timeB - timeA 
         })
       } finally {
         this.loading = false
@@ -1512,16 +1513,16 @@ export default {
         if (response.data.success) {
           this.$message.success('申请已取消')
           
-          // Remove the canceled request from the pending list
+          
           this.pendingRequests = this.pendingRequests.filter(req => req.id !== request.id)
           
-          // Refresh the tickets list to update any status changes
+          
           await this.loadTickets()
         } else {
           throw new Error(response.data.message || '取消申请失败')
         }
       } catch (error) {
-        if (error !== 'cancel') { // User didn't cancel the confirmation
+        if (error !== 'cancel') { 
           console.error('Cancel request error:', error)
           this.$message.error('取消申请失败: ' + (error.message || '未知错误'))
         }
@@ -1530,7 +1531,7 @@ export default {
       }
     },
     
-    // Action methods
+    
     canPay(ticket) {
       return ticket.status === 'BOOKED'
     },
@@ -1540,7 +1541,7 @@ export default {
     },
     
     canReschedule(ticket) {
-      // For connecting flights, ensure all flights in the itinerary can be rescheduled
+      
       if (this.isConnectingFlight(ticket)) {
         const allFlights = this.getAllFlights(ticket)
         const canRescheduleAll = allFlights.every(flight => 
@@ -1553,7 +1554,7 @@ export default {
     },
     
     canRefund(ticket) {
-      // For connecting flights, ensure all flights in the itinerary can be refunded
+      
       if (this.isConnectingFlight(ticket)) {
         const allFlights = this.getAllFlights(ticket)
         const canRefundAll = allFlights.every(flight => 
@@ -1577,7 +1578,7 @@ export default {
           }
         )
         
-        // Navigate to payment page
+        
         this.$router.push(`/payment/${ticket.id}`)
         this.ticketDetailsVisible = false
       } catch (error) {
@@ -1591,37 +1592,37 @@ export default {
       try {
         this.loading = true
         
-        // Create reschedule payment order
+        
         const response = await api.post(`/tickets/${ticket.id}/reschedule-payment`)
         
         if (response.data.success) {
           const paymentData = response.data.data
           
-          // Use the same approach as regular payment - write HTML to new window
+          
           if (paymentData.paymentUrl) {
             const paymentWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes')
             
             if (paymentWindow) {
               try {
-                // Write the Alipay HTML content to the new window
+                
                 paymentWindow.document.write(paymentData.paymentUrl)
                 paymentWindow.document.close()
                 
-                // Set window title
+                
                 paymentWindow.document.title = '改签费用支付 - 支付宝沙箱支付'
                 
                 ElMessage.success('改签费用支付订单已创建，请在新窗口中完成支付')
                 
-                // Monitor payment completion
+                
                 const checkPaymentStatus = setInterval(async () => {
                   try {
                     if (paymentWindow.closed) {
                       clearInterval(checkPaymentStatus)
-                      // Reload tickets to check if payment was completed
+                      
                       await this.loadTickets()
                       ElMessage.info('支付窗口已关闭，正在刷新机票状态...')
                     } else {
-                      // Also periodically check payment status while window is open
+                      
                       try {
                         const currentTicket = this.tickets.find(t => t.id === ticket.id)
                         if (currentTicket && currentTicket.status === 'PAID') {
@@ -1631,7 +1632,7 @@ export default {
                           paymentWindow.close()
                         }
                       } catch (error) {
-                        // Silent fail for status checks
+                        console.error('Error while verifying updated ticket status:', error)
                       }
                     }
                   } catch (error) {
@@ -1639,7 +1640,7 @@ export default {
                   }
                 }, 3000)
                 
-                // Auto-stop checking after 10 minutes
+                
                 setTimeout(() => {
                   clearInterval(checkPaymentStatus)
                 }, 600000)
@@ -1673,41 +1674,41 @@ export default {
         if (requestsResponse.data.success) {
           const allRequests = requestsResponse.data.data || []
           
-          // Use the same improved logic to find reschedule requests
+          
           let ticketRequests = []
           
-          // Method 1: Direct match with current ticket
+          
           ticketRequests = allRequests.filter(req => 
             req.ticket && req.ticket.id === ticket.id && req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
           )
           
-          // Method 2: If current ticket is a rescheduled ticket, look for requests on the original ticket
+          
           if (ticketRequests.length === 0 && ticket.originalTicketId) {
             ticketRequests = allRequests.filter(req => 
               req.ticket && req.ticket.id === ticket.originalTicketId && req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
             )
           }
           
-          // Method 3: Look for any reschedule requests that resulted in this ticket
+          
           if (ticketRequests.length === 0) {
             ticketRequests = allRequests.filter(req => 
               req.requestType === 'RESCHEDULE' && req.status === 'APPROVED' && req.ticket && (
-                // The request ticket is the original ticket, and this ticket is the result
+                
                 (req.ticket.id === ticket.originalTicketId) ||
-                // The request references this ticket somehow
+                
                 req.ticket.rescheduledToTicketId === ticket.id ||
-                // Broad search - any reschedule request related to our ticket chain
+                
                 (ticket.originalTicketId && req.ticket.id === ticket.originalTicketId)
               )
             )
           }
           
           for (const request of ticketRequests) {
-            // Calculate if this should result in a refund based on total amount
+            
             if (request.totalAmount < 0 && request.paymentStatus === 'COMPLETED') {
               const refundAmount = Math.abs(request.totalAmount)
               
-              // Use MessageBox for interactive refund request
+              
               setTimeout(() => {
                 ElMessageBox.confirm(
                   `您的改签产生了¥${refundAmount}的退款，如果您还没有收到，可以点击"确定"提交退款申请。`, 
@@ -1720,99 +1721,17 @@ export default {
                 ).then(() => {
                   this.requestMissingRescheduleRefund(ticket)
                 }).catch(() => {
-                  // User clicked "我已收到" or canceled - do nothing
+                  
                 })
               }, 2000)
             }
           }
         }
       } catch (error) {
-        // Silent fail - this is just an informational check
+        
         console.log('Could not check refund status:', error)
       }
     },
-    
-    async completeReschedulePaymentTest(ticket) {
-      try {
-        await ElMessageBox.confirm(
-          '这是测试功能，将直接完成改签支付。确认继续？', 
-          '测试支付完成', 
-          {
-            confirmButtonText: '确认完成',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-        
-        this.loading = true
-        
-        const response = await api.post(`/tickets/${ticket.id}/complete-reschedule-payment-test`)
-        
-        if (response.data.success) {
-          ElMessage.success('测试支付完成成功')
-          await this.loadTickets()
-        } else {
-          ElMessage.error(response.data.message || '测试支付完成失败')
-        }
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('Complete reschedule payment test error:', error)
-          ElMessage.error(error.response?.data?.message || '测试支付完成失败')
-        }
-      } finally {
-        this.loading = false
-        this.ticketDetailsVisible = false
-      }
-    },
-    
-    async debugTicketStatus(ticket) {
-      try {
-        this.loading = true
-        
-        const response = await api.get(`/tickets/${ticket.id}/debug-status`)
-        
-        if (response.data.success) {
-          const debugInfo = response.data.data
-          
-          // Display debug information in console and alert
-          console.log('Debug Info for Ticket', ticket.id, ':', debugInfo)
-          
-          const summary = `
-票据状态调试信息:
-===================
-票据ID: ${debugInfo.ticket.id}
-票据号: ${debugInfo.ticket.ticketNumber}
-当前状态: ${debugInfo.ticket.status}
-原票据ID: ${debugInfo.ticket.originalTicketId || 'null'}
-改签到票据ID: ${debugInfo.ticket.rescheduledToTicketId || 'null'}
-是否原票: ${debugInfo.ticket.isOriginalTicket}
-
-前端按钮逻辑:
-- 可支付改签费: ${debugInfo.frontendButtonLogic.canPayRescheduleFee}
-- 可支付: ${debugInfo.frontendButtonLogic.canPay}
-- 可改签: ${debugInfo.frontendButtonLogic.canReschedule}
-
-相关审批请求 (${debugInfo.approvalRequests.length}个):
-${debugInfo.approvalRequests.map(req => 
-  `- ID: ${req.id}, 票据ID: ${req.ticketId}, 类型: ${req.requestType}, 状态: ${req.status}, 总金额: ${req.totalAmount}, 支付状态: ${req.paymentStatus}`
-).join('\n')}
-          `
-          
-          this.$alert(summary, '票据状态调试信息', {
-            type: 'info',
-            customClass: 'debug-alert'
-          })
-        } else {
-          ElMessage.error('获取调试信息失败: ' + response.data.message)
-        }
-      } catch (error) {
-        console.error('Debug ticket status error:', error)
-        ElMessage.error('获取调试信息失败: ' + (error.response?.data?.message || error.message))
-      } finally {
-        this.loading = false
-      }
-    },
-    
     async triggerPaymentMonitoring(ticket) {
       if (!ticket || !ticket.id) {
         ElMessage.error('无法获取票据信息')
@@ -1822,18 +1741,18 @@ ${debugInfo.approvalRequests.map(req =>
       try {
         this.loading = true
         
-        // Check if there are any approval requests for this ticket
+        
         const requestsResponse = await api.get('/tickets/my-requests')
         
         if (requestsResponse.data.success) {
           const allRequests = requestsResponse.data.data || []
           
-          // Find reschedule requests for this specific ticket
+          
           const ticketRequests = allRequests.filter(req => 
             req.ticket && req.ticket.id === ticket.id && req.requestType === 'RESCHEDULE'
           )
           
-          // Check if there are any pending reschedule requests (not yet paid)
+          
           const pendingRequests = ticketRequests.filter(req => req.status === 'PENDING')
           
           if (pendingRequests.length > 0) {
@@ -1841,7 +1760,7 @@ ${debugInfo.approvalRequests.map(req =>
             return
           }
           
-          // Check if there are approved but unpaid requests
+          
           const approvedUnpaidRequests = ticketRequests.filter(req => 
             req.status === 'APPROVED' && (!req.paymentStatus || req.paymentStatus === 'PENDING')
           )
@@ -1851,7 +1770,7 @@ ${debugInfo.approvalRequests.map(req =>
             return
           }
           
-          // Check if there are completed requests to monitor
+          
           const completedRequests = ticketRequests.filter(req => 
             req.status === 'APPROVED' && req.paymentStatus === 'COMPLETED'
           )
@@ -1862,13 +1781,13 @@ ${debugInfo.approvalRequests.map(req =>
           }
         }
         
-        // If payment has been made, proceed with monitoring
+        
         const response = await api.post('/tickets/trigger-payment-monitoring')
         
         if (response.data.success) {
           ElMessage.success('支付状态检查已触发')
           
-          // Check if this reschedule should generate a refund
+          
           if (requestsResponse.data.success) {
             const allRequests = requestsResponse.data.data || []
             const ticketRequests = allRequests.filter(req => 
@@ -1884,7 +1803,7 @@ ${debugInfo.approvalRequests.map(req =>
             }
           }
           
-          // 等待一秒后刷新票据列表
+          
           setTimeout(async () => {
             await this.loadTickets()
           }, 1000)
@@ -1901,7 +1820,7 @@ ${debugInfo.approvalRequests.map(req =>
 
     async requestMissingRescheduleRefund(ticket) {
       try {
-        // Check if this ticket has a reschedule that should result in a refund
+        
         const requestsResponse = await api.get('/tickets/my-requests')
         
         if (!requestsResponse.data.success) {
@@ -1911,18 +1830,18 @@ ${debugInfo.approvalRequests.map(req =>
         
         const allRequests = requestsResponse.data.data || []
         
-        // Look for reschedule requests in multiple ways:
-        // 1. Current ticket ID (for original tickets)
-        // 2. Original ticket ID (for rescheduled tickets)
-        // 3. All related tickets in the reschedule chain
+        
+        
+        
+        
         let rescheduleRequests = []
         
-        // Method 1: Direct match with current ticket
+        
         rescheduleRequests = allRequests.filter(req => 
           req.ticket && req.ticket.id === ticket.id && req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
         )
         
-        // Method 2: If current ticket is a rescheduled ticket, look for requests on the original ticket
+        
         if (rescheduleRequests.length === 0 && ticket.originalTicketId) {
           rescheduleRequests = allRequests.filter(req => 
             req.ticket && req.ticket.id === ticket.originalTicketId && req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
@@ -1930,44 +1849,44 @@ ${debugInfo.approvalRequests.map(req =>
           console.log(`Looking for reschedule requests on original ticket ${ticket.originalTicketId}:`, rescheduleRequests)
         }
         
-        // Method 3: Look for any reschedule requests that resulted in this ticket
+        
         if (rescheduleRequests.length === 0) {
           rescheduleRequests = allRequests.filter(req => 
             req.requestType === 'RESCHEDULE' && req.status === 'APPROVED' && req.ticket && (
-              // The request ticket is the original ticket, and this ticket is the result
+              
               (req.ticket.id === ticket.originalTicketId) ||
-              // The request references this ticket somehow
+              
               req.ticket.rescheduledToTicketId === ticket.id ||
-              // Broad search - any reschedule request related to our ticket chain
+              
               (ticket.originalTicketId && req.ticket.id === ticket.originalTicketId)
             )
           )
           console.log(`Broad search for reschedule requests related to ticket ${ticket.id} or original ${ticket.originalTicketId}:`, rescheduleRequests)
         }
         
-        // Method 4: Since ticket relationships are null, use alternative matching approaches
+        
         if (rescheduleRequests.length === 0) {
           const allRescheduleRequests = allRequests.filter(req => 
             req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
           )
           console.log(`All ${allRescheduleRequests.length} approved reschedule requests:`, allRescheduleRequests)
           
-          // Since req.ticket is null for all requests, we need to find the relevant request by other means
-          // Let's look for the most recent approved reschedule request for this user
+          
+          
           console.log('=== ALTERNATIVE MATCHING STRATEGY ===')
           console.log('Since all ticket relationships are null, looking for most recent reschedule request...')
           
-          // Sort by ID (assuming higher ID = more recent) and take the most recent approved ones
+          
           const recentRescheduleRequests = allRescheduleRequests
-            .sort((a, b) => b.id - a.id) // Sort by ID descending
-            .slice(0, 3) // Take the 3 most recent
+            .sort((a, b) => b.id - a.id) 
+            .slice(0, 3) 
           
           console.log('Most recent approved reschedule requests:', recentRescheduleRequests)
           
-          // For tickets 189->190, let's assume one of the recent requests applies
+          
           rescheduleRequests = recentRescheduleRequests
           
-          // Log detailed structure of the requests we're going to check
+          
           console.log('=== DETAILED REQUEST ANALYSIS ===')
           rescheduleRequests.forEach((req, index) => {
             console.log(`Request ${index + 1}:`, {
@@ -1978,14 +1897,14 @@ ${debugInfo.approvalRequests.map(req =>
               paymentStatus: req.paymentStatus,
               requestTime: req.requestTime,
               reason: req.reason,
-              allFields: req // Log the complete object to see what fields exist
+              allFields: req 
             })
           })
           console.log('=== END ANALYSIS ===')
         }
         
         if (rescheduleRequests.length === 0) {
-          // Show detailed debug information to help understand the issue
+          
           const debugInfo = {
             ticketId: ticket.id,
             ticketNumber: ticket.ticketNumber,
@@ -2001,7 +1920,7 @@ ${debugInfo.approvalRequests.map(req =>
           console.log('All requests:', allRequests)
           console.log('Reschedule requests:', allRequests.filter(req => req.requestType === 'RESCHEDULE'))
           
-          // Show user-friendly debug message
+          
           ElMessageBox.alert(
             `调试信息：
             
@@ -2037,7 +1956,7 @@ ${debugInfo.approvalRequests.map(req =>
         console.log('Refund request found:', refundRequest)
         
         if (!refundRequest) {
-          // Show detailed information about found requests
+          
           ElMessageBox.alert(
             `找到 ${rescheduleRequests.length} 个改签记录，但都不涉及退款：
 
@@ -2060,7 +1979,7 @@ ${rescheduleRequests.map((req, index) =>
         
         await ElMessageBox.confirm(
           `检测到您的改签应产生¥${refundAmount}的退款。\n\n是否要提交退款申请？`, 
-          '改签退款申请', 
+          '确认退款申请',
           {
             confirmButtonText: '申请退款',
             cancelButtonText: '取消',
@@ -2070,7 +1989,7 @@ ${rescheduleRequests.map((req, index) =>
         
         this.loading = true
         
-        // Submit refund request using existing refund API
+        
         const response = await api.post(`/tickets/${ticket.id}/refund`, { 
           reason: `改签产生退款申请 - 应退金额¥${refundAmount}` 
         })
@@ -2091,586 +2010,9 @@ ${rescheduleRequests.map((req, index) =>
         this.loading = false
       }
     },
-
-    async requestManualRefund(ticket) {
-      try {
-        // Allow user to manually specify refund amount and reason
-        const { value: refundInfo } = await ElMessageBox.prompt(
-          '请输入您认为应该退还的金额和原因（格式：金额,原因）\n例如：50,改签到便宜航班应退差价', 
-          '手动申请退款', 
-          {
-            confirmButtonText: '申请退款',
-            cancelButtonText: '取消',
-            inputPattern: /^\d+(\.\d{1,2})?,.*$/,
-            inputErrorMessage: '请按格式输入：金额,原因'
-          }
-        )
-        
-        const [amountStr, reason] = refundInfo.split(',')
-        const amount = parseFloat(amountStr.trim())
-        const refundReason = reason.trim()
-        
-        if (isNaN(amount) || amount <= 0) {
-          ElMessage.error('请输入有效的退款金额')
-          return
-        }
-        
-        await ElMessageBox.confirm(
-          `您要申请退款¥${amount}，原因：${refundReason}\n\n确认提交申请？`, 
-          '确认退款申请', 
-          {
-            confirmButtonText: '确认申请',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-        
-        this.loading = true
-        
-        const response = await api.post(`/tickets/${ticket.id}/refund`, { 
-          reason: `手动退款申请 - ¥${amount} - ${refundReason}` 
-        })
-        
-        if (response.data.success) {
-          ElMessage.success(`退款申请已提交，申请金额：¥${amount}`)
-          await this.loadTickets()
-        } else {
-          ElMessage.error('退款申请失败: ' + response.data.message)
-        }
-        
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('Manual refund request error:', error)
-          ElMessage.error('退款申请失败: ' + (error.response?.data?.message || error.message))
-        }
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async showDetailedDebugInfo(ticket) {
-      try {
-        const requestsResponse = await api.get('/tickets/my-requests')
-        
-        if (requestsResponse.data.success) {
-          const allRequests = requestsResponse.data.data || []
-          
-          // Find all reschedule requests for this ticket or its original
-          const allRescheduleRequests = allRequests.filter(req => req.requestType === 'RESCHEDULE')
-          const relatedRequests = allRescheduleRequests.filter(req => 
-            req.ticket && (
-              req.ticket.id === ticket.id ||
-              req.ticket.id === ticket.originalTicketId ||
-              (ticket.originalTicketId && req.ticket.id === ticket.originalTicketId)
-            )
-          )
-          
-          // Create detailed info display
-          let debugMessage = `票据信息：
-票据ID: ${ticket.id}
-票据号: ${ticket.ticketNumber}
-原票据ID: ${ticket.originalTicketId || '无'}
-改签到票据ID: ${ticket.rescheduledToTicketId || '无'}
-
-相关改签请求 (${relatedRequests.length}个)：\n`
-          
-          if (relatedRequests.length === 0) {
-            debugMessage += '未找到相关改签请求\n\n'
-            debugMessage += `所有改签请求 (${allRescheduleRequests.length}个)：\n`
-            allRescheduleRequests.slice(0, 5).forEach((req, index) => {
-              debugMessage += `${index + 1}. ID:${req.id} 票据ID:${req.ticket?.id} 状态:${req.status} 金额:${req.totalAmount || '未设置'}\n`
-            })
-          } else {
-            relatedRequests.forEach((req, index) => {
-              debugMessage += `${index + 1}. 请求ID: ${req.id}
-   票据ID: ${req.ticket?.id}
-   票据号: ${req.ticket?.ticketNumber || '未知'}
-   状态: ${req.status}
-   总金额: ¥${req.totalAmount || '未设置'}
-   支付状态: ${req.paymentStatus || '未知'}
-   申请时间: ${req.requestTime || '未知'}
-   原因: ${req.reason || '未填写'}\n\n`
-            })
-          }
-          
-          ElMessageBox.alert(debugMessage, '改签详情调试信息', { 
-            type: 'info',
-            customClass: 'debug-info-dialog'
-          })
-        }
-      } catch (error) {
-        ElMessage.error('获取改签详情失败: ' + error.message)
-      }
-    },
-
-    async selectRescheduleRequestForRefund(ticket) {
-      try {
-        const requestsResponse = await api.get('/tickets/my-requests')
-        
-        if (!requestsResponse.data.success) {
-          ElMessage.error('无法获取改签信息')
-          return
-        }
-        
-        const allRequests = requestsResponse.data.data || []
-        const rescheduleRequests = allRequests.filter(req => 
-          req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
-        ).sort((a, b) => b.id - a.id) // Most recent first
-        
-        if (rescheduleRequests.length === 0) {
-          ElMessage.warning('未找到已批准的改签请求')
-          return
-        }
-        
-        // Create a simple HTML list of all reschedule requests
-        let requestsList = '请选择与您的改签相关的申请记录（点击确定后输入对应的请求ID）:\n\n'
-        
-        rescheduleRequests.slice(0, 10).forEach((req) => {
-          const amount = req.totalAmount !== null && req.totalAmount !== undefined ? `¥${req.totalAmount}` : '未设置'
-          const refundStatus = req.totalAmount < 0 ? ' 🔴退款' : (req.totalAmount > 0 ? ' 💰付费' : ' ⚪无费用')
-          requestsList += `${req.id}: ${req.requestTime || '未知时间'} - ${req.reason || '无原因'} - 金额:${amount}${refundStatus}\n`
-        })
-        
-        requestsList += '\n请输入您要申请退款的请求ID (例如: 39):'
-        
-        // Show selection dialog
-        const { value: selectedRequestId } = await ElMessageBox.prompt(
-          requestsList, 
-          '选择改签记录', 
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            inputType: 'text',
-            inputPlaceholder: '输入请求ID (例如: 39)',
-            inputValidator: (value) => {
-              if (!value) {
-                return '请输入请求ID'
-              }
-              const requestId = parseInt(value)
-              const exists = rescheduleRequests.find(req => req.id == requestId)
-              if (!exists) {
-                return '请求ID不存在，请输入有效的请求ID'
-              }
-              return true
-            }
-          }
-        )
-        
-        const selectedRequest = rescheduleRequests.find(req => req.id == selectedRequestId)
-        
-        if (selectedRequest && selectedRequest.totalAmount < 0) {
-          const refundAmount = Math.abs(selectedRequest.totalAmount)
-          
-          await ElMessageBox.confirm(
-            `您选择的改签记录显示应退款¥${refundAmount}。\n\n是否要提交退款申请？`, 
-            '确认退款申请', 
-            {
-              confirmButtonText: '申请退款',
-              cancelButtonText: '取消',
-              type: 'info'
-            }
-          )
-          
-          this.loading = true
-          const response = await api.post(`/tickets/${ticket.id}/refund`, { 
-            reason: `基于改签记录${selectedRequest.id}的退款申请 - 应退金额¥${refundAmount}` 
-          })
-          
-          if (response.data.success) {
-            ElMessage.success(`退款申请已提交，预计退款金额：¥${refundAmount}`)
-            await this.loadTickets()
-          } else {
-            ElMessage.error('退款申请失败: ' + response.data.message)
-          }
-          
-        } else if (selectedRequest) {
-          ElMessage.info(`选择的改签记录 (金额: ¥${selectedRequest.totalAmount || '未设置'}) 不涉及退款`)
-        }
-        
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('操作失败: ' + (error.message || '未知错误'))
-        }
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async calculateAndRequestRefund(ticket) {
-      try {
-        // First, we need to find the original ticket to compare prices
-        if (!ticket.originalTicketId) {
-          ElMessage.warning('无法找到原始票据信息，无法计算退款金额')
-          return
-        }
-        
-        // Try to find the original ticket in the current tickets list
-        let originalTicket = this.tickets.find(t => t.id === ticket.originalTicketId)
-        
-        if (!originalTicket) {
-          // If not found in current list, ask user for original ticket price
-          const { value: originalPrice } = await ElMessageBox.prompt(
-            `无法自动获取原始票据价格。\n\n当前票据: ${ticket.ticketNumber} (¥${ticket.price})\n原始票据ID: ${ticket.originalTicketId}\n\n请输入您原始票据的价格:`, 
-            '输入原始票价', 
-            {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              inputType: 'number',
-              inputPlaceholder: '例如: 680.00',
-              inputValidator: (value) => {
-                const price = parseFloat(value)
-                if (!value || isNaN(price) || price <= 0) {
-                  return '请输入有效的价格'
-                }
-                return true
-              }
-            }
-          )
-          
-          originalTicket = { price: parseFloat(originalPrice) }
-        }
-
-        const priceDifference = originalTicket.price - ticket.price
-
-        const { value: serviceFeeInput } = await ElMessageBox.prompt(
-          `价格对比:\n原票价: ¥${originalTicket.price}\n新票价: ¥${ticket.price}\n价格差: ¥${priceDifference}\n\n请输入您支付的改签手续费:`, 
-          '输入改签手续费', 
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            inputType: 'number',
-            inputPlaceholder: '例如: 50.00',
-            inputValidator: (value) => {
-              const fee = parseFloat(value)
-              if (!value || isNaN(fee) || fee < 0) {
-                return '请输入有效的手续费'
-              }
-              return true
-            }
-          }
-        )
-        
-        const serviceFee = parseFloat(serviceFeeInput)
-        const netRefund = priceDifference - serviceFee
-        
-        let refundMessage = `退款计算结果:\n\n原票价: ¥${originalTicket.price}\n新票价: ¥${ticket.price}\n价格差: ¥${priceDifference}\n改签手续费: ¥${serviceFee}\n\n`
-        
-        if (netRefund > 0) {
-          refundMessage += `应退款金额: ¥${netRefund}\n\n是否要申请此退款?`
-          
-          await ElMessageBox.confirm(refundMessage, '确认退款申请', {
-            confirmButtonText: '申请退款',
-            cancelButtonText: '取消',
-            type: 'info'
-          })
-          
-          this.loading = true
-          const response = await api.post(`/tickets/${ticket.id}/refund`, { 
-            reason: `改签价格差退款申请 - 原价¥${originalTicket.price} 新价¥${ticket.price} 手续费¥${serviceFee} 应退¥${netRefund}` 
-          })
-          
-          if (response.data.success) {
-            ElMessage.success(`退款申请已提交，申请金额：¥${netRefund}`)
-            await this.loadTickets()
-          } else {
-            ElMessage.error('退款申请失败: ' + response.data.message)
-          }
-          
-        } else {
-          refundMessage += `计算结果: 无需退款 (手续费大于等于价格差)`
-          ElMessageBox.alert(refundMessage, '计算结果', { type: 'info' })
-        }
-        
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('操作失败: ' + (error.message || '未知错误'))
-        }
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async fixExistingRescheduleRefund(ticket) {
-      try {
-        this.loading = true
-        
-        // Get all requests to find the specific reschedule request that needs fixing
-        const requestsResponse = await api.get('/tickets/my-requests')
-        
-        if (!requestsResponse.data.success) {
-          ElMessage.error('无法获取请求列表')
-          return
-        }
-        
-        const allRequests = requestsResponse.data.data || []
-        
-        // Find approved reschedule requests that might need refunds
-        const approvedRescheduleRequests = allRequests.filter(req => 
-          req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
-        )
-        
-        if (approvedRescheduleRequests.length === 0) {
-          ElMessage.warning('没有找到已批准的改签记录')
-          return
-        }
-        
-        // Let user select which request to process
-        const options = approvedRescheduleRequests.map(req => {
-          return {
-            label: `请求ID: ${req.id} - ${req.reason || '改签申请'} (总金额: ¥${req.totalAmount || '未设置'})`,
-            value: req.id,
-            req: req
-          }
-        })
-        
-        const { value: selectedRequestId } = await ElMessageBox.prompt(
-          '找到以下已批准的改签请求，请选择需要计算退款的请求:', 
-          '选择改签记录', 
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            inputType: 'select',
-            selectOptions: options
-          }
-        )
-        
-        const selectedRequest = approvedRescheduleRequests.find(req => req.id == selectedRequestId)
-        
-        if (!selectedRequest) {
-          ElMessage.error('未找到选择的请求')
-          return
-        }
-        
-        // Now ask user to provide price information since we can't get it from the system
-        const priceInfo = await ElMessageBox.prompt(
-          `请输入价格信息来计算退款：
-          
-改签请求ID: ${selectedRequest.id}
-当前票据: ${ticket.ticketNumber} 
-状态: ${selectedRequest.status}
-
-格式：原价,新价,手续费
-例如：1200.00,800.00,50.00`, 
-          '输入价格信息', 
-          {
-            confirmButtonText: '计算',
-            cancelButtonText: '取消',
-            inputPlaceholder: '原价,新价,手续费 (例如: 1200.00,800.00,50.00)'
-          }
-        )
-        
-        // Parse the price information
-        const prices = priceInfo.value.split(',').map(p => parseFloat(p.trim()))
-        
-        if (prices.length !== 3 || prices.some(p => isNaN(p))) {
-          ElMessage.error('价格格式错误，请使用格式：原价,新价,手续费')
-          return
-        }
-        
-        const [originalPrice, newPrice, serviceFee] = prices
-        const priceDifference = originalPrice - newPrice
-        const refundAmount = priceDifference - serviceFee
-        
-        if (refundAmount <= 0) {
-          ElMessage.info(`计算结果：无需退款
-          
-原价: ¥${originalPrice}
-新价: ¥${newPrice}  
-价格差: ¥${priceDifference}
-手续费: ¥${serviceFee}
-净退款: ¥${refundAmount}`)
-          return
-        }
-        
-        // Confirm the refund request
-        await ElMessageBox.confirm(
-          `计算结果：
-          
-原价: ¥${originalPrice}
-新价: ¥${newPrice}
-价格差: ¥${priceDifference}
-手续费: ¥${serviceFee}
-应退金额: ¥${refundAmount}
-
-是否提交退款申请？`, 
-          '确认退款申请', 
-          {
-            confirmButtonText: '提交申请',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-        
-        // Submit the refund request
-        const response = await api.post(`/tickets/${ticket.id}/refund`, {
-          reason: `基于改签请求${selectedRequest.id}的补充退款申请 - 原价¥${originalPrice} 新价¥${newPrice} 手续费¥${serviceFee} 应退¥${refundAmount}`
-        })
-
-        if (response.data.success) {
-          ElMessage.success(`退款申请已提交，申请金额：¥${refundAmount}`)
-          await this.loadTickets()
-        } else {
-          ElMessage.error('退款申请失败: ' + response.data.message)
-        }
-
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('操作失败: ' + (error.message || '未知错误'))
-        }
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async checkRefundStatus(ticket) {
-      try {
-        this.loading = true
-        
-        // Check for refund requests in the user's requests
-        const requestsResponse = await api.get('/tickets/my-requests')
-        
-        if (requestsResponse.data.success) {
-          const allRequests = requestsResponse.data.data || []
-          
-          // Find all refund requests for this ticket (including both REFUND and 改签退款 types)
-          const refundRequests = allRequests.filter(req => 
-            (req.requestType === 'REFUND' || req.requestType === '改签退款' || req.requestType === 'RESCHEDULE_REFUND') && (
-              (req.ticket && req.ticket.id === ticket.id) ||
-              (!req.ticket && req.reason && req.reason.includes(ticket.ticketNumber)) ||
-              (!req.ticket && !req.reason && req.ticketNumber === ticket.ticketNumber) ||
-              (!req.ticket && req.details && req.details.includes(ticket.ticketNumber))
-            )
-          )
-          
-          if (refundRequests.length === 0) {
-            ElMessageBox.alert(
-              `票据 ${ticket.ticketNumber} 没有找到退款申请记录。\n\n如果您认为应该有退款，请使用其他按钮提交退款申请。`, 
-              '退款状态', 
-              { type: 'info' }
-            )
-            return
-          }
-          
-          // Display refund request status
-          let statusMessage = `票据 ${ticket.ticketNumber} 的退款申请状态：\n\n`
-          
-          refundRequests.forEach((req, index) => {
-            const statusText = {
-              'PENDING': '⏳ 待审批',
-              'APPROVED': '✅ 已批准',
-              'REJECTED': '❌ 已拒绝',
-              'COMPLETED': '💰 已完成'
-            }[req.status] || `❓ ${req.status}`
-            
-            statusMessage += `申请 ${index + 1}:\n`
-            statusMessage += `- 申请ID: ${req.id}\n`
-            statusMessage += `- 状态: ${statusText}\n`
-            statusMessage += `- 申请时间: ${req.requestTime || '未知'}\n`
-            statusMessage += `- 申请原因: ${req.reason || '未填写'}\n`
-            
-            if (req.totalAmount) {
-              statusMessage += `- 申请金额: ¥${req.totalAmount}\n`
-            }
-            
-            if (req.processTime) {
-              statusMessage += `- 处理时间: ${req.processTime}\n`
-            }
-            
-            if (req.adminComment) {
-              statusMessage += `- 管理员备注: ${req.adminComment}\n`
-            }
-            
-            statusMessage += `\n`
-          })
-          
-          // Add guidance based on status
-          const latestRequest = refundRequests[0]
-          if (latestRequest.status === 'PENDING') {
-            statusMessage += `📋 下一步: 等待管理员审批\n退款申请正在处理中，请耐心等待。`
-          } else if (latestRequest.status === 'APPROVED') {
-            statusMessage += `💳 下一步: 等待退款到账\n申请已批准，退款将在3-5个工作日内到账到您的原支付方式。`
-          } else if (latestRequest.status === 'REJECTED') {
-            statusMessage += `📞 下一步: 联系客服\n申请被拒绝，如有疑问请联系客服询问原因。`
-          } else if (latestRequest.status === 'COMPLETED') {
-            statusMessage += `✅ 已完成: 退款应已到账\n如果您还没收到款项，请检查您的银行账户或支付宝/微信余额。`
-          }
-          
-          ElMessageBox.alert(statusMessage, '退款状态详情', { 
-            type: 'info',
-            customClass: 'refund-status-dialog'
-          })
-          
-        } else {
-          ElMessage.error('无法获取退款状态信息')
-        }
-        
-      } catch (error) {
-        console.error('Check refund status error:', error)
-        ElMessage.error('查询退款状态失败: ' + (error.message || '未知错误'))
-      } finally {
-        this.loading = false
-      }
-    },
-
-    showRefundHelpGuide(ticket) {
-      const helpMessage = `📋 改签退款完整指南
-
-🎫 您的票据信息:
-- 当前票据: ${ticket.ticketNumber} (¥${ticket.price})
-- 原始票据ID: ${ticket.originalTicketId || '未知'}
-
-💰 为什么没收到退款?
-改签退款是一个多步骤流程，不会自动到账：
-
-1️⃣ 提交申请阶段 ✅
-   - 您需要先提交退款申请
-   - 系统记录您的申请
-
-2️⃣ 管理员审批阶段 ⏳
-   - 管理员审核您的申请
-   - 可能需要1-3个工作日
-
-3️⃣ 财务处理阶段 💳
-   - 审批通过后，财务部门处理退款
-   - 退款到原支付方式(支付宝/微信/银行卡)
-   - 通常需要3-7个工作日
-
-🔧 您可以采取的行动:
-
-🔍 第一步: 点击 "查看退款状态"
-   - 检查是否已提交申请
-   - 查看申请的审批状态
-
-💰 第二步: 如果没有申请记录，点击 "计算改签退款"
-   - 输入原票价和手续费
-   - 系统帮您计算并提交申请
-
-📞 第三步: 如果申请已批准但长时间未到账
-   - 联系客服查询具体情况
-   - 提供申请ID和票据号
-
-⏰ 预期时间线:
-- 申请提交: 立即
-- 管理员审批: 1-3个工作日  
-- 退款到账: 审批后3-7个工作日
-
-📋 需要准备的信息:
-- 原始票价
-- 改签手续费金额
-- 票据号码
-- 改签时间
-
-现在请选择下一步操作:`
-
-      ElMessageBox.alert(helpMessage, '改签退款帮助', { 
-        type: 'info',
-        customClass: 'refund-help-dialog'
-      })
-    },
-    
     async refundAndCancelTicket(ticket) {
       try {
-        // Show special warning for connecting flights
+        
         if (this.isConnectingFlight(ticket)) {
           await ElMessageBox.confirm(
             `您即将退款联程航班：${this.getFlightNumberDisplay(ticket)}\n\n注意：退款联程航班将取消整个行程，所有航段都将被取消。\n\n是否继续？`, 
@@ -2683,7 +2025,7 @@ ${rescheduleRequests.map((req, index) =>
           )
         }
         
-        // Get detailed refund information
+        
         const refundInfoResponse = await api.get(`/tickets/${ticket.id}/refund-info`)
         if (!refundInfoResponse.data.success) {
           ElMessage.error('无法获取退款信息: ' + refundInfoResponse.data.message)
@@ -2692,7 +2034,7 @@ ${rescheduleRequests.map((req, index) =>
         
         const refundInfo = refundInfoResponse.data.data
         
-        // Check if refund is allowed
+        
         if (!refundInfo.canRefund) {
           ElMessage.error(refundInfo.timeWarning || '此票据无法退款')
           return
@@ -2740,7 +2082,7 @@ ${rescheduleRequests.map((req, index) =>
         if (response.data.success) {
           const refundData = response.data.data
           
-          // Show detailed success message
+          
           const successMessage = `
             <div style="text-align: left;">
               <h4 style="color: #67C23A;">✅ 退款处理成功</h4>
@@ -2852,7 +2194,7 @@ ${rescheduleRequests.map((req, index) =>
     clearFilters() {
       this.selectedDate = null
       this.includeConnecting = true
-      // Clear current results after clearing filters
+      
       this.availableFlights = []
       this.selectedNewFlight = null
     },
@@ -2940,7 +2282,7 @@ ${rescheduleRequests.map((req, index) =>
       this.includeConnecting = true
     },
     
-    // Utility methods
+    
     formatTime(datetime) {
       if (!datetime) {
         console.log('🔴 formatTime: datetime is empty/null')
@@ -3016,28 +2358,28 @@ ${rescheduleRequests.map((req, index) =>
       console.log('🕐 parseDateTime input:', dateTime, typeof dateTime);
       
       try {
-        // Parse as UTC and convert to local timezone (Asia/Shanghai for China)
+        
         let parsed = dayjs.utc(dateTime).tz('Asia/Shanghai')
         if (parsed.isValid()) {
           console.log('✅ UTC->Asia/Shanghai successful:', dateTime, '->', parsed.format('YYYY-MM-DD HH:mm:ss'));
           return parsed
         }
         
-        // Try parsing as "yyyy-MM-dd HH:mm:ss" format (assume UTC)
+        
         parsed = dayjs.utc(dateTime, 'YYYY-MM-DD HH:mm:ss').tz('Asia/Shanghai')
         if (parsed.isValid()) {
           console.log('✅ Format UTC->Asia/Shanghai successful:', dateTime, '->', parsed.format('YYYY-MM-DD HH:mm:ss'));
           return parsed
         }
         
-        // Try parsing as ISO with 'T' separator (assume UTC)
+        
         parsed = dayjs.utc(dateTime, 'YYYY-MM-DDTHH:mm:ss').tz('Asia/Shanghai')
         if (parsed.isValid()) {
           console.log('✅ ISO UTC->Asia/Shanghai successful:', dateTime, '->', parsed.format('YYYY-MM-DD HH:mm:ss'));
           return parsed
         }
         
-        // NO FALLBACK - if UTC parsing fails, return null to avoid timezone issues
+        
         console.log('❌ All UTC parsing methods failed for:', dateTime);
         
         console.error('❌ All parsing attempts failed for:', dateTime);
@@ -3096,31 +2438,31 @@ ${rescheduleRequests.map((req, index) =>
       }
     },
     
-    // Local timezone formatting functions for international flights
+    
     parseLocalDateTime(dateTime, airport) {
       if (!dateTime) return null
       
       console.log('🌍 parseLocalDateTime input:', dateTime, 'airport timezone:', airport?.timeZone);
       
       try {
-        // If no airport or no timezone, fallback to China time
+        
         const targetTimezone = airport?.timeZone || 'Asia/Shanghai'
         
-        // Parse as UTC and convert to local airport timezone
+        
         let parsed = dayjs.utc(dateTime).tz(targetTimezone)
         if (parsed.isValid()) {
           console.log('✅ UTC->Local successful:', dateTime, '->', parsed.format('YYYY-MM-DD HH:mm:ss'), 'TZ:', targetTimezone);
           return parsed
         }
         
-        // Try parsing as "yyyy-MM-dd HH:mm:ss" format (assume UTC)
+        
         parsed = dayjs.utc(dateTime, 'YYYY-MM-DD HH:mm:ss').tz(targetTimezone)
         if (parsed.isValid()) {
           console.log('✅ Format UTC->Local successful:', dateTime, '->', parsed.format('YYYY-MM-DD HH:mm:ss'), 'TZ:', targetTimezone);
           return parsed
         }
         
-        // Try parsing as ISO with 'T' separator (assume UTC)
+        
         parsed = dayjs.utc(dateTime, 'YYYY-MM-DDTHH:mm:ss').tz(targetTimezone)
         if (parsed.isValid()) {
           console.log('✅ ISO UTC->Local successful:', dateTime, '->', parsed.format('YYYY-MM-DD HH:mm:ss'), 'TZ:', targetTimezone);
@@ -3182,7 +2524,7 @@ ${rescheduleRequests.map((req, index) =>
     },
     
     isInternationalAirport(airport) {
-      // Check if the airport is in a different timezone than China
+      
       return airport?.timeZone && airport.timeZone !== 'Asia/Shanghai'
     },
     
@@ -3199,7 +2541,7 @@ ${rescheduleRequests.map((req, index) =>
       }
     },
     
-    // Connecting flight utility methods
+    
     isConnectingFlight(ticket) {
       return ticket && ticket.connectingFlights && ticket.connectingFlights.length > 0
     },
@@ -3210,7 +2552,7 @@ ${rescheduleRequests.map((req, index) =>
       if (ticket.connectingFlights && ticket.connectingFlights.length > 0) {
         flights.push(...ticket.connectingFlights)
       }
-      return flights.filter(f => f) // Remove any null/undefined flights
+      return flights.filter(f => f) 
     },
     
     getLastFlight(ticket) {
@@ -3230,7 +2572,7 @@ ${rescheduleRequests.map((req, index) =>
     getAvailableFlightDisplay(flight) {
       if (!flight) return '-'
       if (flight.connectingFlights && flight.connectingFlights.length > 0) {
-        // For connecting flights, show all flight numbers
+        
         const allNumbers = [flight.flightNumber]
         flight.connectingFlights.forEach(connecting => {
           allNumbers.push(connecting.flightNumber)
@@ -3257,15 +2599,7 @@ ${rescheduleRequests.map((req, index) =>
       const arrival = ticket.flight?.arrivalAirport?.city || '未知'
       return `${departure} → ${arrival}`
     },
-    
-    // Updated route method to use the new complete route logic
-    getRoute(flight) {
-      if (!flight) return '-'
-      const departure = flight.departureAirport?.city || '未知'
-      const arrival = flight.arrivalAirport?.city || '未知'
-      return `${departure} → ${arrival}`
-    },
-    
+
     getAirportCode(airport) {
       return airport?.code || airport?.name?.slice(0, 3) || '未知'
     },
@@ -3275,7 +2609,7 @@ ${rescheduleRequests.map((req, index) =>
       return name.slice(0, 2)
     },
     
-    // Cross-airport transfer detection
+    
     hasCrossAirportTransfer(ticket) {
       if (!this.isConnectingFlight(ticket)) return false
       
@@ -3285,7 +2619,7 @@ ${rescheduleRequests.map((req, index) =>
         const nextFlight = allFlights[i + 1]
         
         if (currentFlight?.arrivalAirport && nextFlight?.departureAirport) {
-          // Check if same city but different airports
+          
           const sameCity = currentFlight.arrivalAirport.city === nextFlight.departureAirport.city
           const differentAirports = currentFlight.arrivalAirport.code !== nextFlight.departureAirport.code
           
@@ -3325,7 +2659,7 @@ ${rescheduleRequests.map((req, index) =>
       return transfers
     },
     
-    // Status methods
+    
     getFlightStatusType(status) {
       const statusTypes = {
         'SCHEDULED': 'success',
@@ -3370,46 +2704,6 @@ ${rescheduleRequests.map((req, index) =>
       
       return '正常'
     },
-
-    isRescheduleConnectingFlight(flight) {
-      if (!flight || !this.selectedTicket) return false
-
-      if (this.includeConnecting && this.selectedTicket) {
-        const finalDestination = this.getFinalDestinationAirportId()
-        return flight.arrivalAirport?.id !== finalDestination
-      }
-      
-      return false
-    },
-    
-    getFinalDestination() {
-      if (!this.selectedTicket) return ''
-      
-      if (this.isConnectingFlight(this.selectedTicket)) {
-        // For connecting flights, get the final destination
-        const allFlights = this.getAllFlights(this.selectedTicket)
-        const lastFlight = allFlights[allFlights.length - 1]
-        return lastFlight?.arrivalAirport?.city || ''
-      } else {
-        // For direct flights, get the arrival airport
-        return this.selectedTicket.flight?.arrivalAirport?.city || ''
-      }
-    },
-    
-    getFinalDestinationAirportId() {
-      if (!this.selectedTicket) return null
-      
-      if (this.isConnectingFlight(this.selectedTicket)) {
-        // For connecting flights, get the final destination airport ID
-        const allFlights = this.getAllFlights(this.selectedTicket)
-        const lastFlight = allFlights[allFlights.length - 1]
-        return lastFlight?.arrivalAirport?.id || null
-      } else {
-        // For direct flights, get the arrival airport ID
-        return this.selectedTicket.flight?.arrivalAirport?.id || null
-      }
-    },
-    
     getTicketStatusType(status) {
       const statusTypes = {
         'BOOKED': '',
@@ -3477,7 +2771,7 @@ ${rescheduleRequests.map((req, index) =>
       return typeMap[type] || type
     },
 
-    // Countdown methods
+    
     async startSelectedTicketCountdown(ticketId) {
       if (this.selectedTicketTimer) {
         clearInterval(this.selectedTicketTimer)
@@ -3501,12 +2795,12 @@ ${rescheduleRequests.map((req, index) =>
           const data = response.data.data
           this.selectedTicketRemainingSeconds = data.remainingSeconds || 0
           
-          // Use backend provided values directly to avoid flashing
+          
           this.selectedTicketUrgency = data.urgencyLevel || 'LOW'
           this.selectedTicketMessage = data.message || '请在时限内完成支付'
           this.selectedTicketCountdown = data.countdownDisplay || '00:00'
           
-          // Mark data as loaded
+          
           this.countdownDataLoaded = true
         }
       } catch (error) {
@@ -3516,7 +2810,7 @@ ${rescheduleRequests.map((req, index) =>
         this.selectedTicketMessage = '支付时间已过期'
         this.selectedTicketCountdown = '00:00'
         
-        // Mark data as loaded even on error
+        
         this.countdownDataLoaded = true
       }
     },
@@ -3552,7 +2846,7 @@ ${rescheduleRequests.map((req, index) =>
       }
     },
 
-    // Cancel methods
+    
     async cancelSelectedTicket() {
       await this.cancelTicketById(this.selectedTicket.id)
       this.ticketDetailsVisible = false
@@ -3589,47 +2883,47 @@ ${rescheduleRequests.map((req, index) =>
       }
     },
 
-    // Fare calculation methods
+    
 
-    // Calculate what surcharge was actually used when creating the ticket price
+    
     calculateActualStoredSurcharge(ticket) {
       if (!ticket) return 0
       
       const flightCount = ticket.connectingFlights ? 1 + ticket.connectingFlights.length : 1
-      const oldSurchargePerFlight = 70  // Old system: only fuel surcharge
-      const newSurchargePerFlight = 120 // New system: fuel + construction fee
+      const oldSurchargePerFlight = 70  
+      const newSurchargePerFlight = 120 
       
-      // Use the ticket's own booking time to determine what surcharge was used when creating it
-      const cutoffDate = new Date('2025-09-01T20:00:00') // When fix was deployed
+      
+      const cutoffDate = new Date('2025-09-01T20:00:00') 
       const ticketCreationDate = new Date(ticket.bookingTime)
       
       if (ticketCreationDate < cutoffDate) {
-        // Ticket created with old system: stored price includes 70 per flight
+        
         return flightCount * oldSurchargePerFlight
       } else {
-        // Ticket created with new system: stored price includes 120 per flight
+        
         return flightCount * newSurchargePerFlight
       }
     },
 
-    // Calculate what surcharge to DISPLAY (for rescheduled tickets, show original rate)
+    
     calculateDisplaySurcharge(ticket) {
       if (!ticket) return 0
       
       const flightCount = ticket.connectingFlights ? 1 + ticket.connectingFlights.length : 1
-      const oldSurchargePerFlight = 70  // Old system: only fuel surcharge
-      const newSurchargePerFlight = 120 // New system: fuel + construction fee
+      const oldSurchargePerFlight = 70  
+      const newSurchargePerFlight = 120 
       
-      const cutoffDate = new Date('2025-09-01T20:00:00') // When fix was deployed
+      const cutoffDate = new Date('2025-09-01T20:00:00') 
       
-      // Special handling for PENDING_RESCHEDULE tickets to avoid display inconsistencies
+      
       if (ticket.status === 'PENDING_RESCHEDULE') {
-        // For tickets awaiting reschedule payment, always show the actual stored surcharge
-        // to match what was used in the fee calculation
+        
+        
         return this.calculateActualStoredSurcharge(ticket)
       }
       
-      // For rescheduled tickets, use original ticket's booking time for display
+      
       if (ticket.originalTicketId) {
         const originalTicket = this.tickets?.find(t => t.id === ticket.originalTicketId)
         if (originalTicket) {
@@ -3637,35 +2931,35 @@ ${rescheduleRequests.map((req, index) =>
           console.log(`Rescheduled ticket ${ticket.ticketNumber}: Display based on original booking time ${originalTicket.bookingTime}`)
           
           if (originalBookingDate < cutoffDate) {
-            return flightCount * oldSurchargePerFlight // Display ¥70 for old bookings
+            return flightCount * oldSurchargePerFlight 
           } else {
-            return flightCount * newSurchargePerFlight // Display ¥120 for new bookings
+            return flightCount * newSurchargePerFlight 
           }
         } else {
-          // Can't find original ticket in current list
+          
           console.log(`Rescheduled ticket ${ticket.ticketNumber}: Original ticket not found in current list`)
           
-          // Use actual stored surcharge to avoid display inconsistencies
+          
           return this.calculateActualStoredSurcharge(ticket)
         }
       } else {
-        // Regular ticket - display matches what was stored
+        
         return this.calculateActualStoredSurcharge(ticket)
       }
     },
 
     calculateBaseTicketPrice(ticket) {
       if (!ticket) return 0
-      // Use the actual stored surcharge (what was used to create the price) to get correct base
+      
       return ticket.price - this.calculateActualStoredSurcharge(ticket)
     },
 
-    // This method returns what should be displayed to user
+    
     calculateFuelSurcharge(ticket) {
       return this.calculateDisplaySurcharge(ticket)
     },
 
-    // Calculate the total that should be displayed (base price + display surcharges)
+    
     calculateDisplayTotal(ticket) {
       if (!ticket) return 0
       const basePrice = this.calculateBaseTicketPrice(ticket)
@@ -3699,7 +2993,7 @@ ${rescheduleRequests.map((req, index) =>
       const fareDifference = this.selectedNewFlight.price - this.selectedTicket.price
       
       if (fareDifference < 0) {
-        // When new flight is cheaper, customer gets refund but still pays service fee
+        
         const refundAmount = Math.abs(fareDifference)
         const netCost = this.serviceFee - refundAmount
         if (netCost <= 0) {
@@ -3708,32 +3002,32 @@ ${rescheduleRequests.map((req, index) =>
           return `¥${netCost} (含¥${refundAmount}票价退差)`
         }
       } else if (fareDifference > 0) {
-        // When new flight is more expensive, customer pays service fee + fare difference
+        
         const totalFee = fareDifference + this.serviceFee
         return `¥${totalFee}`
       } else {
-        // Same price, only service fee
+        
         return `¥${this.serviceFee}`
       }
     },
 
-    // Calculate actual amount to be paid (for payment flow)
+    
     calculateTotalCost() {
       if (!this.selectedNewFlight || !this.selectedTicket || !this.serviceFee) return 0
       const fareDifference = this.selectedNewFlight.price - this.selectedTicket.price
       
       if (fareDifference < 0) {
-        // When new flight is cheaper, net cost = service fee - refund amount
+        
         const refundAmount = Math.abs(fareDifference)
         const netCost = this.serviceFee - refundAmount
-        return Math.max(0, netCost) // Cannot be negative
+        return Math.max(0, netCost) 
       } else {
-        // When new flight is same price or more expensive
+        
         return fareDifference + this.serviceFee
       }
     },
 
-    // Get appropriate button text based on payment requirement
+    
     getConfirmButtonText() {
       if (!this.selectedNewFlight || !this.rescheduleReason.trim()) {
         return '提交改签申请'
@@ -3759,7 +3053,7 @@ ${rescheduleRequests.map((req, index) =>
     console.log('🌏 Current timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone)
     console.log('🕐 Current time:', new Date().toISOString())
     
-    // Test time formatting immediately
+    
     console.log('🧪 Testing time formatting with sample UTC time: 2025-08-30T21:35:16Z')
     const testResult = this.formatTime('2025-08-30T21:35:16Z')
     console.log('🧪 Expected: 05:35 (China time), Got:', testResult)
@@ -3783,13 +3077,13 @@ ${rescheduleRequests.map((req, index) =>
 </script>
 
 <style scoped>
-/* Page Layout */
+
 .my-tickets-page {
   min-height: 100vh;
   background: var(--color-bg-primary);
 }
 
-/* Page Header */
+
 .page-header {
   background: var(--color-bg-card);
   border-bottom: 1px solid var(--color-border-primary);
@@ -3828,7 +3122,7 @@ ${rescheduleRequests.map((req, index) =>
   padding: var(--space-3) var(--space-6);
 }
 
-/* Search and Filter Section */
+
 .search-filter-section {
   padding: var(--space-6) 0;
 }
@@ -3879,7 +3173,7 @@ ${rescheduleRequests.map((req, index) =>
   width: 100%;
 }
 
-/* Pending Requests Section */
+
 .pending-requests-section {
   padding: 0 0 var(--space-6);
 }
@@ -3958,7 +3252,7 @@ ${rescheduleRequests.map((req, index) =>
   color: var(--color-text-tertiary);
 }
 
-/* Tickets Section */
+
 .tickets-section {
   padding: 0 0 var(--space-8);
 }
@@ -3986,7 +3280,7 @@ ${rescheduleRequests.map((req, index) =>
   gap: var(--space-2);
 }
 
-/* Loading State */
+
 .loading-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -4030,7 +3324,7 @@ ${rescheduleRequests.map((req, index) =>
   gap: var(--space-2);
 }
 
-/* Empty State */
+
 .empty-state {
   text-align: center;
   padding: var(--space-12) var(--space-6);
@@ -4062,7 +3356,7 @@ ${rescheduleRequests.map((req, index) =>
   padding: var(--space-3) var(--space-6);
 }
 
-/* Tickets Grid (Card View) */
+
 .tickets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -4093,7 +3387,7 @@ ${rescheduleRequests.map((req, index) =>
   outline-offset: 2px;
 }
 
-/* Ticket Card Header */
+
 .ticket-card-header {
   display: flex;
   align-items: flex-start;
@@ -4148,8 +3442,7 @@ ${rescheduleRequests.map((req, index) =>
 .flight-number {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  font-family: var(--font-family-monospace);
+  color: var(--color-text-primary);font-family: var(--font-family-monospace);
 }
 
 .route {
@@ -4175,7 +3468,7 @@ ${rescheduleRequests.map((req, index) =>
   font-size: var(--icon-xs);
 }
 
-/* Flight Timeline */
+
 .flight-timeline {
   display: flex;
   align-items: center;
@@ -4282,7 +3575,7 @@ ${rescheduleRequests.map((req, index) =>
   transform: rotate(90deg);
 }
 
-/* Ticket Details */
+
 .ticket-details {
   display: flex;
   flex-direction: column;
@@ -4312,7 +3605,7 @@ ${rescheduleRequests.map((req, index) =>
   font-weight: var(--font-weight-bold);
 }
 
-/* Ticket Actions */
+
 .ticket-actions {
   display: flex;
   gap: var(--space-2);
@@ -4336,7 +3629,7 @@ ${rescheduleRequests.map((req, index) =>
   color: #fff;
 }
 
-/* Table View */
+
 .tickets-table-container {
   background: var(--color-bg-card);
   border-radius: var(--radius-lg);
@@ -4377,7 +3670,7 @@ ${rescheduleRequests.map((req, index) =>
   flex-wrap: wrap;
 }
 
-/* Pagination */
+
 .pagination-container {
   display: flex;
   justify-content: center;
@@ -4391,7 +3684,7 @@ ${rescheduleRequests.map((req, index) =>
   border: 1px solid var(--color-border-primary);
 }
 
-/* Ticket Details Drawer */
+
 .ticket-details-drawer :deep(.el-drawer__header) {
   padding: var(--space-6);
   border-bottom: 1px solid var(--color-border-primary);
@@ -4439,7 +3732,7 @@ ${rescheduleRequests.map((req, index) =>
   border-bottom: 1px solid var(--color-border-primary);
 }
 
-/* Flight Summary Card */
+
 .flight-summary-card {
   background: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
@@ -4493,7 +3786,7 @@ ${rescheduleRequests.map((req, index) =>
   font-size: var(--font-size-base);
 }
 
-/* Flight Route Detailed */
+
 .flight-route-detailed {
   display: flex;
   align-items: center;
@@ -4531,6 +3824,9 @@ ${rescheduleRequests.map((req, index) =>
   color: var(--color-text-secondary);
   text-align: center;
   max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .city-name {
@@ -4565,7 +3861,7 @@ ${rescheduleRequests.map((req, index) =>
   transform: rotate(90deg);
 }
 
-/* Info Grid */
+
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -4605,7 +3901,7 @@ ${rescheduleRequests.map((req, index) =>
   font-weight: var(--font-weight-bold);
 }
 
-/* Detail Actions */
+
 .detail-actions {
   display: flex;
   gap: var(--space-3);
@@ -4623,7 +3919,7 @@ ${rescheduleRequests.map((req, index) =>
   gap: var(--space-2);
 }
 
-/* Reschedule Dialog */
+
 .reschedule-dialog :deep(.el-dialog) {
   border-radius: var(--radius-lg);
 }
@@ -4846,7 +4142,7 @@ ${rescheduleRequests.map((req, index) =>
   justify-content: flex-end;
 }
 
-/* Fare Difference Calculation Styles */
+
 .fare-difference-card {
   background: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
@@ -4939,7 +4235,7 @@ ${rescheduleRequests.map((req, index) =>
   color: var(--color-primary);
 }
 
-/* Responsive Design */
+
 @media (max-width: 1023px) {
   .header-content {
     flex-direction: column;
@@ -5024,7 +4320,7 @@ ${rescheduleRequests.map((req, index) =>
   }
 }
 
-/* Connecting flights specific styles */
+
 .connecting-label {
   margin-top: var(--space-1);
 }
@@ -5103,7 +4399,7 @@ ${rescheduleRequests.map((req, index) =>
   gap: var(--space-1);
 }
 
-/* Connecting flights detailed route styles */
+
 .connecting-route-detailed {
   display: flex;
   flex-direction: column;
@@ -5166,7 +4462,7 @@ ${rescheduleRequests.map((req, index) =>
   margin-top: var(--space-2);
 }
 
-/* Cross-airport Transfer Reminder Styles */
+
 .cross-airport-reminder {
   margin: var(--space-3) 0;
   padding: var(--space-3);
@@ -5251,7 +4547,7 @@ ${rescheduleRequests.map((req, index) =>
   font-weight: var(--font-weight-medium);
 }
 
-/* Detailed view styles */
+
 .transfer-info-detailed {
   display: flex;
   flex-direction: column;
@@ -5338,7 +4634,7 @@ ${rescheduleRequests.map((req, index) =>
   font-weight: var(--font-weight-bold);
 }
 
-/* Dark Mode */
+
 .dark .ticket-card {
   background: var(--color-bg-secondary);
 }
@@ -5379,7 +4675,7 @@ ${rescheduleRequests.map((req, index) =>
   background: var(--color-border-hover);
 }
 
-/* Countdown Styles */
+
 .countdown-card {
   background: #f8f9ff;
   border: 1px solid #e6f7ff;
@@ -5424,7 +4720,7 @@ ${rescheduleRequests.map((req, index) =>
   margin: 0;
 }
 
-/* Urgency Classes */
+
 .urgency-low {
   background: #f0f9ff;
   border-color: #3b82f6;
@@ -5511,7 +4807,7 @@ ${rescheduleRequests.map((req, index) =>
   font-size: 12px;
 }
 
-/* Connecting Flight Display Styles */
+
 .connecting-flight-numbers {
   margin-top: 8px;
   display: flex;
@@ -5548,3 +4844,4 @@ ${rescheduleRequests.map((req, index) =>
   margin: 0 4px;
 }
 </style>
+

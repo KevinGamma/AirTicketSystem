@@ -59,7 +59,7 @@ public interface TicketMapper {
     @Delete("DELETE FROM tickets WHERE id = #{id}")
     int deleteById(Long id);
     
-    // Mark original ticket as rescheduled and link to new ticket
+    
     @Update("UPDATE tickets SET status = '已改签', service_fee = #{serviceFee}, " +
             "reschedule_reason = #{rescheduleReason}, reschedule_time = NOW(), " +
             "rescheduled_to_ticket_id = #{newTicketId}, is_original_ticket = true " +
@@ -69,7 +69,7 @@ public interface TicketMapper {
                                @Param("serviceFee") BigDecimal serviceFee,
                                @Param("rescheduleReason") String rescheduleReason);
     
-    // Update new ticket to link back to original
+    
     @Update("UPDATE tickets SET original_ticket_id = #{originalTicketId} WHERE id = #{newTicketId}")
     int linkNewTicketToOriginal(@Param("newTicketId") Long newTicketId, 
                                @Param("originalTicketId") Long originalTicketId);
@@ -97,7 +97,7 @@ public interface TicketMapper {
     @Select("SELECT * FROM tickets WHERE status = #{status}")
     List<Ticket> findByStatus(String status);
     
-    // Methods for notification service
+    
     @Select("SELECT DISTINCT user_id FROM tickets WHERE flight_id = #{flightId} AND status IN ('PAID', 'BOOKED')")
     List<Long> findUserIdsByFlightId(@Param("flightId") Long flightId);
     
@@ -113,7 +113,7 @@ public interface TicketMapper {
             ")")
     List<Ticket> findPaidTicketsWithoutReminders();
     
-    // Methods for connecting flights management
+    
     @Insert("INSERT INTO ticket_connecting_flights (ticket_id, connecting_flight_id, sequence_number) " +
             "VALUES (#{ticketId}, #{connectingFlightId}, #{sequenceNumber})")
     int insertTicketConnectingFlight(@Param("ticketId") Long ticketId, 

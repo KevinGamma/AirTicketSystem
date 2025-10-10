@@ -38,12 +38,12 @@ export default {
     login: 'Login'
   },
 
-  // Flight Search
+  
   flights: {
     searchTitle: 'Flight Search'
   },
 
-  // Auth
+  
   auth: {
     login: 'Login',
     register: 'Register',
@@ -72,7 +72,7 @@ export default {
     passwordMismatch: 'Passwords do not match'
   },
 
-  // Profile
+  
   profile: {
     title: 'Personal Profile',
     updateProfile: 'Update Profile',
@@ -95,7 +95,7 @@ export default {
     avatarDeleteFailed: 'Avatar deletion failed'
   },
 
-  // System
+  
   system: {
     title: 'SkyGo',
     language: 'Language',
@@ -103,7 +103,7 @@ export default {
     english: 'English'
   },
 
-  // Dashboard
+  
   dashboard: {
     welcome: 'Welcome, ',
     customerMessage: 'Manage your flights and tickets from here.',
@@ -127,7 +127,7 @@ export default {
     recentBookings: 'Recent Bookings'
   },
 
-  // Flight Search
+  
   flightSearch: {
     title: 'Search Flights',
     departure: 'Departure',
@@ -192,7 +192,7 @@ export default {
     allowExtraTimeForTransfer: 'Please allow extra time for ground transportation'
   },
 
-  // Tickets
+  
   tickets: {
     title: 'My Tickets',
     flightNumber: 'Flight Number',
@@ -278,12 +278,12 @@ export default {
     hideSuccess: 'Ticket hidden successfully',
     hideFailed: 'Failed to hide ticket',
     
-    // Payment interface
+    
     confirmPayment: 'Confirm payment for this ticket?',
     paymentTitle: 'Payment',
     payButton: 'Pay',
     
-    // Cancel ticket interface
+    
     cancelTicketInfo: 'Cancel Ticket Information',
     originalPrice: 'Original Price',
     cancelNote: 'Note: After canceling the ticket, please apply for refund separately if needed',
@@ -293,7 +293,7 @@ export default {
     keepTicket: 'Keep Ticket',
     customerCancel: 'Customer cancellation',
     
-    // Refund interface
+    
     refundFeeDetails: 'Refund Fee Details',
     refundFee: 'Refund Fee',
     actualRefundAmount: 'Actual Refund Amount',
@@ -302,7 +302,7 @@ export default {
     confirmRefundApplication: 'Confirm Refund Application',
     customerRefundApplication: 'Customer refund application',
     
-    // Reschedule interface
+    
     rescheduleFeeDetails: 'Reschedule Fee Details',
     originalFlight: 'Original Flight',
     newFlight: 'New Flight',
@@ -314,7 +314,7 @@ export default {
     rescheduleConfirm: 'Reschedule Confirmation',
     confirmRescheduleButton: 'Confirm Reschedule',
     
-    // Approval request functionality
+    
     requestCancel: 'Request Cancel',
     pendingRequests: 'Pending Requests',
     requestType: 'Request Type',
@@ -335,7 +335,7 @@ export default {
     ticketInfo: 'Ticket Information'
   },
 
-  // Messages
+  
   messages: {
     success: 'Operation successful',
     error: 'Operation failed',
@@ -353,7 +353,7 @@ export default {
     flightDeleteFailed: 'Failed to delete flight'
   },
 
-  // Cities
+  
   cities: {
     '北京': 'Beijing',
     '上海': 'Shanghai',
@@ -402,14 +402,14 @@ export default {
     '兰州': 'Lanzhou'
   },
 
-  // Admin interface
+  
   admin: {
     userManagement: 'User Management',
     ticketManagement: 'Ticket Management',
     flightManagement: 'Flight Management',
     statistics: 'System Statistics',
     
-    // User management
+    
     createUser: 'Create User',
     editUser: 'Edit User',
     userDetails: 'User Details',
@@ -431,13 +431,13 @@ export default {
     customer: 'Customer',
     none: 'None',
     
-    // Roles
+    
     roles: {
       admin: 'Admin',
       customer: 'Customer'
     },
     
-    // Approval requests
+    
     approvalRequests: 'Approval Requests',
     pendingRequests: 'Pending Requests',
     allRequests: 'All Requests',
@@ -468,7 +468,7 @@ export default {
     rejectFailed: 'Failed to reject request',
     rejectionReasonRequired: 'Rejection reason is required',
     
-    // Flight management
+    
     addFlight: 'Add Flight',
     editFlight: 'Edit Flight',
     airline: 'Airline',
@@ -493,7 +493,7 @@ export default {
     autoSetSeats: 'Seats automatically set based on selected aircraft model',
     save: 'Save',
     
-    // Ticket management
+    
     ticketNumber: 'Ticket Number',
     flight: 'Flight',
     user: 'User',
@@ -502,7 +502,7 @@ export default {
     bookingDate: 'Booking Date',
     refund: 'Refund',
     
-    // Statistics
+    
     systemStatistics: 'System Statistics',
     totalFlights: 'Total Flights',
     totalTickets: 'Total Tickets',
@@ -514,7 +514,7 @@ export default {
     manageUsers: 'Manage Users',
     manageAirlines: 'Manage Airlines',
     
-    // Messages
+    
     loadUsersFailed: 'Failed to load users',
     userCreatedSuccess: 'User created successfully!',
     userUpdatedSuccess: 'User updated successfully!',
@@ -529,6 +529,8 @@ export default {
     flightCreatedSuccess: 'Flight created successfully!',
     flightUpdatedSuccess: 'Flight updated successfully!',
     saveFlightFailed: 'Failed to save flight',
+    duplicateFlightNumber: 'Flight number {flightNumber} already exists, please use a different one',
+    duplicateFlightNumberField: 'This flight number is already in use',
     confirmCancelFlight: 'Are you sure you want to cancel this flight?',
     cancelFlight: 'Cancel Flight',
     yes: 'Yes',
@@ -557,7 +559,7 @@ export default {
     
     loadStatisticsFailed: 'Failed to load statistics',
     
-    // Validation messages
+    
     usernameRequired: 'Please enter username',
     usernameLength: 'Username length should be 3 to 50 characters',
     passwordRequired: 'Please enter password',
@@ -586,7 +588,7 @@ export default {
     pastArrivalTimeError: 'Arrival time cannot be earlier than current time',
     invalidTimeError: 'Departure time cannot be later than arrival time',
     
-    // Status translations
+    
     statuses: {
       booked: 'Booked',
       paid: 'Paid',
@@ -600,14 +602,14 @@ export default {
       completed: 'Completed'
     },
     
-    // Ticket types
+    
     ticketTypes: {
       economy: 'Economy',
       business: 'Business',
       first: 'First Class'
     },
     
-    // Airline management
+    
     airlineManagement: 'Airline Management',
     createAirline: 'Create Airline',
     editAirline: 'Edit Airline',

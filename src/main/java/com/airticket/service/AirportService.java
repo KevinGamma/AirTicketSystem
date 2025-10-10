@@ -45,7 +45,7 @@ public class AirportService {
     
     @Transactional
     public Airport createAirport(Airport airport) {
-        // Validate required fields
+        
         if (airport.getCode() == null || airport.getCode().trim().isEmpty()) {
             throw new IllegalArgumentException("Airport code is required");
         }

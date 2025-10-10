@@ -25,9 +25,9 @@ public class Ticket {
     private Instant createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Instant updatedAt;
-    private boolean deletedByUser = false; // For soft delete from user side
+    private boolean deletedByUser = false; 
     
-    // Reschedule and refund related fields
+    
     private BigDecimal serviceFee;
     private String rescheduleReason;
     @JsonFormat(shape = JsonFormat.Shape.STRING)
@@ -36,16 +36,16 @@ public class Ticket {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Instant refundTime;
     
-    // New rescheduling tracking fields
-    private Long originalTicketId; // References the original ticket if this is a rescheduled ticket
-    private Long rescheduledToTicketId; // References the new ticket if this ticket was rescheduled
-    private Boolean isOriginalTicket; // True if this is the original ticket that was rescheduled
+    
+    private Long originalTicketId; 
+    private Long rescheduledToTicketId; 
+    private Boolean isOriginalTicket; 
     
     private Flight flight;
     private User user;
     private List<Flight> connectingFlights;
     
-    // 支付倒计时相关字段（非持久化）
+    
     private transient Long paymentRemainingSeconds;
     private transient String paymentCountdownDisplay;
     private transient String paymentUrgencyLevel;
@@ -252,7 +252,7 @@ public class Ticket {
         this.deletedByUser = deletedByUser;
     }
     
-    // 支付倒计时相关的getter和setter方法
+    
     public Long getPaymentRemainingSeconds() {
         return paymentRemainingSeconds;
     }
@@ -301,7 +301,7 @@ public class Ticket {
         this.canPay = canPay;
     }
     
-    // New rescheduling tracking getters and setters
+    
     public Long getOriginalTicketId() {
         return originalTicketId;
     }

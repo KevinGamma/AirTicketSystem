@@ -64,7 +64,7 @@ public class FlightController {
             Map<String, Object> debugInfo = new HashMap<>();
             debugInfo.put("totalFlights", allFlights.size());
             
-            // Get all unique departure airports
+            
             Map<String, Object> departureAirports = new HashMap<>();
             allFlights.stream()
                 .filter(f -> f.getDepartureAirport() != null)
@@ -81,7 +81,7 @@ public class FlightController {
             
             debugInfo.put("departureAirports", departureAirports);
             
-            // Get all unique arrival airports
+            
             Map<String, Object> arrivalAirports = new HashMap<>();
             allFlights.stream()
                 .filter(f -> f.getArrivalAirport() != null)
@@ -98,7 +98,7 @@ public class FlightController {
             
             debugInfo.put("arrivalAirports", arrivalAirports);
             
-            // Sample flights with departure times
+            
             List<Map<String, Object>> sampleFlights = allFlights.stream()
                 .limit(5)
                 .map(f -> {
@@ -129,14 +129,14 @@ public class FlightController {
             @RequestParam(required = false) Integer passengers) {
         
         try {
-            // Map airport IDs to city names
+            
             String departureCity = getAirportCity(originAirportId);
             String arrivalCity = getAirportCity(destinationAirportId);
             
-            // Parse departure date
+            
             java.time.LocalDate parsedDate = java.time.LocalDate.parse(departureDate);
             
-            // Create FlightSearchRequest from query parameters
+            
             FlightSearchRequest request = new FlightSearchRequest();
             request.setDepartureCity(departureCity);
             request.setArrivalCity(arrivalCity);
@@ -172,7 +172,7 @@ public class FlightController {
         if (airportId == null) return null;
         
         try {
-            // Look up airport from database to get actual city name
+            
             com.airticket.model.Airport airport = airportService.findById(airportId);
             if (airport != null && airport.getCity() != null) {
                 System.out.println("DEBUG: Airport ID " + airportId + " -> City: '" + airport.getCity() + "'");
@@ -183,7 +183,7 @@ public class FlightController {
             }
         } catch (Exception e) {
             System.err.println("ERROR: Failed to lookup airport ID " + airportId + ": " + e.getMessage());
-            // Fallback to hardcoded mapping as backup
+            
             switch (airportId.intValue()) {
                 case 1: return "北京";
                 case 2: return "上海"; 
@@ -224,7 +224,7 @@ public class FlightController {
             List<ConnectingFlight> flights = flightService.searchConnectingFlights(request);
             System.out.println("成功找到 " + flights.size() + " 个航班组合，准备返回给前端");
             
-            // Clean the flights to remove circular references before serialization
+            
             List<ConnectingFlight> cleanedFlights = flights.stream().map(cf -> {
                 ConnectingFlight cleaned = new ConnectingFlight();
                 cleaned.setFlights(cf.getFlights().stream().map(f -> {
@@ -244,7 +244,7 @@ public class FlightController {
                     cleanedFlight.setCreatedAt(f.getCreatedAt());
                     cleanedFlight.setUpdatedAt(f.getUpdatedAt());
                     
-                    // Preserve airport information for frontend display
+                    
                     if (f.getDepartureAirport() != null) {
                         cleanedFlight.setDepartureAirport(f.getDepartureAirport());
                     }
@@ -280,7 +280,7 @@ public class FlightController {
         try {
             Instant now = Instant.now();
             
-            // Validate departure and arrival times are not in the past
+            
             if (flight.getDepartureTimeUtc() != null && flight.getDepartureTimeUtc().isBefore(now)) {
                 return ResponseEntity.badRequest().body(ApiResponse.error(messageService.getMessage("flight.create.pastDepartureTime")));
             }
@@ -289,7 +289,7 @@ public class FlightController {
                 return ResponseEntity.badRequest().body(ApiResponse.error(messageService.getMessage("flight.create.pastArrivalTime")));
             }
             
-            // Basic validation
+            
             if (flight.getDepartureAirportId() != null && flight.getArrivalAirportId() != null 
                 && flight.getDepartureAirportId().equals(flight.getArrivalAirportId())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error(messageService.getMessage("flight.create.sameDepartureArrival")));
@@ -313,7 +313,7 @@ public class FlightController {
         try {
             flight.setId(id);
             
-            // Basic validation
+            
             if (flight.getDepartureAirportId() != null && flight.getArrivalAirportId() != null 
                 && flight.getDepartureAirportId().equals(flight.getArrivalAirportId())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error(messageService.getMessage("flight.update.sameDepartureArrival")));
@@ -327,7 +327,7 @@ public class FlightController {
             Flight updatedFlight = flightService.updateFlight(flight);
             return ResponseEntity.ok(ApiResponse.success(messageService.getMessage("flight.update.success"), updatedFlight));
         } catch (Exception e) {
-            e.printStackTrace(); // Log the full stack trace for debugging
+            e.printStackTrace(); 
             return ResponseEntity.badRequest().body(ApiResponse.error(messageService.getMessage("flight.update.failed", e.getMessage())));
         }
     }

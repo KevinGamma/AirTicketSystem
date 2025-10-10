@@ -1,5 +1,5 @@
 export default {
-  // Common
+  
   common: {
     confirm: '确认',
     cancel: '取消',
@@ -22,7 +22,7 @@ export default {
     close: '关闭'
   },
 
-  // Navigation
+  
   nav: {
     home: '主页',
     dashboard: '主页',
@@ -42,20 +42,20 @@ export default {
     settings: '设置'
   },
   
-  // Notifications
+  
   notifications: {
     markAllRead: '全部标记为已读',
     noNotifications: '暂无通知'
   },
   
-  // Theme
+  
   theme: {
     light: '浅色主题',
     dark: '深色主题',
     auto: '跟随系统'
   },
 
-  // Auth
+  
   auth: {
     login: '登录',
     register: '注册',
@@ -540,6 +540,8 @@ export default {
     flightCreatedSuccess: '航班创建成功！',
     flightUpdatedSuccess: '航班更新成功！',
     saveFlightFailed: '保存航班失败',
+    duplicateFlightNumber: '航班号 {flightNumber} 已存在，请使用其他航班号',
+    duplicateFlightNumberField: '此航班号已被使用',
     confirmCancelFlight: '您确定要取消此航班吗？',
     cancelFlight: '取消航班',
     yes: '是',

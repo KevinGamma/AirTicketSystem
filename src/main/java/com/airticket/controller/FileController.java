@@ -34,7 +34,7 @@ public class FileController {
             if (resource.exists() && resource.isReadable()) {
                 String contentType = "application/octet-stream";
                 
-                // Determine content type based on file extension
+                
                 String fileExtension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
                 switch (fileExtension) {
                     case "jpg":

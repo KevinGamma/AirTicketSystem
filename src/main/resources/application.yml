@@ -9,18 +9,18 @@ spring:
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
-  
+
   jackson:
     time-zone: UTC
     serialization:
       write-dates-as-timestamps: false
       write-durations-as-timestamps: false
-      
+
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
-    
+
   servlet:
     multipart:
       max-file-size: 5MB

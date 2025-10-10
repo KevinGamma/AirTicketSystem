@@ -202,7 +202,7 @@ public class Flight {
     public Instant getArrivalTime() {
         System.out.println("Flight.getArrivalTime() called for flight " + this.id + 
                           " (" + this.flightNumber + "): returning " + this.arrivalTimeUtc);
-        return this.arrivalTimeUtc;  // FIXED: was returning departureTimeUtc
+        return this.arrivalTimeUtc;  
     }
 
     public void setArrivalTime(Instant arrivalTime) {

@@ -116,7 +116,7 @@ const routes = [
     path: '/payment/return',
     name: 'PaymentReturn',
     redirect: to => {
-      // Handle Alipay return callback
+      
       const paymentNumber = to.query.out_trade_no
       const result = to.query.result || to.query.trade_status
       

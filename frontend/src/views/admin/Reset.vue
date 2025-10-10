@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <!-- Statistics Overview -->
+    
     <div class="statistics-section">
       <h2 class="section-title">当前数据统计</h2>
       <el-row :gutter="24">
@@ -77,12 +77,12 @@
       </div>
     </div>
 
-    <!-- Reset Options -->
+    
     <div class="reset-section">
       <h2 class="section-title">重置选项</h2>
       
       <el-row :gutter="24">
-        <!-- Complete Database Reset -->
+        
         <el-col :span="12">
           <el-card class="reset-card dangerous">
             <template #header>
@@ -113,7 +113,7 @@
           </el-card>
         </el-col>
 
-        <!-- User Data Reset -->
+        
         <el-col :span="12">
           <el-card class="reset-card warning">
             <template #header>
@@ -144,7 +144,7 @@
           </el-card>
         </el-col>
 
-        <!-- Ticket Data Reset -->
+        
         <el-col :span="12">
           <el-card class="reset-card info">
             <template #header>
@@ -175,7 +175,7 @@
           </el-card>
         </el-col>
 
-        <!-- Flight Data Reset -->
+        
         <el-col :span="12">
           <el-card class="reset-card info">
             <template #header>
@@ -206,7 +206,7 @@
           </el-card>
         </el-col>
 
-        <!-- Airline Data Reset -->
+        
         <el-col :span="12">
           <el-card class="reset-card warning">
             <template #header>
@@ -239,7 +239,7 @@
       </el-row>
     </div>
 
-    <!-- Confirmation Dialog -->
+    
     <el-dialog
       v-model="resetDialogVisible"
       :title="resetDialogConfig.title"
@@ -398,7 +398,7 @@ export default {
           this.$message.success(response.data.message)
           this.resetDialogVisible = false
           
-          // 刷新统计数据
+          
           await this.loadStatistics()
         } else {
           this.$message.error(response.data.message || '重置操作失败')
@@ -428,7 +428,7 @@ export default {
   padding: var(--space-6);
 }
 
-/* Page Header */
+
 .page-header {
   margin-bottom: var(--space-8);
 }
@@ -461,7 +461,7 @@ export default {
   line-height: var(--line-height-normal);
 }
 
-/* Statistics Section */
+
 .statistics-section {
   margin-bottom: var(--space-8);
 }
@@ -533,7 +533,7 @@ export default {
   margin-top: var(--space-6);
 }
 
-/* Reset Section */
+
 .reset-section {
   margin-bottom: var(--space-8);
 }
@@ -609,7 +609,7 @@ export default {
   text-align: center;
 }
 
-/* Dialog */
+
 .dialog-content {
   display: flex;
   gap: var(--space-4);
@@ -651,7 +651,7 @@ export default {
   gap: var(--space-3);
 }
 
-/* Responsive */
+
 @media (max-width: 1023px) {
   .reset-page {
     padding: var(--space-4);
@@ -679,7 +679,7 @@ export default {
   }
 }
 
-/* Dark mode */
+
 .dark .stat-card {
   background: var(--color-bg-secondary);
 }

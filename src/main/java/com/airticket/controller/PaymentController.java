@@ -33,7 +33,7 @@ public class PaymentController {
             logger.info("创建支付宝支付订单: ticketId={}, amount={}, sandbox={}", 
                        request.getTicketId(), request.getAmount(), request.isUseSandbox());
             
-            // 验证请求参数
+            
             if (request.getTicketId() == null) {
                 return ResponseEntity.badRequest()
                     .body(ApiResponse.error("票据ID不能为空"));
@@ -44,13 +44,13 @@ public class PaymentController {
                     .body(ApiResponse.error("支付金额必须大于0"));
             }
             
-            // 默认使用沙箱环境
+            
             if (!request.isUseSandbox()) {
                 request.setUseSandbox(true);
                 logger.info("自动启用沙箱模式进行测试");
             }
             
-            // 创建支付订单
+            
             PaymentResponse paymentResponse = alipayService.createPayment(request);
             
             if (paymentResponse.isSuccess()) {
@@ -73,7 +73,7 @@ public class PaymentController {
         try {
             logger.info("收到支付宝异步通知");
             
-            // 获取支付宝POST过来的反馈信息
+            
             Map<String, String> params = new HashMap<>();
             request.getParameterMap().forEach((key, values) -> {
                 if (values.length > 0) {
@@ -83,7 +83,7 @@ public class PaymentController {
             
             logger.info("支付宝通知参数: {}", params);
             
-            // 处理通知
+            
             String result = alipayService.handleNotify(params);
             
             logger.info("支付宝通知处理结果: {}", result);
@@ -180,7 +180,7 @@ public class PaymentController {
         try {
             logger.info("模拟支付成功: {}", paymentNumber);
             
-            // 模拟支付宝异步通知参数
+            
             Map<String, String> mockNotifyParams = new HashMap<>();
             mockNotifyParams.put("trade_status", "TRADE_SUCCESS");
             mockNotifyParams.put("out_trade_no", paymentNumber);

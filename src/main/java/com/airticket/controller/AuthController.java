@@ -113,7 +113,7 @@ public class AuthController {
     @PostMapping("/avatar")
     public ResponseEntity<ApiResponse<User>> uploadAvatar(@RequestParam("file") MultipartFile file) {
         try {
-            // Validate file
+            
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Please select a file to upload"));
             }
@@ -122,7 +122,7 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Invalid file type. Only JPEG, PNG, and GIF images are allowed"));
             }
 
-            if (!fileStorageService.isFileSizeValid(file, 5)) { // 5MB limit
+            if (!fileStorageService.isFileSizeValid(file, 5)) { 
                 return ResponseEntity.badRequest().body(ApiResponse.error("File size too large. Maximum size is 5MB"));
             }
 

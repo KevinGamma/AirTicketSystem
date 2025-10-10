@@ -19,9 +19,9 @@ public class ResetController {
     @Autowired
     private DataInitializer dataInitializer;
 
-    /**
-     * 获取重置统计信息
-     */
+    
+
+
     @GetMapping("/statistics")
     public ResponseEntity<ApiResponse<ResetService.ResetStatistics>> getResetStatistics() {
         try {
@@ -35,15 +35,15 @@ public class ResetController {
         }
     }
 
-    /**
-     * 重置整个数据库
-     */
+    
+
+
     @PostMapping("/database")
     public ResponseEntity<ApiResponse<String>> resetEntireDatabase() {
         try {
             resetService.resetEntireDatabase();
             
-            // 重新初始化基础数据
+            
             reinitializeBaseData();
             
             return ResponseEntity.ok(ApiResponse.success("数据库重置成功，基础数据已重新初始化", "SUCCESS"));
@@ -53,9 +53,9 @@ public class ResetController {
         }
     }
 
-    /**
-     * 重置用户数据
-     */
+    
+
+
     @PostMapping("/users")
     public ResponseEntity<ApiResponse<String>> resetUserData() {
         try {
@@ -67,9 +67,9 @@ public class ResetController {
         }
     }
 
-    /**
-     * 重置机票数据
-     */
+    
+
+
     @PostMapping("/tickets")
     public ResponseEntity<ApiResponse<String>> resetTicketData() {
         try {
@@ -81,15 +81,15 @@ public class ResetController {
         }
     }
 
-    /**
-     * 重置航班数据
-     */
+    
+
+
     @PostMapping("/flights")
     public ResponseEntity<ApiResponse<String>> resetFlightData() {
         try {
             resetService.resetFlightData();
             
-            // 重新初始化航班数据
+            
             try {
                 dataInitializer.reinitializeData();
             } catch (Exception initException) {
@@ -103,15 +103,15 @@ public class ResetController {
         }
     }
 
-    /**
-     * 重置航空公司数据
-     */
+    
+
+
     @PostMapping("/airlines")
     public ResponseEntity<ApiResponse<String>> resetAirlineData() {
         try {
             resetService.resetAirlineData();
             
-            // 重新初始化航空公司和航班数据
+            
             try {
                 dataInitializer.reinitializeData();
             } catch (Exception initException) {
@@ -125,9 +125,9 @@ public class ResetController {
         }
     }
 
-    /**
-     * 重新初始化基础数据的辅助方法
-     */
+    
+
+
     private void reinitializeBaseData() {
         try {
             dataInitializer.reinitializeData();

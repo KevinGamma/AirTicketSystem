@@ -332,7 +332,7 @@ export default {
           
           console.log('[Statistics] Airline distribution calculated:', airlineStats)
           
-          // Force chart re-render by using nextTick
+          
           await this.$nextTick()
           console.log('[Statistics] Chart data updated and DOM refreshed')
         }
@@ -400,7 +400,7 @@ export default {
     },
 
     onFlightChartClick(params) {
-      // Handle chart click events if needed
+      
       console.log('Flight chart clicked:', params)
     },
 
@@ -415,13 +415,13 @@ export default {
     async refreshAirlineChart() {
       console.log('[Statistics] Manual refresh button clicked for airline chart')
       await this.loadAirlineDistribution()
-      // Also increment flight data version to trigger chart re-render
+      
       this.$store.dispatch('notifyFlightDataUpdate')
       ElMessage.success('航空公司航班占比图表已更新')
     },
 
     calculateAirlineDistribution(flights) {
-      // Airline mapping based on flight number prefixes (first 2 letters)
+      
       const airlineMap = {
         'CA': '中国国际航空',
         'MU': '中国东方航空', 
@@ -441,12 +441,12 @@ export default {
         'NS': '河北航空'
       }
 
-      // Count flights by airline prefix
+      
       const airlineCounts = {}
       
       flights.forEach(flight => {
         if (flight.flightNumber) {
-          // Extract first 2 characters as airline code
+          
           const airlineCode = flight.flightNumber.substring(0, 2).toUpperCase()
           const airlineName = airlineMap[airlineCode] || `${airlineCode}航空`
           
@@ -461,9 +461,9 @@ export default {
         }
       })
 
-      // Convert to array format expected by the chart
+      
       const result = Object.values(airlineCounts)
-        .sort((a, b) => b.value - a.value) // Sort by flight count descending
+        .sort((a, b) => b.value - a.value) 
       
       console.log('[Statistics] Airline distribution calculation:', {
         totalFlights: flights.length,
@@ -476,7 +476,7 @@ export default {
   },
 
   computed: {
-    // Flight Volume Chart Option
+    
     flightVolumeOption() {
       if (!this.flightVolumeData || this.flightVolumeData.length === 0) {
         return {}
@@ -561,7 +561,7 @@ export default {
       }
     },
 
-    // Airline Distribution Chart Option
+    
     airlineDistributionOption() {
       if (!this.airlineDistributionData || this.airlineDistributionData.length === 0) {
         return {}
@@ -614,7 +614,7 @@ export default {
       }
     },
 
-    // Booking Trends Chart Option
+    
     bookingTrendsOption() {
       if (!this.bookingTrendsData || this.bookingTrendsData.length === 0) {
         return {}
@@ -700,7 +700,7 @@ export default {
       }
     },
 
-    // Revenue Analysis Chart Option
+    
     revenueAnalysisOption() {
       if (!this.revenueAnalysisData || this.revenueAnalysisData.length === 0) {
         return {}
@@ -770,7 +770,7 @@ export default {
       }
     },
 
-    // Popular Routes Chart Option
+    
     popularRoutesOption() {
       if (!this.popularRoutesData || this.popularRoutesData.length === 0) {
         return {}
@@ -828,7 +828,7 @@ export default {
       }
     },
     
-    // Add a computed property to watch the flight data version
+    
     flightDataVersion() {
       const version = this.$store.getters.flightDataVersion
       console.log(`[Statistics] Computed flightDataVersion accessed: ${version}`)
@@ -837,14 +837,14 @@ export default {
   },
 
   watch: {
-    // Watch for changes in flight data version and refresh airline chart
+    
     flightDataVersion: {
       handler(newVersion, oldVersion) {
         console.log(`[Statistics] Watcher triggered - Flight data updated: ${oldVersion} → ${newVersion}`)
         if (newVersion !== oldVersion && newVersion > 0) {
           console.log('[Statistics] Conditions met, refreshing airline distribution chart and stats')
           this.loadAirlineDistribution()
-          // Also update the main stats to reflect flight count changes
+          
           this.loadStats()
         } else {
           console.log('[Statistics] Conditions not met for refresh:', { 
@@ -863,7 +863,7 @@ export default {
     try {
       await this.loadStats()
       
-      // Load chart data with staggered delays to prevent race conditions
+      
       await this.loadFlightVolumeData(this.flightDays)
       await this.$nextTick()
       
@@ -878,7 +878,7 @@ export default {
       
       await this.loadPopularRoutes()
       
-      // Set up direct store subscription as backup
+      
       this.unsubscribe = this.$store.subscribe((mutation) => {
         if (mutation.type === 'FLIGHT_DATA_UPDATED') {
           console.log('[Statistics] Direct store subscription detected FLIGHT_DATA_UPDATED')
@@ -887,7 +887,7 @@ export default {
         }
       })
       
-      // Set up localStorage listener for cross-tab communication
+      
       this.handleStorageChange = (event) => {
         if (event.key === 'flightDataUpdated') {
           console.log('[Statistics] localStorage flightDataUpdated event detected:', event.newValue)
@@ -906,18 +906,18 @@ export default {
   
   beforeUnmount() {
     console.log('[Statistics] Component unmounting, cleaning up subscriptions')
-    // Clean up store subscription
+    
     if (this.unsubscribe) {
       this.unsubscribe()
     }
     
-    // Clean up localStorage event listener
+    
     if (this.handleStorageChange) {
       window.removeEventListener('storage', this.handleStorageChange)
       console.log('[Statistics] localStorage event listener removed')
     }
     
-    // Clean up any potential references
+    
     this.flightVolumeData = []
     this.airlineDistributionData = []
     this.bookingTrendsData = []
@@ -934,7 +934,7 @@ export default {
   padding: var(--space-6);
 }
 
-/* Page Header */
+
 .page-header {
   text-align: center;
   margin-bottom: var(--space-8);
@@ -962,7 +962,7 @@ export default {
   margin: 0;
 }
 
-/* Metrics Cards */
+
 .metrics-row {
   margin-bottom: var(--space-8);
 }
@@ -1046,7 +1046,7 @@ export default {
   color: var(--color-text-secondary);
 }
 
-/* Charts Section */
+
 .charts-section {
   margin-bottom: var(--space-8);
 }
@@ -1095,7 +1095,7 @@ export default {
 }
 
 
-/* Responsive Design */
+
 @media (max-width: 1023px) {
   .admin-statistics {
     padding: var(--space-4);
@@ -1131,7 +1131,7 @@ export default {
 
 }
 
-/* Dark mode */
+
 .dark .metric-card {
   background: var(--color-bg-secondary);
   border-color: var(--color-border-primary);
@@ -1142,7 +1142,7 @@ export default {
 }
 
 
-/* Loading states */
+
 .chart[loading] {
   position: relative;
 }

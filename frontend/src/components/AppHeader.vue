@@ -191,7 +191,7 @@ export default {
           this.$router.push('/profile')
           break
         case 'settings':
-          // TODO: Implement settings page
+          
           break
         case 'logout':
           this.handleLogout()
@@ -237,14 +237,14 @@ export default {
           }))
         }
         
-        // Also get unread count
+        
         const countResponse = await api.get('/notifications/unread-count')
         if (countResponse.data.success) {
           this.unreadNotifications = countResponse.data.data
         }
       } catch (error) {
         console.error('Error loading notifications:', error)
-        // Fallback to demo data for development
+        
         this.notifications = []
         this.unreadNotifications = 0
       }
@@ -293,7 +293,7 @@ export default {
     },
     
     handleKeyboardShortcuts() {
-      // No keyboard shortcuts needed currently
+      
     }
   },
   
@@ -301,7 +301,7 @@ export default {
     window.addEventListener('scroll', this.handleScroll)
     window.addEventListener('keydown', this.handleKeyboardShortcuts)
     
-    // Only load notifications for customers, not admins
+    
     if (this.isLoggedIn && !this.isAdmin) {
       this.loadNotifications()
     }
@@ -342,7 +342,7 @@ export default {
   gap: var(--space-6);
 }
 
-/* Brand Section */
+
 .brand-section {
   display: flex;
   align-items: center;
@@ -388,7 +388,7 @@ export default {
 }
 
 
-/* Header Actions */
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -419,7 +419,7 @@ export default {
   line-height: 16px;
 }
 
-/* User Dropdown */
+
 .user-dropdown-trigger {
   display: flex;
   align-items: center;
@@ -487,7 +487,7 @@ export default {
 }
 
 
-/* Notifications Drawer */
+
 .notifications-drawer {
   z-index: 2000 !important;
 }
@@ -615,7 +615,7 @@ export default {
   color: var(--color-text-tertiary);
 }
 
-/* Responsive Design */
+
 @media (max-width: 1023px) {
   .user-info {
     display: none;

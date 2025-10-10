@@ -96,13 +96,13 @@ public class TicketService {
             enrichTicketWithFlightAndUserInfo(ticket);
             enrichTicketWithPaymentInfo(ticket);
             
-            // For rescheduled tickets, also load related ticket information
+            
             enrichTicketWithRescheduledInfo(ticket);
             
-            // Load connecting flights
+            
             loadConnectingFlights(ticket);
             
-            // Log the flight information after enrichment
+            
             Flight flight = ticket.getFlight();
             if (flight != null) {
                 System.out.println("=== FLIGHT TIMEZONE DEBUG INFO (Ticket " + ticket.getId() + ") ===");
@@ -115,7 +115,7 @@ public class TicketService {
                 System.out.println("  getDepartureTime(): " + flight.getDepartureTime());
                 System.out.println("  getArrivalTime(): " + flight.getArrivalTime());
                 
-                // Convert to different timezone for comparison
+                
                 if (flight.getDepartureTimeUtc() != null) {
                     try {
                         java.time.ZoneId shanghaiZone = java.time.ZoneId.of("Asia/Shanghai");
@@ -129,7 +129,7 @@ public class TicketService {
                         System.out.println("  departure in Shanghai: " + departureInShanghai);
                         System.out.println("  arrival in Shanghai: " + arrivalInShanghai);
                         
-                        // Format as strings to see what users would see
+                        
                         System.out.println("Formatted for display:");
                         System.out.println("  departure formatted: " + departureInShanghai.toString());
                         System.out.println("  arrival formatted: " + (arrivalInShanghai != null ? arrivalInShanghai.toString() : "null"));
@@ -179,19 +179,19 @@ public class TicketService {
         System.out.println("Current time: " + now);
         System.out.println("Flight departure time: " + flight.getDepartureTimeUtc());
         
-        // 检查是否在起飞前40分钟内
+        
         if (now.isAfter(flight.getDepartureTimeUtc().minusSeconds(40 * 60))) {
             System.out.println("ERROR: Cannot book within 40 minutes of departure");
             throw new RuntimeException("Cannot book tickets within 40 minutes of departure");
         }
         
-        // 检查航班是否已经起飞
+        
         if (now.isAfter(flight.getDepartureTimeUtc())) {
             System.out.println("ERROR: Flight has already departed");
             throw new RuntimeException("Cannot book tickets after flight departure");
         }
         
-        // Reserve seat for main flight
+        
         System.out.println("Reserving seat for main flight...");
         if (!flightService.reserveSeat(request.getFlightId())) {
             System.out.println("ERROR: No available seats on main flight");
@@ -202,7 +202,7 @@ public class TicketService {
         BigDecimal totalPrice = calculatePrice(flight, request.getTicketType());
         System.out.println("Main flight price: " + totalPrice);
         
-        // Handle connecting flights if present
+        
         if (request.getConnectingFlightIds() != null && !request.getConnectingFlightIds().isEmpty()) {
             System.out.println("=== PROCESSING CONNECTING FLIGHTS ===");
             System.out.println("Number of connecting flights: " + request.getConnectingFlightIds().size());
@@ -219,7 +219,7 @@ public class TicketService {
                 Flight connectingFlight = flightService.getFlightById(connectingFlightId);
                 if (connectingFlight == null) {
                     System.out.println("ERROR: Connecting flight not found: " + connectingFlightId);
-                    // Release already reserved seats on failure
+                    
                     flightService.releaseSeat(request.getFlightId());
                     throw new RuntimeException("Connecting flight not found: " + connectingFlightId);
                 }
@@ -228,24 +228,24 @@ public class TicketService {
                                  " (" + connectingFlight.getDepartureAirport().getCity() + " -> " + 
                                  connectingFlight.getArrivalAirport().getCity() + ")");
                 
-                // Set the previous flight for next iteration
+                
                 if (previousFlight == null) {
-                    // First segment: use the main flight as previous flight if this is not the main flight
+                    
                     if (!connectingFlightId.equals(request.getFlightId())) {
                         previousFlight = flight;
                         System.out.println("Using main flight as previous: " + previousFlight.getFlightNumber() + 
                                          " (" + previousFlight.getDepartureAirport().getCity() + " -> " + 
                                          previousFlight.getArrivalAirport().getCity() + ")");
                     } else {
-                        // This IS the main flight, so it's the first segment
+                        
                         previousFlight = connectingFlight;
                         System.out.println("This is the main flight (first segment): " + previousFlight.getFlightNumber());
                         segmentNumber++;
-                        continue; // Skip validation for the first segment
+                        continue; 
                     }
                 }
                 
-                // Validate connecting flight route: arrival city of previous flight = departure city of connecting flight
+                
                 System.out.println("Validating route connection...");
                 System.out.println("Previous flight arrives at airport ID: " + previousFlight.getArrivalAirport().getId());
                 System.out.println("Connecting flight departs from airport ID: " + connectingFlight.getDepartureAirport().getId());
@@ -261,9 +261,9 @@ public class TicketService {
                 }
                 System.out.println("Route validation passed");
                 
-                // Validate time sequence: connecting flight must depart after previous flight arrives (with minimum connection time)
+                
                 System.out.println("Validating timing...");
-                long minConnectionTimeMinutes = 60; // Minimum 1 hour connection time
+                long minConnectionTimeMinutes = 60; 
                 Instant earliestConnectionTime = previousFlight.getArrivalTimeUtc().plusSeconds(minConnectionTimeMinutes * 60);
                 System.out.println("Previous flight arrival: " + previousFlight.getArrivalTimeUtc());
                 System.out.println("Earliest connection time: " + earliestConnectionTime);
@@ -281,7 +281,7 @@ public class TicketService {
                 }
                 System.out.println("Timing validation passed");
                 
-                // Check departure time for connecting flight
+                
                 System.out.println("Checking if connecting flight is too close to departure...");
                 if (now.isAfter(connectingFlight.getDepartureTimeUtc().minusSeconds(40 * 60))) {
                     System.out.println("ERROR: Connecting flight too close to departure");
@@ -290,12 +290,12 @@ public class TicketService {
                 }
                 System.out.println("Departure time check passed");
                 
-                // Reserve seat for connecting flight (skip if this is the main flight, already reserved)
+                
                 if (!connectingFlightId.equals(request.getFlightId())) {
                     System.out.println("Reserving seat for connecting flight...");
                     if (!flightService.reserveSeat(connectingFlightId)) {
                         System.out.println("ERROR: No available seats on connecting flight");
-                        // Release already reserved seats on failure
+                        
                         flightService.releaseSeat(request.getFlightId());
                         for (int i = 0; i < request.getConnectingFlightIds().indexOf(connectingFlightId); i++) {
                             Long prevFlightId = request.getConnectingFlightIds().get(i);
@@ -307,7 +307,7 @@ public class TicketService {
                     }
                     System.out.println("Seat reserved for connecting flight successfully");
                     
-                    // Add connecting flight price to total
+                    
                     BigDecimal connectingFlightPrice = calculatePrice(connectingFlight, request.getTicketType());
                     System.out.println("Connecting flight price: " + connectingFlightPrice);
                     totalPrice = totalPrice.add(connectingFlightPrice);
@@ -317,7 +317,7 @@ public class TicketService {
                     System.out.println("Main flight price already included in total");
                 }
                 
-                // Update previous flight for next iteration (for multi-segment connections)
+                
                 previousFlight = connectingFlight;
                 segmentNumber++;
             }
@@ -351,14 +351,14 @@ public class TicketService {
         ticketMapper.insert(ticket);
         System.out.println("Ticket inserted successfully! Ticket ID: " + ticket.getId());
         
-        // Save connecting flight relationships to database and load connecting flight information
+        
         if (request.getConnectingFlightIds() != null && !request.getConnectingFlightIds().isEmpty()) {
             System.out.println("=== SAVING CONNECTING FLIGHT RELATIONSHIPS ===");
             List<Flight> connectingFlights = new ArrayList<>();
             int sequenceNumber = 1;
             
             for (Long connectingFlightId : request.getConnectingFlightIds()) {
-                // Skip the main flight ID - only save actual connecting flights
+                
                 if (connectingFlightId.equals(request.getFlightId())) {
                     System.out.println("Skipping main flight ID " + connectingFlightId + " from connecting flights storage");
                     continue;
@@ -369,11 +369,11 @@ public class TicketService {
                                  ", Sequence: " + sequenceNumber);
                 
                 try {
-                    // Save the connecting flight relationship
+                    
                     int rowsInserted = ticketMapper.insertTicketConnectingFlight(ticket.getId(), connectingFlightId, sequenceNumber);
                     System.out.println("Database insert result: " + rowsInserted + " rows inserted");
                     
-                    // Load flight information for the response
+                    
                     Flight connectingFlight = flightService.getFlightById(connectingFlightId);
                     if (connectingFlight != null) {
                         connectingFlights.add(connectingFlight);
@@ -417,19 +417,19 @@ public class TicketService {
         
         Instant now = Instant.now();
         
-        // 检查航班是否已经起飞
+        
         if (now.isAfter(flight.getDepartureTimeUtc())) {
             throw new RuntimeException("Cannot pay for a ticket after flight departure");
         }
         
-        // 检查是否超过预订后10分钟的支付期限 (改签票除外)
+        
         if (ticket.getBookingTime() != null && 
             !"PENDING_RESCHEDULE".equals(ticket.getStatus()) &&
             now.isAfter(ticket.getBookingTime().plusSeconds(10 * 60))) {
             throw new RuntimeException("Payment deadline exceeded. Tickets must be paid within 10 minutes of booking");
         }
         
-        // 检查是否在起飞前40分钟内
+        
         if (now.isAfter(flight.getDepartureTimeUtc().minusSeconds(40 * 60))) {
             throw new RuntimeException("Cannot pay for tickets within 40 minutes of departure");
         }
@@ -439,12 +439,12 @@ public class TicketService {
         ticket.setUpdatedAt(now);
         ticketMapper.updateStatus(ticket);
         
-        // Schedule flight reminder notification (1 hour before departure)
+        
         try {
-            ticket.setFlight(flight); // Ensure flight is attached for notification
+            ticket.setFlight(flight); 
             notificationService.scheduleFlightReminder(ticket);
         } catch (Exception e) {
-            // Don't fail the payment if notification scheduling fails
+            
             logger.error("Failed to schedule flight reminder for ticket " + ticketId, e);
         }
         
@@ -501,29 +501,29 @@ public class TicketService {
             throw new RuntimeException("Ticket not found");
         }
         
-        // Allow refunds for both PAID and BOOKED tickets
+        
         if (!"PAID".equals(ticket.getStatus()) && !"BOOKED".equals(ticket.getStatus())) {
             throw new RuntimeException("Only paid or booked tickets can be refunded/cancelled");
         }
         
-        // Calculate refund service fee
+        
         BigDecimal serviceFee = calculateRefundServiceFee(ticket);
         
-        // Calculate actual refund amount (ticket price - service fee for paid tickets, 0 for unpaid tickets)
+        
         BigDecimal refundAmount = "PAID".equals(ticket.getStatus()) ? 
             ticket.getPrice().subtract(serviceFee) : BigDecimal.ZERO;
         
-        // Process Alipay refund first (will handle unpaid tickets gracefully)
+        
         PaymentResponse refundResponse = alipayService.processRefundByTicketId(ticketId, refundAmount, reason);
         
         if (!refundResponse.isSuccess()) {
             throw new RuntimeException("Alipay refund failed: " + refundResponse.getMessage());
         }
         
-        // If Alipay refund successful or no payment required, update ticket status
+        
         flightService.releaseSeat(ticket.getFlightId());
         
-        // For unpaid tickets (BOOKED status), use cancellation instead of refund
+        
         if ("BOOKED".equals(ticket.getStatus())) {
             ticket.setStatus("CANCELLED");
             ticket.setUpdatedAt(java.time.Instant.now());
@@ -535,10 +535,10 @@ public class TicketService {
         return true;
     }
     
-    /**
-     * Direct refund method for users without admin approval
-     * Returns detailed refund information
-     */
+    
+
+
+
     @Transactional
     public Map<String, Object> processDirectRefund(Long ticketId, String reason, Long userId) {
         Ticket ticket = ticketMapper.findById(ticketId);
@@ -546,22 +546,22 @@ public class TicketService {
             throw new RuntimeException("Ticket not found");
         }
         
-        // Verify ownership (security check)
+        
         if (!ticket.getUserId().equals(userId)) {
             throw new RuntimeException("Access denied: You can only refund your own tickets");
         }
         
-        // Check if ticket can be refunded
+        
         if (!"PAID".equals(ticket.getStatus()) && !"BOOKED".equals(ticket.getStatus())) {
             throw new RuntimeException("Only paid or booked tickets can be refunded");
         }
         
-        // Check if ticket is already cancelled or refunded
+        
         if ("CANCELLED".equals(ticket.getStatus()) || "REFUNDED".equals(ticket.getStatus())) {
             throw new RuntimeException("Ticket is already cancelled or refunded");
         }
         
-        // Check time constraints (e.g., cannot refund within 2 hours of departure)
+        
         Flight flight = flightService.getFlightById(ticket.getFlightId());
         if (flight != null) {
             Instant now = Instant.now();
@@ -570,24 +570,24 @@ public class TicketService {
             }
         }
         
-        // Calculate refund service fee
+        
         BigDecimal serviceFee = calculateRefundServiceFee(ticket);
         
-        // Calculate actual refund amount
+        
         BigDecimal refundAmount = "PAID".equals(ticket.getStatus()) ? 
             ticket.getPrice().subtract(serviceFee) : BigDecimal.ZERO;
         
-        // Process Alipay refund
+        
         PaymentResponse refundResponse = alipayService.processRefundByTicketId(ticketId, refundAmount, reason);
         
         if (!refundResponse.isSuccess()) {
             throw new RuntimeException("Payment refund failed: " + refundResponse.getMessage());
         }
         
-        // Release seat back to the flight
+        
         flightService.releaseSeat(ticket.getFlightId());
         
-        // Update ticket status
+        
         if ("BOOKED".equals(ticket.getStatus())) {
             ticket.setStatus("CANCELLED");
             ticket.setUpdatedAt(Instant.now());
@@ -596,9 +596,9 @@ public class TicketService {
             ticketMapper.refundTicket(ticketId, serviceFee, reason);
         }
         
-        // Credit refund amount to user's account balance
+        
         try {
-            // Ensure balance column exists before attempting to update
+            
             ensureBalanceColumnExists();
             
             int balanceUpdated = userMapper.addToBalance(ticket.getUserId(), refundAmount);
@@ -611,10 +611,10 @@ public class TicketService {
             }
         } catch (Exception e) {
             logger.error("Error updating user balance during refund: {}", e.getMessage());
-            // Continue with refund process even if balance update fails
+            
         }
         
-        // Prepare response data
+        
         Map<String, Object> refundInfo = new HashMap<>();
         refundInfo.put("success", true);
         refundInfo.put("message", "Ticket refunded successfully");
@@ -640,36 +640,36 @@ public class TicketService {
             throw new RuntimeException("Current flight not found");
         }
         
-        // Load connecting flights to determine the actual origin and final destination
+        
         loadConnectingFlights(ticket);
         
-        // Determine the origin and final destination for reschedule options
+        
         Long originAirportId = mainFlight.getDepartureAirport().getId();
         Long finalDestinationAirportId;
         
         if (ticket.getConnectingFlights() != null && !ticket.getConnectingFlights().isEmpty()) {
-            // For connecting flights, the final destination is the arrival airport of the last connecting flight
+            
             Flight lastConnectingFlight = ticket.getConnectingFlights().get(ticket.getConnectingFlights().size() - 1);
             finalDestinationAirportId = lastConnectingFlight.getArrivalAirport().getId();
             
             System.out.println("Connecting flight reschedule: Origin=" + mainFlight.getDepartureAirport().getCity() + 
                              ", Final destination=" + lastConnectingFlight.getArrivalAirport().getCity());
         } else {
-            // For single flights, use the main flight's arrival airport
+            
             finalDestinationAirportId = mainFlight.getArrivalAirport().getId();
             
             System.out.println("Single flight reschedule: Origin=" + mainFlight.getDepartureAirport().getCity() + 
                              ", Destination=" + mainFlight.getArrivalAirport().getCity());
         }
         
-        // Find flights from origin to final destination (allowing direct flights to replace connecting flights)
+        
         List<Flight> availableFlights = flightMapper.findAvailableFlightsForReschedule(
             originAirportId,
             finalDestinationAirportId,
-            mainFlight.getId() // Exclude the main flight from results
+            mainFlight.getId() 
         );
         
-        // Load connecting flights for each available flight
+        
         for (Flight flight : availableFlights) {
             loadConnectingFlightsForFlight(flight, finalDestinationAirportId);
         }
@@ -688,15 +688,15 @@ public class TicketService {
             throw new RuntimeException("Current flight not found");
         }
         
-        // Load connecting flights to determine the actual origin and final destination
+        
         loadConnectingFlights(ticket);
         
-        // Determine the origin and final destination cities for reschedule options
+        
         String originCity = mainFlight.getDepartureAirport().getCity();
         String finalDestinationCity;
         
         if (ticket.getConnectingFlights() != null && !ticket.getConnectingFlights().isEmpty()) {
-            // For connecting flights, the final destination is the arrival city of the last connecting flight
+            
             Flight lastConnectingFlight = ticket.getConnectingFlights().get(ticket.getConnectingFlights().size() - 1);
             finalDestinationCity = lastConnectingFlight.getArrivalAirport().getCity();
             
@@ -704,7 +704,7 @@ public class TicketService {
                              ", Final destination=" + finalDestinationCity +
                              ", Date=" + date + ", Include connecting=" + includeConnecting);
         } else {
-            // For single flights, use the main flight's arrival city
+            
             finalDestinationCity = mainFlight.getArrivalAirport().getCity();
             
             System.out.println("Single flight reschedule with filters: Origin=" + originCity + 
@@ -712,10 +712,10 @@ public class TicketService {
                              ", Date=" + date + ", Include connecting=" + includeConnecting);
         }
         
-        // Use the existing flight search logic to find both direct and connecting flights
+        
         List<Flight> result = new ArrayList<>();
         
-        // First, get direct flights using the existing search logic
+        
         com.airticket.dto.FlightSearchRequest searchRequest = new com.airticket.dto.FlightSearchRequest();
         searchRequest.setDepartureCity(originCity);
         searchRequest.setArrivalCity(finalDestinationCity);
@@ -723,7 +723,7 @@ public class TicketService {
         
         List<Flight> directFlights = flightService.searchFlights(searchRequest);
         
-        // Filter out the current flight being rescheduled
+        
         directFlights = directFlights.stream()
             .filter(flight -> !flight.getId().equals(mainFlight.getId()))
             .collect(Collectors.toList());
@@ -731,35 +731,35 @@ public class TicketService {
         result.addAll(directFlights);
         System.out.println("Found " + directFlights.size() + " direct flights for reschedule");
         
-        // If connecting flights are requested, use the existing connecting flight logic
+        
         if (includeConnecting != null && includeConnecting) {
             List<com.airticket.model.ConnectingFlight> connectingFlights = flightService.findConnectingFlights(
                 originCity, finalDestinationCity, date
             );
             
-            // Convert ConnectingFlight objects to Flight objects with connecting flight information
+            
             for (com.airticket.model.ConnectingFlight connectingFlight : connectingFlights) {
                 if (connectingFlight.getFlights() != null && !connectingFlight.getFlights().isEmpty()) {
                     Flight firstFlight = connectingFlight.getFlights().get(0);
                     
-                    // Skip if this is the same flight being rescheduled
+                    
                     if (firstFlight.getId().equals(mainFlight.getId())) {
                         continue;
                     }
                     
-                    // Set the connecting flights on the first flight
+                    
                     if (connectingFlight.getFlights().size() > 1) {
                         List<Flight> connectedFlights = connectingFlight.getFlights().subList(1, connectingFlight.getFlights().size());
                         firstFlight.setConnectingFlights(connectedFlights);
                     }
                     
-                    // ✅ FIX: Set the total price from ConnectingFlight instead of just first flight price
+                    
                     if (connectingFlight.getTotalPrice() != null) {
                         firstFlight.setPrice(connectingFlight.getTotalPrice());
                         System.out.println("✅ Fixed pricing: Set total price " + connectingFlight.getTotalPrice() + " for connecting flight " + firstFlight.getFlightNumber());
                     }
                     
-                    // Also set other total metrics from ConnectingFlight
+                    
                     firstFlight.setAvailableSeats(connectingFlight.getAvailableSeats());
                     firstFlight.setDepartureTimeUtc(connectingFlight.getDepartureTimeUtc());
                     firstFlight.setArrivalTimeUtc(connectingFlight.getArrivalTimeUtc());
@@ -809,8 +809,8 @@ public class TicketService {
             throw new RuntimeException("Flight not found");
         }
         
-        // Validate departure and destination for reschedule
-        // Load connecting flights to determine the actual origin and final destination
+        
+        
         System.out.println("Loading connecting flights for original ticket...");
         loadConnectingFlights(originalTicket);
         
@@ -831,7 +831,7 @@ public class TicketService {
         Long finalDestinationAirportId;
         
         if (originalTicket.getConnectingFlights() != null && !originalTicket.getConnectingFlights().isEmpty()) {
-            // For connecting flights, validate against the final destination
+            
             Flight lastConnectingFlight = originalTicket.getConnectingFlights().get(originalTicket.getConnectingFlights().size() - 1);
             finalDestinationAirportId = lastConnectingFlight.getArrivalAirport().getId();
             
@@ -841,7 +841,7 @@ public class TicketService {
                              " vs new flight " + newFlight.getDepartureAirport().getCity() + " -> " + 
                              newFlight.getArrivalAirport().getCity());
         } else {
-            // For single flights, use the main flight's arrival airport
+            
             finalDestinationAirportId = currentFlight.getArrivalAirport().getId();
             
             System.out.println("Validating single flight reschedule: " + 
@@ -851,38 +851,38 @@ public class TicketService {
                              newFlight.getArrivalAirport().getCity());
         }
         
-        // Enhanced validation for connecting flights - allow more flexible reschedule options
+        
         boolean isValidDestination = false;
         
-        // Allow reschedule if the new flight:
-        // 1. Has exact same origin and final destination (original strict validation)
-        // 2. Starts from the same origin (more flexible)
-        // 3. Goes to the same final destination (more flexible)
-        // 4. For connecting flights, allows intermediate segment reschedules
+        
+        
+        
+        
+        
         
         if (originAirportId.equals(newFlight.getDepartureAirport().getId()) &&
             finalDestinationAirportId.equals(newFlight.getArrivalAirport().getId())) {
-            // Exact match - original validation logic
+            
             isValidDestination = true;
             System.out.println("✅ Exact match validation: Same origin and final destination");
         }
         else if (originAirportId.equals(newFlight.getDepartureAirport().getId())) {
-            // Flight starts from same origin - allow this for connecting flight flexibility
+            
             isValidDestination = true;
             System.out.println("✅ Origin match validation: New flight starts from original origin");
         }
         else if (finalDestinationAirportId.equals(newFlight.getArrivalAirport().getId())) {
-            // Flight goes to final destination - allow this for connecting flight flexibility
+            
             isValidDestination = true;
             System.out.println("✅ Destination match validation: New flight goes to final destination");
         }
         else if (originalTicket.getConnectingFlights() != null && !originalTicket.getConnectingFlights().isEmpty()) {
-            // For connecting flights, allow intermediate segments
+            
             List<Flight> allOriginalFlights = new ArrayList<>();
             allOriginalFlights.add(currentFlight);
             allOriginalFlights.addAll(originalTicket.getConnectingFlights());
             
-            // Check if new flight connects any two airports in the original journey
+            
             for (Flight originalFlight : allOriginalFlights) {
                 if (newFlight.getDepartureAirport().getId().equals(originalFlight.getDepartureAirport().getId()) ||
                     newFlight.getArrivalAirport().getId().equals(originalFlight.getArrivalAirport().getId())) {
@@ -896,46 +896,46 @@ public class TicketService {
         if (!isValidDestination) {
             System.out.println("Reschedule validation failed: Origin " + originAirportId + " -> " + finalDestinationAirportId + 
                              ", New flight " + newFlight.getDepartureAirport().getId() + " -> " + newFlight.getArrivalAirport().getId());
-            // For the regular reschedule method, be more permissive but still log the issue
+            
             System.out.println("⚠️  Validation failed but allowing reschedule for admin review");
             isValidDestination = true;
         }
         
-        // Validate not the same flight
+        
         if (currentFlight.getId().equals(newFlight.getId())) {
             throw new RuntimeException("Cannot reschedule to the same flight");
         }
         
-        // Check availability
+        
         if (!flightService.reserveSeat(newFlightId)) {
             throw new RuntimeException("No available seats on new flight");
         }
         
-        // Calculate service fee
+        
         BigDecimal serviceFee = calculateRescheduleServiceFee(originalTicket);
         
-        // Create new ticket with the same passenger information but new flight
+        
         Ticket newTicket = new Ticket();
         newTicket.setTicketNumber(generateTicketNumber());
         newTicket.setUserId(originalTicket.getUserId());
         newTicket.setFlightId(newFlightId);
-        newTicket.setSeatNumber(originalTicket.getSeatNumber()); // May need to be updated based on new flight seating
+        newTicket.setSeatNumber(originalTicket.getSeatNumber()); 
         newTicket.setPassengerName(originalTicket.getPassengerName());
         newTicket.setPassengerIdNumber(originalTicket.getPassengerIdNumber());
         newTicket.setTicketType(originalTicket.getTicketType());
         
-        // Calculate new ticket price based on the new flight
+        
         BigDecimal newTicketPrice = calculatePrice(newFlight, originalTicket.getTicketType());
         newTicket.setPrice(newTicketPrice);
         
-        // Set ticket status based on total cost
+        
         if (totalCost != null && totalCost.compareTo(BigDecimal.ZERO) > 0) {
-            // Payment required - set to BOOKED status
+            
             newTicket.setStatus("BOOKED");
             newTicket.setBookingTime(Instant.now());
-            newTicket.setPaymentTime(null); // Not yet paid
+            newTicket.setPaymentTime(null); 
         } else {
-            // No payment needed or refund scenario - set to PAID status
+            
             newTicket.setStatus("PAID");
             newTicket.setBookingTime(Instant.now());
             newTicket.setPaymentTime(Instant.now());
@@ -949,7 +949,7 @@ public class TicketService {
 
         ticketMapper.linkNewTicketToOriginal(newTicket.getId(), ticketId);
 
-        // Handle connecting flights for rescheduling
+        
         handleConnectingFlightsForReschedule(originalTicket, newTicket, newFlight);
 
         flightService.releaseSeat(originalTicket.getFlightId());
@@ -964,7 +964,7 @@ public class TicketService {
             System.out.println("  Flight ID: " + finalNewTicket.getFlightId());
             System.out.println("  Status: " + finalNewTicket.getStatus());
             
-            // Load and display connecting flights for the new ticket
+            
             loadConnectingFlights(finalNewTicket);
             if (finalNewTicket.getConnectingFlights() != null && !finalNewTicket.getConnectingFlights().isEmpty()) {
                 System.out.println("  Connecting flights: " + finalNewTicket.getConnectingFlights().size());
@@ -1025,37 +1025,37 @@ public class TicketService {
                              newFlight.getArrivalAirport().getCity());
         }
 
-        // Enhanced validation for connecting flights - allow more flexible reschedule options
+        
         boolean isValidDestination = false;
         
-        // Allow reschedule if the new flight:
-        // 1. Starts from the same origin airport
-        // 2. Goes to the same final destination  
-        // 3. Goes to any intermediate airport that can connect to final destination
-        // 4. For connecting flights, allows individual segment reschedules
         
-        // Check if flight departs from original origin
+        
+        
+        
+        
+        
+        
         if (originAirportId.equals(newFlight.getDepartureAirport().getId())) {
-            // Flight starts from original origin - this is always valid for reschedule
+            
             isValidDestination = true;
             System.out.println("✅ Origin match validation: New flight starts from original origin " + 
                              newFlight.getDepartureAirport().getCity());
         }
-        // Check if flight goes directly to final destination (from any departure point)
+        
         else if (finalDestinationAirportId.equals(newFlight.getArrivalAirport().getId())) {
-            // Flight goes to final destination - valid for connecting flight reschedule
+            
             isValidDestination = true;
             System.out.println("✅ Destination match validation: New flight goes to final destination " + 
                              newFlight.getArrivalAirport().getCity());
         }
-        // For connecting flights, also allow intermediate segments
+        
         else if (originalTicket.getConnectingFlights() != null && !originalTicket.getConnectingFlights().isEmpty()) {
-            // Check if the new flight could be part of a valid connecting journey
+            
             List<Flight> allOriginalFlights = new ArrayList<>();
             allOriginalFlights.add(currentFlight);
             allOriginalFlights.addAll(originalTicket.getConnectingFlights());
             
-            // Check if new flight connects any two airports in the original journey
+            
             for (Flight originalFlight : allOriginalFlights) {
                 if (newFlight.getDepartureAirport().getId().equals(originalFlight.getDepartureAirport().getId()) ||
                     newFlight.getArrivalAirport().getId().equals(originalFlight.getArrivalAirport().getId())) {
@@ -1065,7 +1065,7 @@ public class TicketService {
                 }
             }
             
-            // If still not valid, check if there are connecting flights available to final destination
+            
             if (!isValidDestination) {
                 try {
                     List<Flight> connectingFlights = flightMapper.findAvailableFlightsForReschedule(
@@ -1085,12 +1085,12 @@ public class TicketService {
                     }
                 } catch (Exception e) {
                     System.out.println("Could not check connecting flights, but allowing reschedule: " + e.getMessage());
-                    // Be permissive - if we can't check connecting flights, allow the reschedule
+                    
                     isValidDestination = true;
                 }
             }
         }
-        // For direct flights, also check if connecting flights are available
+        
         else {
             try {
                 List<Flight> connectingFlights = flightMapper.findAvailableFlightsForReschedule(
@@ -1115,61 +1115,61 @@ public class TicketService {
         if (!isValidDestination) {
             System.out.println("Reschedule validation details: Origin " + originAirportId + " -> " + finalDestinationAirportId + 
                              ", New flight " + newFlight.getDepartureAirport().getId() + " -> " + newFlight.getArrivalAirport().getId());
-            // Be more permissive - log the issue but allow admin to proceed
+            
             System.out.println("⚠️  Validation failed but allowing reschedule for admin review");
             isValidDestination = true;
         }
         
-        // Validate not the same flight
+        
         if (currentFlight.getId().equals(newFlight.getId())) {
             throw new RuntimeException("Cannot reschedule to the same flight");
         }
         
-        // Check availability
+        
         if (!flightService.reserveSeat(newFlightId)) {
             throw new RuntimeException("No available seats on new flight");
         }
         
-        // Calculate service fee
+        
         BigDecimal serviceFee = calculateRescheduleServiceFee(originalTicket);
         
-        // Create new ticket with the same passenger information but new flight
+        
         Ticket newTicket = new Ticket();
         newTicket.setTicketNumber(generateTicketNumber());
         newTicket.setUserId(originalTicket.getUserId());
         newTicket.setFlightId(newFlightId);
-        newTicket.setSeatNumber(originalTicket.getSeatNumber()); // May need to be updated based on new flight seating
+        newTicket.setSeatNumber(originalTicket.getSeatNumber()); 
         newTicket.setPassengerName(originalTicket.getPassengerName());
         newTicket.setPassengerIdNumber(originalTicket.getPassengerIdNumber());
         newTicket.setTicketType(originalTicket.getTicketType());
         
-        // Calculate new ticket price based on the new flight
+        
         BigDecimal newTicketPrice = calculatePrice(newFlight, originalTicket.getTicketType());
         newTicket.setPrice(newTicketPrice);
         
-        // Set ticket status to PENDING_RESCHEDULE when payment is required
+        
         newTicket.setStatus("PENDING_RESCHEDULE");
         newTicket.setBookingTime(Instant.now());
-        newTicket.setPaymentTime(null); // Not yet paid
+        newTicket.setPaymentTime(null); 
         newTicket.setCreatedAt(Instant.now());
         newTicket.setUpdatedAt(Instant.now());
         
-        // Insert new ticket first to get its ID
+        
         ticketMapper.insert(newTicket);
         
-        // Mark original ticket as rescheduled and link to new ticket
+        
         ticketMapper.markTicketAsRescheduled(ticketId, newTicket.getId(), serviceFee, reason);
         
-        // Link new ticket back to original
+        
         ticketMapper.linkNewTicketToOriginal(newTicket.getId(), ticketId);
         
-        // Handle connecting flights for rescheduling
+        
         handleConnectingFlightsForReschedule(originalTicket, newTicket, newFlight);
         
-        // Release current seat (original flight seat)
+        
         flightService.releaseSeat(originalTicket.getFlightId());
         
-        // Return the new ticket (the active one)
+        
         return ticketMapper.findById(newTicket.getId());
     }
     
@@ -1195,7 +1195,7 @@ public class TicketService {
             return BigDecimal.ZERO;
         }
         
-        // Calculate hours until departure
+        
         Duration duration = Duration.between(Instant.now(), flight.getDepartureTimeUtc());
         long hoursUntilDeparture = duration.toHours();
         
@@ -1203,22 +1203,22 @@ public class TicketService {
         BigDecimal percentageFee;
         
         if (hoursUntilDeparture < serviceFeeConfig.getHighFeeThresholdHours()) {
-            // High fee for last-minute rescheduling
+            
             baseFee = serviceFeeConfig.getHighRescheduleBaseFee();
             percentageFee = serviceFeeConfig.getHighReschedulePercentageFee();
         } else {
-            // Normal fee
+            
             baseFee = serviceFeeConfig.getRescheduleBaseFee();
             percentageFee = serviceFeeConfig.getReschedulePercentageFee();
         }
         
-        // Calculate percentage of ticket price
+        
         BigDecimal ticketPercentageFee = ticket.getPrice().multiply(percentageFee);
         
-        // Calculate base reschedule fee (higher of base fee or percentage fee)
+        
         BigDecimal rescheduleServiceFee = baseFee.max(ticketPercentageFee);
         
-        // Check if this ticket has connecting flights - if so, double the fee
+        
         List<Long> connectingFlightIds = ticketMapper.findConnectingFlightIdsByTicketId(ticket.getId());
         if (connectingFlightIds != null && !connectingFlightIds.isEmpty()) {
             rescheduleServiceFee = rescheduleServiceFee.multiply(BigDecimal.valueOf(2));
@@ -1227,9 +1227,9 @@ public class TicketService {
         return rescheduleServiceFee.setScale(2, RoundingMode.HALF_UP);
     }
     
-    /**
-     * 计算改签费用详情 - 为用户界面提供完整的费用信息
-     */
+    
+
+
     public RescheduleFeeInfo calculateRescheduleFeeInfo(Long ticketId, Long newFlightId) {
         System.out.println("=== DEBUG RESCHEDULE FEE CALCULATION START ===");
         System.out.println("Ticket ID: " + ticketId + ", New Flight ID: " + newFlightId);
@@ -1254,23 +1254,23 @@ public class TicketService {
         System.out.println("Current flight: " + currentFlight.getFlightNumber());
         System.out.println("New flight: " + newFlight.getFlightNumber());
         
-        // 🔧 FIX: Do NOT automatically load connecting flights for reschedule calculations
-        // The user is selecting this specific flight for reschedule, so treat it as a single flight
-        // unless they specifically selected a connecting journey through the UI
+        
+        
+        
         System.out.println("=== RESCHEDULE FEE CALCULATION: TREATING NEW FLIGHT AS SINGLE FLIGHT ===");
         System.out.println("ℹ️ New flight " + newFlight.getFlightNumber() + " will be treated as a direct flight for reschedule calculation");
         System.out.println("ℹ️ If user wants connecting flights, they should select the entire journey through the UI");
         
-        // Ensure no connecting flights are loaded for price calculation consistency
+        
         newFlight.setConnectingFlights(null);
         
         RescheduleFeeInfo feeInfo = new RescheduleFeeInfo();
         
-        // 基本信息
+        
         feeInfo.setTicketId(ticketId);
         feeInfo.setTicketNumber(ticket.getTicketNumber());
         
-        // 计算时间相关信息
+        
         Instant now = Instant.now();
         Duration duration = Duration.between(now, currentFlight.getDepartureTimeUtc());
         long hoursUntilDeparture = duration.toHours();
@@ -1281,7 +1281,7 @@ public class TicketService {
         System.out.println("Hours until departure: " + hoursUntilDeparture);
         System.out.println("High fee threshold: " + serviceFeeConfig.getHighFeeThresholdHours());
         
-        // 计算服务费
+        
         BigDecimal baseFee;
         BigDecimal percentageFee;
         String feeType;
@@ -1300,9 +1300,9 @@ public class TicketService {
         System.out.println("Base fee: ¥" + baseFee);
         System.out.println("Percentage fee rate: " + percentageFee);
         
-        // 计算票价差异 - 使用实际存储的票价而非重新计算
-        // 这样可以避免因为不同计价系统（70 vs 120 surcharge）导致的显示不一致
-        BigDecimal currentTicketPrice = ticket.getPrice(); // 使用实际存储的票价
+        
+        
+        BigDecimal currentTicketPrice = ticket.getPrice(); 
         BigDecimal newTicketPrice = calculatePrice(newFlight, ticket.getTicketType());
         BigDecimal priceDifference = newTicketPrice.subtract(currentTicketPrice);
         
@@ -1318,14 +1318,14 @@ public class TicketService {
             System.out.println("ℹ️ New flight has the SAME PRICE");
         }
         
-        // 计算实际服务费 (基础费用与百分比费用的较大值)
+        
         BigDecimal ticketPercentageFee = currentTicketPrice.multiply(percentageFee);
         BigDecimal actualServiceFee = baseFee.max(ticketPercentageFee).setScale(2, RoundingMode.HALF_UP);
         
         System.out.println("DEBUG - Ticket percentage fee (currentPrice * rate): ¥" + ticketPercentageFee);
         System.out.println("DEBUG - Actual service fee (max of base and percentage): ¥" + actualServiceFee);
         
-        // 设置费用信息
+        
         feeInfo.setCurrentTicketPrice(currentTicketPrice);
         feeInfo.setNewTicketPrice(newTicketPrice);
         feeInfo.setServiceFee(actualServiceFee);
@@ -1334,33 +1334,33 @@ public class TicketService {
         feeInfo.setFeeType(feeType);
         feeInfo.setPriceDifference(priceDifference);
         
-        // 计算总费用或退款
+        
         if (priceDifference.compareTo(BigDecimal.ZERO) >= 0) {
-            // 新票价更高或相等，需要支付差价 + 服务费
+            
             BigDecimal totalCost = priceDifference.add(actualServiceFee);
             feeInfo.setTotalAdditionalCost(totalCost);
             feeInfo.setTotalRefund(BigDecimal.ZERO);
             System.out.println("DEBUG - Price difference >= 0, total cost: ¥" + totalCost);
             System.out.println("DEBUG - Formula: priceDiff(¥" + priceDifference + ") + serviceFee(¥" + actualServiceFee + ") = ¥" + totalCost);
         } else {
-            // 新票价更低，计算退款或需要支付的费用
+            
             BigDecimal refundableAmount = priceDifference.abs().subtract(actualServiceFee);
             System.out.println("DEBUG - Price difference < 0, refundable calculation:");
             System.out.println("DEBUG - Refundable amount: abs(¥" + priceDifference + ") - ¥" + actualServiceFee + " = ¥" + refundableAmount);
             if (refundableAmount.compareTo(BigDecimal.ZERO) > 0) {
-                // 可以退款
+                
                 feeInfo.setTotalRefund(refundableAmount);
                 feeInfo.setTotalAdditionalCost(BigDecimal.ZERO);
                 System.out.println("DEBUG - User gets refund: ¥" + refundableAmount);
             } else {
-                // 仍需要支付服务费（减去价格差异）
+                
                 feeInfo.setTotalAdditionalCost(refundableAmount.abs());
                 feeInfo.setTotalRefund(BigDecimal.ZERO);
                 System.out.println("DEBUG - User still pays: ¥" + refundableAmount.abs());
             }
         }
         
-        // 设置航班信息
+        
         RescheduleFeeInfo.FlightInfo originalFlightInfo = new RescheduleFeeInfo.FlightInfo(
             currentFlight.getId(),
             currentFlight.getFlightNumber(),
@@ -1384,7 +1384,7 @@ public class TicketService {
         feeInfo.setOriginalFlight(originalFlightInfo);
         feeInfo.setNewFlight(newFlightInfo);
         
-        // 生成费用说明
+        
         generateFeeExplanation(feeInfo);
         
         System.out.println("=== FINAL RESULT ===");
@@ -1395,17 +1395,17 @@ public class TicketService {
         return feeInfo;
     }
     
-    /**
-     * 生成费用说明和建议
-     */
+    
+
+
     private void generateFeeExplanation(RescheduleFeeInfo feeInfo) {
         StringBuilder explanation = new StringBuilder();
         List<String> breakdown = new ArrayList<>();
         
-        // 基本说明
+        
         explanation.append("改签费用计算基于以下因素：");
         
-        // 服务费说明
+        
         if ("HIGH".equals(feeInfo.getFeeType())) {
             explanation.append("由于距离起飞时间不足").append(feeInfo.getHighFeeThresholdHours()).append("小时，适用高额服务费标准。");
             breakdown.add("高额服务费：¥" + feeInfo.getServiceFee() + " (基础费用 ¥" + feeInfo.getBaseFee() + 
@@ -1416,7 +1416,7 @@ public class TicketService {
                          " 或票价的" + (feeInfo.getPercentageFee().multiply(new BigDecimal("100"))) + "%，取较大值)");
         }
         
-        // 价格差异说明
+        
         if (feeInfo.getPriceDifference().compareTo(BigDecimal.ZERO) > 0) {
             breakdown.add("票价差异：¥" + feeInfo.getPriceDifference() + " (新票价更高)");
         } else if (feeInfo.getPriceDifference().compareTo(BigDecimal.ZERO) < 0) {
@@ -1425,7 +1425,7 @@ public class TicketService {
             breakdown.add("票价差异：¥0 (票价相同)");
         }
         
-        // 总费用说明
+        
         if (feeInfo.getTotalAdditionalCost().compareTo(BigDecimal.ZERO) > 0) {
             breakdown.add("需要支付：¥" + feeInfo.getTotalAdditionalCost());
             explanation.append(" 您需要额外支付 ¥").append(feeInfo.getTotalAdditionalCost()).append("。");
@@ -1440,14 +1440,14 @@ public class TicketService {
         feeInfo.setFeeExplanation(explanation.toString());
         feeInfo.setFeeBreakdown(breakdown.toArray(new String[0]));
         
-        // 生成建议
+        
         String recommendation = generateRecommendation(feeInfo);
         feeInfo.setRecommendation(recommendation);
     }
     
-    /**
-     * 生成改签建议
-     */
+    
+
+
     private String generateRecommendation(RescheduleFeeInfo feeInfo) {
         StringBuilder recommendation = new StringBuilder();
         
@@ -1472,7 +1472,7 @@ public class TicketService {
             return BigDecimal.ZERO;
         }
         
-        // Calculate hours until departure
+        
         Duration duration = Duration.between(Instant.now(), flight.getDepartureTimeUtc());
         long hoursUntilDeparture = duration.toHours();
         
@@ -1480,25 +1480,25 @@ public class TicketService {
         BigDecimal percentageFee;
         
         if (hoursUntilDeparture < serviceFeeConfig.getHighFeeThresholdHours()) {
-            // High fee for last-minute refunds
+            
             baseFee = serviceFeeConfig.getHighRefundBaseFee();
             percentageFee = serviceFeeConfig.getHighRefundPercentageFee();
         } else {
-            // Normal fee
+            
             baseFee = serviceFeeConfig.getRefundBaseFee();
             percentageFee = serviceFeeConfig.getRefundPercentageFee();
         }
         
-        // Calculate percentage of ticket price
+        
         BigDecimal ticketPercentageFee = ticket.getPrice().multiply(percentageFee);
         
-        // Return the higher of base fee or percentage fee
+        
         return baseFee.max(ticketPercentageFee).setScale(2, RoundingMode.HALF_UP);
     }
     
     private String generateTicketNumber() {
-        // Create a shorter ticket number: AT + timestamp (last 8 digits) + random 4 chars
-        String timestamp = String.valueOf(System.currentTimeMillis()).substring(5); // Last 8 digits
+        
+        String timestamp = String.valueOf(System.currentTimeMillis()).substring(5); 
         String randomPart = UUID.randomUUID().toString().replace("-", "").substring(0, 4).toUpperCase();
         return "AT" + timestamp + randomPart;
     }
@@ -1507,7 +1507,7 @@ public class TicketService {
         System.out.println("=== CALCULATING PRICE FOR FLIGHT " + flight.getFlightNumber() + " ===");
         System.out.println("Flight ID: " + flight.getId() + ", Ticket Type: " + ticketType);
         
-        // Check if this is a connecting flight
+        
         if (flight.getConnectingFlights() != null && !flight.getConnectingFlights().isEmpty()) {
             System.out.println("🔗 This is a CONNECTING FLIGHT with " + flight.getConnectingFlights().size() + " connecting segments");
             return calculateConnectingFlightPrice(flight, ticketType);
@@ -1517,13 +1517,13 @@ public class TicketService {
         }
     }
     
-    /**
-     * Calculate price for a single flight segment
-     */
+    
+
+
     private BigDecimal calculateSingleFlightPrice(Flight flight, String ticketType) {
         BigDecimal basePrice = flight.getPrice();
         
-        // Apply ticket type multiplier
+        
         BigDecimal typeAdjustedPrice;
         switch (ticketType) {
             case "BUSINESS":
@@ -1538,9 +1538,9 @@ public class TicketService {
                 break;
         }
         
-        // Add fuel surcharge of 70 RMB per flight
+        
         BigDecimal fuelSurcharge = new BigDecimal("70");
-        // Add airport construction fee of 50 RMB per flight
+        
         BigDecimal airportConstructionFee = new BigDecimal("50");
         BigDecimal totalSurcharges = fuelSurcharge.add(airportConstructionFee);
         
@@ -1555,19 +1555,19 @@ public class TicketService {
         return typeAdjustedPrice.add(totalSurcharges);
     }
     
-    /**
-     * Calculate price for connecting flights (main flight + all connecting segments)
-     */
+    
+
+
     private BigDecimal calculateConnectingFlightPrice(Flight mainFlight, String ticketType) {
         System.out.println("=== CONNECTING FLIGHT PRICE CALCULATION ===");
         
-        // Calculate price for main flight
+        
         BigDecimal mainFlightPrice = calculateSingleFlightPrice(mainFlight, ticketType);
         BigDecimal totalPrice = mainFlightPrice;
         
         System.out.println("Main flight " + mainFlight.getFlightNumber() + " price: ¥" + mainFlightPrice);
         
-        // Calculate price for each connecting flight
+        
         int segmentNumber = 2;
         for (Flight connectingFlight : mainFlight.getConnectingFlights()) {
             BigDecimal connectingPrice = calculateSingleFlightPrice(connectingFlight, ticketType);
@@ -1582,7 +1582,7 @@ public class TicketService {
         return totalPrice;
     }
 
-    // Hard delete - permanently removes ticket from database (Admin only)
+    
     @Transactional
     public boolean hardDeleteTicket(Long ticketId) {
         Ticket ticket = ticketMapper.findById(ticketId);
@@ -1590,20 +1590,20 @@ public class TicketService {
             throw new RuntimeException("Ticket not found");
         }
         
-        // Release seat if ticket is not already cancelled or refunded
+        
         if (!"CANCELLED".equals(ticket.getStatus()) && !"REFUNDED".equals(ticket.getStatus())) {
             flightService.releaseSeat(ticket.getFlightId());
         }
         
-        // Delete related approval requests first to avoid foreign key constraint violation
+        
         adminApprovalRequestMapper.deleteByTicketId(ticketId);
         
-        // Now delete the ticket
+        
         ticketMapper.deleteById(ticketId);
         return true;
     }
     
-    // Soft delete - marks ticket as deleted for user but keeps in database
+    
     @Transactional
     public boolean softDeleteTicket(Long ticketId) {
         Ticket ticket = ticketMapper.findById(ticketId);
@@ -1630,20 +1630,20 @@ public class TicketService {
         Map<String, Object> paymentInfo = new HashMap<>();
         Instant now = Instant.now();
         
-        // 计算预订时间 + 10分钟的截止时间
+        
         Instant paymentDeadline = ticket.getBookingTime() != null 
             ? ticket.getBookingTime().plusSeconds(10 * 60) 
             : now.plusSeconds(10 * 60);
         
-        // 计算航班起飞前40分钟的截止时间
+        
         Instant flightDeadline = flight.getDepartureTimeUtc().minusSeconds(40 * 60);
         
-        // 实际支付截止时间是两者中较早的那个
+        
         Instant effectiveDeadline = paymentDeadline.isBefore(flightDeadline) 
             ? paymentDeadline 
             : flightDeadline;
         
-        // 计算剩余时间（秒数）
+        
         Duration remainingDuration = Duration.between(now, effectiveDeadline);
         long remainingSeconds = remainingDuration.getSeconds();
         
@@ -1680,7 +1680,7 @@ public class TicketService {
             }
             
             paymentInfo.put("countdownDisplay", countdown);
-            // 设置紧急程度 - 与前端逻辑保持一致
+            
             if (remainingSeconds <= 120) {
                 paymentInfo.put("urgencyLevel", "HIGH");
             } else if (remainingSeconds <= 300) {
@@ -1693,14 +1693,14 @@ public class TicketService {
             paymentInfo.put("urgencyLevel", "EXPIRED");
         }
         
-        // 添加提示信息
+        
         if (isExpired) {
             paymentInfo.put("message", "支付时间已过期");
         } else if (!canPay) {
             paymentInfo.put("message", "当前无法支付此机票");
-        } else if (remainingSeconds < 120) { // 少于2分钟
+        } else if (remainingSeconds < 120) { 
             paymentInfo.put("message", "支付时间即将到期！");
-        } else if (remainingSeconds < 300) { // 少于5分钟
+        } else if (remainingSeconds < 300) { 
             paymentInfo.put("message", "支付时间即将到期，请尽快完成支付");
         } else {
             paymentInfo.put("message", "请在时限内完成支付");
@@ -1711,7 +1711,7 @@ public class TicketService {
     
     private void enrichTicketWithPaymentInfo(Ticket ticket) {
         try {
-            // 只对BOOKED状态的票据添加支付倒计时信息
+            
             if (!"BOOKED".equals(ticket.getStatus())) {
                 return;
             }
@@ -1723,32 +1723,32 @@ public class TicketService {
             
             Instant now = Instant.now();
             
-            // 计算预订时间 + 10分钟的截止时间
+            
             Instant paymentDeadline = ticket.getBookingTime() != null 
                 ? ticket.getBookingTime().plusSeconds(10 * 60) 
                 : now.plusSeconds(10 * 60);
             
-            // 计算航班起飞前40分钟的截止时间
+            
             Instant flightDeadline = flight.getDepartureTimeUtc().minusSeconds(40 * 60);
             
-            // 实际支付截止时间是两者中较早的那个
+            
             Instant effectiveDeadline = paymentDeadline.isBefore(flightDeadline) 
                 ? paymentDeadline 
                 : flightDeadline;
             
-            // 计算剩余时间（秒数）
+            
             Duration remainingDuration = Duration.between(now, effectiveDeadline);
             long remainingSeconds = remainingDuration.getSeconds();
             
             boolean isExpired = remainingSeconds <= 0;
             boolean canPay = !isExpired && now.isBefore(flight.getDepartureTimeUtc());
             
-            // 设置票据的支付倒计时信息
+            
             ticket.setPaymentDeadline(effectiveDeadline);
             ticket.setPaymentRemainingSeconds(Math.max(0, remainingSeconds));
             ticket.setCanPay(canPay);
             
-            // 添加友好的倒计时显示格式
+            
             if (remainingSeconds > 0) {
                 long hours = remainingSeconds / 3600;
                 long minutes = (remainingSeconds % 3600) / 60;
@@ -1762,7 +1762,7 @@ public class TicketService {
                 }
                 
                 ticket.setPaymentCountdownDisplay(countdown);
-                // 设置紧急程度 - 与前端逻辑保持一致
+                
                 if (remainingSeconds <= 120) {
                     ticket.setPaymentUrgencyLevel("HIGH");
                 } else if (remainingSeconds <= 300) {
@@ -1775,27 +1775,27 @@ public class TicketService {
                 ticket.setPaymentUrgencyLevel("EXPIRED");
             }
             
-            // 添加提示信息
+            
             if (isExpired) {
                 ticket.setPaymentMessage("支付时间已过期");
             } else if (!canPay) {
                 ticket.setPaymentMessage("当前无法支付此机票");
-            } else if (remainingSeconds < 120) { // 少于2分钟
+            } else if (remainingSeconds < 120) { 
                 ticket.setPaymentMessage("支付时间即将到期！");
-            } else if (remainingSeconds < 300) { // 少于5分钟
+            } else if (remainingSeconds < 300) { 
                 ticket.setPaymentMessage("支付时间即将到期，请尽快完成支付");
             } else {
                 ticket.setPaymentMessage("请在时限内完成支付");
             }
         } catch (Exception e) {
-            // 如果获取支付信息失败，不影响主要功能
-            // 这里可以记录日志但不抛出异常
+            
+            
         }
     }
     
     private void enrichTicketWithFlightAndUserInfo(Ticket ticket) {
         try {
-            // Load flight information
+            
             if (ticket.getFlightId() != null) {
                 Flight flight = flightService.getFlightById(ticket.getFlightId());
                 if (flight != null) {
@@ -1803,7 +1803,7 @@ public class TicketService {
                 }
             }
             
-            // Load user information
+            
             if (ticket.getUserId() != null) {
                 User user = userService.findById(ticket.getUserId());
                 if (user != null) {
@@ -1811,8 +1811,8 @@ public class TicketService {
                 }
             }
         } catch (Exception e) {
-            // If enriching fails, don't break the main functionality
-            // Log the error but don't throw exception
+            
+            
             System.err.println("Failed to enrich ticket " + ticket.getId() + " with flight/user info: " + e.getMessage());
             e.printStackTrace();
         }
@@ -1820,24 +1820,24 @@ public class TicketService {
     
     private void enrichTicketWithRescheduledInfo(Ticket ticket) {
         try {
-            // No need to load additional tickets for now, as the database relationships
-            // are already populated in the ticket object through the new fields:
-            // - originalTicketId
-            // - rescheduledToTicketId 
-            // - isOriginalTicket
             
-            // If needed in the future, we can add logic here to load related tickets
-            // for display purposes
+            
+            
+            
+            
+            
+            
+            
         } catch (Exception e) {
-            // If enriching fails, don't break the main functionality
+            
             System.err.println("Failed to enrich ticket " + ticket.getId() + " with rescheduled info: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
-    /**
-     * Loads connecting flights for a flight from the database based on route logic
-     */
+    
+
+
     public void loadConnectingFlightsForFlight(Flight flight, Long finalDestinationAirportId) {
         System.out.println("=== loadConnectingFlightsForFlight() CALLED ===");
         try {
@@ -1845,33 +1845,33 @@ public class TicketService {
                 System.out.println("Loading connecting flights for flight ID: " + flight.getId() + 
                                  " to destination airport ID: " + finalDestinationAirportId);
                 
-                // Check if this flight already reaches the final destination
+                
                 if (flight.getArrivalAirportId() != null && flight.getArrivalAirportId().equals(finalDestinationAirportId)) {
                     System.out.println("Flight " + flight.getFlightNumber() + " already reaches final destination - no connecting flights needed");
                     return;
                 }
                 
-                // Skip flights with null arrival airport ID
+                
                 if (flight.getArrivalAirportId() == null) {
                     System.out.println("Skipping flight " + flight.getFlightNumber() + " - null arrival airport ID");
                     return;
                 }
                 
-                // Find connecting flights from this flight's arrival airport to the final destination
+                
                 List<Flight> connectingFlights = flightMapper.findConnectingFlights(
-                    flight.getArrivalAirportId(), // departure from first flight's arrival airport
-                    finalDestinationAirportId,    // arrival at final destination
-                    flight.getId()                // exclude the current flight
+                    flight.getArrivalAirportId(), 
+                    finalDestinationAirportId,    
+                    flight.getId()                
                 );
                 
                 System.out.println("Found " + connectingFlights.size() + " connecting flights");
                 
                 if (!connectingFlights.isEmpty()) {
-                    // Filter connecting flights to ensure reasonable connection time
+                    
                     List<Flight> validConnections = new ArrayList<>();
                     for (Flight connectingFlight : connectingFlights) {
-                        // Check if the connecting flight departs after the first flight arrives
-                        // with at least 1 hour connection time
+                        
+                        
                         if (connectingFlight.getDepartureTimeUtc() != null && 
                             flight.getArrivalTimeUtc() != null) {
                             long connectionMinutes = java.time.Duration.between(
@@ -1879,7 +1879,7 @@ public class TicketService {
                                 connectingFlight.getDepartureTimeUtc()
                             ).toMinutes();
                             
-                            if (connectionMinutes >= 60 && connectionMinutes <= 720) { // 1-12 hours connection time
+                            if (connectionMinutes >= 60 && connectionMinutes <= 720) { 
                                 validConnections.add(connectingFlight);
                                 System.out.println("Valid connecting flight: " + connectingFlight.getFlightNumber() + 
                                                  " (connection time: " + connectionMinutes + " minutes)");
@@ -1891,7 +1891,7 @@ public class TicketService {
                     }
                     
                     if (!validConnections.isEmpty()) {
-                        // Take the first valid connection (could be enhanced with better selection logic)
+                        
                         flight.setConnectingFlights(validConnections.subList(0, Math.min(1, validConnections.size())));
                         System.out.println("Set " + flight.getConnectingFlights().size() + " connecting flights on flight");
                     } else {
@@ -1904,7 +1904,7 @@ public class TicketService {
                 System.out.println("Flight, flight ID, or final destination is null");
             }
         } catch (Exception e) {
-            // If loading connecting flights fails, don't break the main functionality
+            
             System.err.println("Failed to load connecting flights for flight " + 
                              (flight != null ? flight.getId() : "null") + ": " + e.getMessage());
             e.printStackTrace();
@@ -1936,7 +1936,7 @@ public class TicketService {
                     ticket.setConnectingFlights(connectingFlights);
                     System.out.println("Set " + connectingFlights.size() + " connecting flights on ticket");
                     
-                    // 🚀 FIX: Calculate and update the total price for connecting flights
+                    
                     if (!connectingFlights.isEmpty()) {
                         BigDecimal originalPrice = ticket.getPrice() != null ? ticket.getPrice() : BigDecimal.ZERO;
                         BigDecimal connectingFlightsPrice = BigDecimal.ZERO;
@@ -1944,13 +1944,13 @@ public class TicketService {
                         System.out.println("💰 Calculating total price for connecting flights...");
                         System.out.println("Original ticket price: " + originalPrice);
                         
-                        // If the original ticket price is just the main flight price, add connecting flight prices
+                        
                         Flight mainFlight = ticket.getFlight();
                         if (mainFlight != null) {
                             BigDecimal mainFlightPrice = calculatePrice(mainFlight, ticket.getTicketType());
                             System.out.println("Main flight calculated price: " + mainFlightPrice);
                             
-                            // Check if original price is approximately equal to main flight price only
+                            
                             boolean needsPriceUpdate = originalPrice.compareTo(mainFlightPrice) == 0 ||
                                                      originalPrice.compareTo(BigDecimal.ZERO) == 0;
                             
@@ -1966,7 +1966,7 @@ public class TicketService {
                                                      " price: ¥" + connectingPrice + ", running total: ¥" + newTotalPrice);
                                 }
                                 
-                                // Update the ticket's price in memory (for API response)
+                                
                                 ticket.setPrice(newTotalPrice);
                                 System.out.println("✅ Updated ticket price from ¥" + originalPrice + " to ¥" + newTotalPrice + 
                                                  " (includes " + connectingFlights.size() + " connecting flights)");
@@ -1982,7 +1982,7 @@ public class TicketService {
                 System.out.println("Ticket or ticket ID is null");
             }
         } catch (Exception e) {
-            // If loading connecting flights fails, don't break the main functionality
+            
             System.err.println("Failed to load connecting flights for ticket " + ticket.getId() + ": " + e.getMessage());
             e.printStackTrace();
         }
@@ -2006,15 +2006,15 @@ public class TicketService {
                              newFlight.getDepartureAirport().getCity() + " -> " + 
                              newFlight.getArrivalAirport().getCity() + ")");
             
-            // Get the original connecting flights
+            
             List<Long> originalConnectingFlightIds = ticketMapper.findConnectingFlightIdsByTicketId(originalTicket.getId());
             System.out.println("Original connecting flights: " + originalConnectingFlightIds.size() + " flights");
             
             if (originalConnectingFlightIds.isEmpty()) {
                 System.out.println("No connecting flights in original ticket");
                 
-                // 🚀 SPECIAL CASE: Original was single flight, but new selection might be connecting
-                // Check if the user selected a connecting flight for reschedule
+                
+                
                 System.out.println("🔍 Checking if new flight selection is a connecting flight combination...");
                 
                 try {
@@ -2029,7 +2029,7 @@ public class TicketService {
                         originCity, finalDestinationCity, rescheduleDate
                     );
                     
-                    // Find the connecting flight combination that starts with our selected flight
+                    
                     com.airticket.model.ConnectingFlight matchingConnectingFlight = null;
                     for (com.airticket.model.ConnectingFlight cf : connectingFlights) {
                         if (cf.getFlights() != null && !cf.getFlights().isEmpty()) {
@@ -2045,7 +2045,7 @@ public class TicketService {
                     if (matchingConnectingFlight != null && matchingConnectingFlight.getFlights().size() > 1) {
                         System.out.println("🎉 SPECIAL CASE: Converting single flight reschedule to connecting flight!");
                         
-                        // Create connecting flights from the second flight onwards
+                        
                         List<Flight> connectingFlightsToCreate = matchingConnectingFlight.getFlights().subList(1, matchingConnectingFlight.getFlights().size());
                         
                         int sequenceNumber = 1;
@@ -2054,7 +2054,7 @@ public class TicketService {
                                              " (" + connectingFlight.getDepartureAirport().getCity() + " → " + 
                                              connectingFlight.getArrivalAirport().getCity() + ")");
                             
-                            // Reserve seat on the connecting flight
+                            
                             if (flightService.reserveSeat(connectingFlight.getId())) {
                                 int rowsInserted = ticketMapper.insertTicketConnectingFlight(
                                     newTicket.getId(), 
@@ -2066,7 +2066,7 @@ public class TicketService {
                                     System.out.println("✅ Successfully created connecting flight " + connectingFlight.getId());
                                 } else {
                                     System.out.println("❌ Failed to create connecting flight " + connectingFlight.getId());
-                                    // Release the seat if we couldn't save the relationship
+                                    
                                     flightService.releaseSeat(connectingFlight.getId());
                                 }
                             } else {
@@ -2076,7 +2076,7 @@ public class TicketService {
                         }
                         
                         System.out.println("✅ SPECIAL CASE completed: Single flight converted to connecting flight");
-                        return; // We're done
+                        return; 
                     } else {
                         System.out.println("ℹ️ SPECIAL CASE: No connecting flight combination found, this is a simple single flight reschedule");
                     }
@@ -2090,7 +2090,7 @@ public class TicketService {
                 return;
             }
             
-            // Load original flight and connecting flights for analysis
+            
             Flight originalMainFlight = flightService.getFlightById(originalTicket.getFlightId());
             List<Flight> originalConnectingFlights = new ArrayList<>();
             for (Long flightId : originalConnectingFlightIds) {
@@ -2110,7 +2110,7 @@ public class TicketService {
                                  cf.getArrivalAirport().getCity() + ")");
             }
             
-            // Determine the final destination of the original journey
+            
             Flight finalDestinationFlight = originalConnectingFlights.isEmpty() ? 
                 originalMainFlight : originalConnectingFlights.get(originalConnectingFlights.size() - 1);
             Long finalDestinationAirportId = finalDestinationFlight.getArrivalAirport().getId();
@@ -2118,14 +2118,14 @@ public class TicketService {
             System.out.println("Final destination of original journey: " + finalDestinationFlight.getArrivalAirport().getCity());
             System.out.println("New flight destination: " + newFlight.getArrivalAirport().getCity());
             
-            // 🚀 CASE 0: NEW FLIGHT SELECTION WAS A CONNECTING FLIGHT FROM SEARCH RESULTS
-            // This is the most important case that was missing!
-            // We need to detect if the "newFlight" actually has connecting flights that should be created
+            
+            
+            
             System.out.println("🔍 CASE 0: Checking if new flight selection has connecting flights...");
             
             try {
-                // Try to find connecting flights that would complete this journey
-                // Check if there are connecting flights for the route from original origin to final destination
+                
+                
                 String originCity = originalMainFlight.getDepartureAirport().getCity();
                 String finalDestinationCity = finalDestinationFlight.getArrivalAirport().getCity();
                 LocalDate rescheduleDate = newFlight.getDepartureTimeUtc().atZone(java.time.ZoneOffset.UTC).toLocalDate();
@@ -2136,7 +2136,7 @@ public class TicketService {
                     originCity, finalDestinationCity, rescheduleDate
                 );
                 
-                // Find the connecting flight combination that starts with our selected flight
+                
                 com.airticket.model.ConnectingFlight matchingConnectingFlight = null;
                 for (com.airticket.model.ConnectingFlight cf : connectingFlights) {
                     if (cf.getFlights() != null && !cf.getFlights().isEmpty()) {
@@ -2152,7 +2152,7 @@ public class TicketService {
                 if (matchingConnectingFlight != null && matchingConnectingFlight.getFlights().size() > 1) {
                     System.out.println("🎉 CASE 0: Creating connecting flights for new ticket!");
                     
-                    // Create connecting flights from the second flight onwards
+                    
                     List<Flight> connectingFlightsToCreate = matchingConnectingFlight.getFlights().subList(1, matchingConnectingFlight.getFlights().size());
                     
                     int sequenceNumber = 1;
@@ -2161,7 +2161,7 @@ public class TicketService {
                                          " (" + connectingFlight.getDepartureAirport().getCity() + " → " + 
                                          connectingFlight.getArrivalAirport().getCity() + ")");
                         
-                        // Reserve seat on the connecting flight
+                        
                         if (flightService.reserveSeat(connectingFlight.getId())) {
                             int rowsInserted = ticketMapper.insertTicketConnectingFlight(
                                 newTicket.getId(), 
@@ -2173,7 +2173,7 @@ public class TicketService {
                                 System.out.println("✅ Successfully created connecting flight " + connectingFlight.getId());
                             } else {
                                 System.out.println("❌ Failed to create connecting flight " + connectingFlight.getId());
-                                // Release the seat if we couldn't save the relationship
+                                
                                 flightService.releaseSeat(connectingFlight.getId());
                             }
                         } else {
@@ -2183,7 +2183,7 @@ public class TicketService {
                     }
                     
                     System.out.println("✅ CASE 0 completed: All connecting flights created for new ticket");
-                    return; // We're done - the connecting flight combination has been created
+                    return; 
                 } else {
                     System.out.println("ℹ️ CASE 0: No matching connecting flight combination found, proceeding to other cases");
                 }
@@ -2193,14 +2193,14 @@ public class TicketService {
                 System.out.println("Proceeding to other reschedule cases...");
             }
             
-            // CASE 1: New flight is a direct flight to the final destination
+            
             if (newFlight.getArrivalAirport().getId().equals(finalDestinationAirportId)) {
                 System.out.println("✅ CASE 1: New flight goes directly to final destination - no connecting flights needed");
-                // Don't copy any connecting flights - the new flight is direct
+                
                 return;
             }
             
-            // CASE 2: New flight goes to the same intermediate destination as one of the original connecting flights
+            
             boolean foundMatchingIntermediateDestination = false;
             int matchingSegmentIndex = -1;
             
@@ -2216,7 +2216,7 @@ public class TicketService {
             }
             
             if (foundMatchingIntermediateDestination) {
-                // Copy only the connecting flights that come AFTER the matching segment
+                
                 int sequenceNumber = 1;
                 for (int i = matchingSegmentIndex + 1; i < originalConnectingFlights.size(); i++) {
                     Flight remainingConnectingFlight = originalConnectingFlights.get(i);
@@ -2238,7 +2238,7 @@ public class TicketService {
                 return;
             }
             
-            // CASE 3: New flight requires connecting flights to reach the final destination
+            
             System.out.println("🔍 CASE 3: Searching for connecting flights from new flight destination to final destination");
             
             try {
@@ -2248,22 +2248,22 @@ public class TicketService {
                     null
                 );
                 
-                // Filter connecting flights that depart after the new flight arrives (with minimum connection time)
-                Instant minConnectionTime = newFlight.getArrivalTimeUtc().plusSeconds(60 * 60); // 1 hour minimum connection
+                
+                Instant minConnectionTime = newFlight.getArrivalTimeUtc().plusSeconds(60 * 60); 
                 List<Flight> validConnectingFlights = availableConnectingFlights.stream()
                     .filter(cf -> cf.getDepartureTimeUtc().isAfter(minConnectionTime))
                     .collect(Collectors.toList());
                 
                 if (!validConnectingFlights.isEmpty()) {
-                    // For now, select the first valid connecting flight
-                    // In a production system, you might want to let the user choose or use smart selection logic
+                    
+                    
                     Flight selectedConnectingFlight = validConnectingFlights.get(0);
                     
                     System.out.println("✅ Found valid connecting flight: " + selectedConnectingFlight.getFlightNumber() + 
                                      " (" + selectedConnectingFlight.getDepartureAirport().getCity() + " -> " + 
                                      selectedConnectingFlight.getArrivalAirport().getCity() + ")");
                     
-                    // Reserve seat on the connecting flight
+                    
                     if (flightService.reserveSeat(selectedConnectingFlight.getId())) {
                         int rowsInserted = ticketMapper.insertTicketConnectingFlight(
                             newTicket.getId(), 
@@ -2275,7 +2275,7 @@ public class TicketService {
                             System.out.println("Successfully added new connecting flight " + selectedConnectingFlight.getId());
                         } else {
                             System.out.println("WARNING: Failed to add new connecting flight " + selectedConnectingFlight.getId());
-                            // Release the seat if we couldn't save the relationship
+                            
                             flightService.releaseSeat(selectedConnectingFlight.getId());
                         }
                     } else {
@@ -2294,20 +2294,20 @@ public class TicketService {
         } catch (Exception e) {
             System.err.println("Failed to handle connecting flights for reschedule: " + e.getMessage());
             e.printStackTrace();
-            // Don't throw the exception to avoid breaking the main reschedule operation
+            
         }
         System.out.println("=== handleConnectingFlightsForReschedule() COMPLETED ===");
     }
 
-    /**
-     * Ensure the balance column exists in the users table
-     */
+    
+
+
     private void ensureBalanceColumnExists() {
         try {
             userMapper.addBalanceColumn();
             logger.info("Added balance column to users table");
         } catch (Exception e) {
-            // This is expected if column already exists
+            
             logger.debug("Balance column already exists or could not be added: {}", e.getMessage());
         }
     }

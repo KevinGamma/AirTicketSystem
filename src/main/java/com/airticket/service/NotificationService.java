@@ -35,42 +35,42 @@ public class NotificationService {
     @Autowired
     private FlightMapper flightMapper;
     
-    // Track which notifications have been scheduled to avoid duplicates
+    
     private final Set<String> scheduledNotifications = new HashSet<>();
 
-    /**
-     * Get notifications for a user (paginated)
-     */
+    
+
+
     public List<Notification> getNotificationsByUserId(Long userId, int limit, int offset) {
         return notificationMapper.findByUserIdPaginated(userId, limit, offset);
     }
 
-    /**
-     * Get unread notification count for a user
-     */
+    
+
+
     public int getUnreadCount(Long userId) {
         return notificationMapper.countUnreadByUserId(userId);
     }
 
-    /**
-     * Mark a notification as read
-     */
+    
+
+
     @Transactional
     public void markAsRead(Long notificationId) {
         notificationMapper.markAsRead(notificationId);
     }
 
-    /**
-     * Mark all notifications as read for a user
-     */
+    
+
+
     @Transactional
     public void markAllAsRead(Long userId) {
         notificationMapper.markAllAsReadByUserId(userId);
     }
 
-    /**
-     * Create a flight reminder notification (1 hour before departure)
-     */
+    
+
+
     @Transactional
     public void scheduleFlightReminder(Ticket ticket) {
         try {
@@ -81,12 +81,12 @@ public class NotificationService {
 
             String key = "REMINDER_" + ticket.getId();
             if (scheduledNotifications.contains(key)) {
-                return; // Already scheduled
+                return; 
             }
 
             Instant reminderTime = ticket.getFlight().getDepartureTimeUtc().minus(1, ChronoUnit.HOURS);
             
-            // Only schedule if reminder time is in the future
+            
             if (reminderTime.isAfter(Instant.now())) {
                 Notification notification = new Notification(
                     ticket.getUserId(),
@@ -108,9 +108,9 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Create immediate flight takeoff notification
-     */
+    
+
+
     @Transactional
     public void createFlightTakeoffNotification(Flight flight, List<Long> passengerUserIds) {
         try {
@@ -133,9 +133,9 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Create immediate flight landing notification
-     */
+    
+
+
     @Transactional
     public void createFlightLandingNotification(Flight flight, List<Long> passengerUserIds) {
         try {
@@ -158,16 +158,16 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Create reschedule approval notification
-     */
+    
+
+
     @Transactional
     public void createRescheduleApprovalNotification(AdminApprovalRequest request, Ticket originalTicket, Ticket newTicket) {
         try {
             String message;
             String notificationType = Notification.TYPE_RESCHEDULE_APPROVED;
             
-            // Check if customer needs to pay additional fee or get refund
+            
             BigDecimal additionalFee = request.getAdditionalFee();
             BigDecimal refundAmount = request.getRefundAmount();
             
@@ -204,9 +204,9 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Create reschedule rejection notification
-     */
+    
+
+
     @Transactional
     public void createRescheduleRejectionNotification(AdminApprovalRequest request, String rejectionReason) {
         try {
@@ -232,9 +232,9 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Create refund processed notification
-     */
+    
+
+
     @Transactional
     public void createRefundProcessedNotification(Long userId, Long ticketId, BigDecimal refundAmount, String ticketNumber) {
         try {
@@ -257,17 +257,17 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Scheduled task to send pending notifications and create flight status notifications
-     * Runs every 30 seconds
-     */
+    
+
+
+
     @Scheduled(fixedDelay = 30000)
     @Transactional
     public void processScheduledNotifications() {
         try {
             Instant now = Instant.now();
             
-            // 1. Send pending scheduled notifications (reminders)
+            
             List<Notification> pendingNotifications = notificationMapper.findPendingScheduledNotifications(now);
             for (Notification notification : pendingNotifications) {
                 try {
@@ -279,10 +279,10 @@ public class NotificationService {
                 }
             }
 
-            // 2. Check for flights that should have takeoff/landing notifications
+            
             checkFlightStatusNotifications(now);
             
-            // 3. Schedule reminders for newly paid tickets
+            
             scheduleRemindersForNewTickets();
 
         } catch (Exception e) {
@@ -290,23 +290,23 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Check for flights that need takeoff or landing notifications
-     */
+    
+
+
     private void checkFlightStatusNotifications(Instant now) {
         try {
-            // Get flights that departed in the last 5 minutes (for takeoff notifications)
+            
             Instant takeoffWindowStart = now.minus(5, ChronoUnit.MINUTES);
             Instant takeoffWindowEnd = now.plus(1, ChronoUnit.MINUTES);
             
-            // Get flights that arrived in the last 5 minutes (for landing notifications)
+            
             Instant landingWindowStart = now.minus(5, ChronoUnit.MINUTES);
             Instant landingWindowEnd = now.plus(1, ChronoUnit.MINUTES);
             
-            // Check flights for takeoff notifications
+            
             List<Flight> departingFlights = flightMapper.findFlightsByDepartureTimeRange(takeoffWindowStart, takeoffWindowEnd);
             for (Flight flight : departingFlights) {
-                // Check if takeoff notification already sent
+                
                 List<Notification> existingTakeoffNotifs = notificationMapper.findByTicketIdAndType(null, Notification.TYPE_FLIGHT_TAKEOFF);
                 boolean alreadySent = existingTakeoffNotifs.stream()
                     .anyMatch(n -> flight.getId().equals(n.getFlightId()));
@@ -319,10 +319,10 @@ public class NotificationService {
                 }
             }
             
-            // Check flights for landing notifications
+            
             List<Flight> arrivingFlights = flightMapper.findFlightsByArrivalTimeRange(landingWindowStart, landingWindowEnd);
             for (Flight flight : arrivingFlights) {
-                // Check if landing notification already sent
+                
                 List<Notification> existingLandingNotifs = notificationMapper.findByTicketIdAndType(null, Notification.TYPE_FLIGHT_LANDING);
                 boolean alreadySent = existingLandingNotifs.stream()
                     .anyMatch(n -> flight.getId().equals(n.getFlightId()));
@@ -340,12 +340,12 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Schedule flight reminders for newly paid tickets
-     */
+    
+
+
     private void scheduleRemindersForNewTickets() {
         try {
-            // Find paid tickets that don't have reminder notifications scheduled
+            
             List<Ticket> paidTickets = ticketMapper.findPaidTicketsWithoutReminders();
             for (Ticket ticket : paidTickets) {
                 scheduleFlightReminder(ticket);
@@ -355,17 +355,17 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Clean up old notifications (older than 30 days)
-     */
-    @Scheduled(cron = "0 0 2 * * ?") // Run at 2 AM daily
+    
+
+
+    @Scheduled(cron = "0 0 2 * * ?") 
     @Transactional
     public void cleanupOldNotifications() {
         try {
             Instant cutoffTime = Instant.now().minus(30, ChronoUnit.DAYS);
             
-            // This would need to be implemented per user to avoid table locks
-            // For now, we'll skip this cleanup
+            
+            
             logger.info("Notification cleanup scheduled (implementation pending)");
             
         } catch (Exception e) {
@@ -373,9 +373,9 @@ public class NotificationService {
         }
     }
     
-    /**
-     * Create a test notification for debugging purposes
-     */
+    
+
+
     @Transactional
     public void createTestNotification(Long userId, String title, String message) {
         try {

@@ -1,6 +1,6 @@
 <template>
   <div class="booking-page">
-    <!-- Header -->
+    
     <header class="page-header">
       <div class="container">
         <div class="header-content">
@@ -10,14 +10,14 @@
       </div>
     </header>
 
-    <!-- Loading State -->
+    
     <div v-if="loading" class="loading-container">
       <div class="container">
         <el-skeleton animated :rows="8" />
       </div>
     </div>
 
-    <!-- Flight Not Found -->
+    
     <div v-else-if="!flight" class="error-container">
       <div class="container">
         <el-result
@@ -34,18 +34,18 @@
       </div>
     </div>
 
-    <!-- Booking Form -->
+    
     <div v-else class="booking-content">
       <div class="container">
         <div class="booking-layout">
-          <!-- Flight Details Section -->
+          
           <div class="flight-details-section">
             <div class="section-header">
               <h2>航班信息</h2>
             </div>
             
             <div class="flight-card">
-              <!-- Flight Overview -->
+              
               <div class="flight-overview" v-if="flight.isConnecting">
                 <div class="overview-header">
                   <h3>行程概览</h3>
@@ -64,7 +64,7 @@
                 </div>
               </div>
 
-              <!-- Flight Segments -->
+              
               <div v-for="(segment, index) in flight.segments" :key="`segment-${index}`" class="flight-segment">
                 <div class="segment-header" v-if="flight.isConnecting">
                   <span class="segment-number">航段 {{ index + 1 }}</span>
@@ -136,7 +136,7 @@
                   </div>
                 </div>
 
-                <!-- Layover Information -->
+                
                 <div v-if="flight.isConnecting && index < flight.segments.length - 1" class="layover-info">
                   <div class="layover-details">
                     <el-icon class="layover-icon"><Clock /></el-icon>
@@ -148,7 +148,7 @@
                 </div>
               </div>
 
-              <!-- Total Price for Connecting Flights -->
+              
               <div v-if="flight.isConnecting" class="connecting-price-section">
                 <div class="price-details">
                   <div class="ticket-type">{{ getTicketTypeName(ticketType) }}</div>
@@ -157,7 +157,7 @@
               </div>
             </div>
 
-              <!-- Booking Summary -->
+              
               <div class="booking-summary">
                 <div class="summary-item">
                   <span class="label">乘客人数:</span>
@@ -187,7 +187,7 @@
             </div>
           </div>
 
-          <!-- Passenger Information Section -->
+          
           <div class="passenger-info-section">
             <div class="section-header">
               <h2>乘客信息</h2>
@@ -199,7 +199,7 @@
               :rules="bookingRules"
               class="booking-form"
             >
-              <!-- Cabin Class Selection -->
+              
               <div class="cabin-class-section">
                 <h3>舱位选择</h3>
                 <div class="cabin-options">
@@ -235,7 +235,7 @@
                 </div>
               </div>
 
-              <!-- Passenger Details -->
+              
               <div class="passengers-section">
                 <h3>乘客详细信息</h3>
                 <p class="passenger-note" v-if="passengers > 1">
@@ -272,7 +272,7 @@
                 </div>
               </div>
 
-              <!-- Submit Section -->
+              
               <div class="submit-section">
                 <div class="terms-section">
                   <el-checkbox v-model="agreeTerms" size="large">
@@ -311,7 +311,7 @@ import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import api from '../api'
 
-// Extend dayjs with timezone plugins
+
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
@@ -337,7 +337,7 @@ export default {
     }
   },
   computed: {
-    // Cabin class price multipliers
+    
     cabinPriceMultiplier() {
       const multipliers = {
         'ECONOMY': 1.0,
@@ -347,33 +347,33 @@ export default {
       return multipliers[this.ticketType] || 1.0
     },
 
-    // Base price per segment (economy class price)
+    
     baseSegmentPrice() {
       if (!this.flight) return 0
       
       if (this.flight.isConnecting && this.flight.segments) {
-        // For connecting flights, sum up all segment base prices
+        
         return this.flight.segments.reduce((total, segment) => {
           return total + (segment.price || 0)
         }, 0)
       } else {
-        // For direct flights
+        
         return this.flight.price || 0
       }
     },
 
-    // Current segment price with cabin class applied
+    
     currentSegmentPrice() {
       return Math.round(this.baseSegmentPrice * this.cabinPriceMultiplier)
     },
 
-    // Total price including passengers and cabin class
+    
     totalPrice() {
       return this.currentSegmentPrice * this.passengers
     }
   },
   methods: {
-    // Timezone utilities
+    
     getCityTimezone(city) {
       const timezoneMap = {
         '纽约': 'America/New_York',
@@ -381,7 +381,7 @@ export default {
         '东京': 'Asia/Tokyo',
         '首尔': 'Asia/Seoul',
         '新加坡': 'Asia/Singapore',
-        // Domestic cities use Asia/Shanghai
+        
         '北京': 'Asia/Shanghai',
         '上海': 'Asia/Shanghai',
         '广州': 'Asia/Shanghai'
@@ -412,7 +412,7 @@ export default {
         const connectingFlightIds = this.$route.query.connectingFlightIds
         const isConnecting = this.$route.query.isConnecting === 'true'
         this.passengers = parseInt(this.$route.query.passengers) || 1
-        this.ticketType = 'ECONOMY' // Default to economy class
+        this.ticketType = 'ECONOMY' 
 
         if (!flightId) {
           this.flight = null
@@ -420,10 +420,10 @@ export default {
         }
 
         if (isConnecting && connectingFlightIds) {
-          // Handle connecting flights - load all flight segments
+          
           await this.loadConnectingFlights(connectingFlightIds.split(','))
         } else {
-          // Handle direct flight
+          
           await this.loadDirectFlight(flightId)
         }
         
@@ -453,7 +453,7 @@ export default {
 
     async loadConnectingFlights(flightIds) {
       try {
-        // Load all flight segments
+        
         const flightPromises = flightIds.map(id => api.get(`/flights/${id}`))
         const responses = await Promise.all(flightPromises)
         
@@ -465,23 +465,23 @@ export default {
         })
 
         if (segments.length > 0) {
-          // Create a combined flight object for connecting flights
+          
           this.flight = {
             id: `connecting_${segments[0].id}`,
             flightNumber: segments.map(s => s.flightNumber).join(' + '),
             isConnecting: true,
             segments: segments,
             
-            // Overall journey details (first departure to final arrival)
+            
             departureTimeUtc: segments[0].departureTimeUtc,
             arrivalTimeUtc: segments[segments.length - 1].arrivalTimeUtc,
             departureAirport: segments[0].departureAirport,
             arrivalAirport: segments[segments.length - 1].arrivalAirport,
             
-            // Combined pricing (sum of all segments)
+            
             price: segments.reduce((total, segment) => total + (segment.price || 0), 0),
             
-            // Use first segment's airline as primary
+            
             airline: segments[0].airline
           }
         } else {
@@ -502,7 +502,7 @@ export default {
           idCard: ''
         })
         
-        // Add validation rules for each passenger
+        
         this.bookingRules[`passengers.${i}.name`] = [
           { required: true, message: '请输入姓名', trigger: 'blur' }
         ]
@@ -519,8 +519,8 @@ export default {
         
         this.submitting = true
         
-        // For now, handle single passenger booking (first passenger)
-        // TODO: Later can be extended to handle multiple passengers by booking separately
+        
+        
         const firstPassenger = this.bookingForm.passengers[0]
         const bookingData = {
           passengerName: firstPassenger.name,
@@ -528,13 +528,13 @@ export default {
           ticketType: this.ticketType
         }
 
-        // Handle connecting vs direct flights
+        
         if (this.flight.isConnecting && this.flight.segments) {
-          // For connecting flights, use the first segment ID as main flightId and pass all segment IDs
+          
           bookingData.flightId = this.flight.segments[0].id
           bookingData.connectingFlightIds = this.flight.segments.map(segment => segment.id)
         } else {
-          // For direct flights, use the flight ID directly
+          
           bookingData.flightId = this.flight.id
         }
 
@@ -542,7 +542,7 @@ export default {
         
         if (response.data.success) {
           ElMessage.success('预订成功！正在跳转到支付页面...')
-          // Navigate to payment page
+          
           setTimeout(() => {
             this.$router.push({
               path: `/payment/${response.data.data.id}`,
@@ -628,7 +628,7 @@ export default {
   background: #f5f5f5;
 }
 
-/* Header */
+
 .page-header {
   padding: 2rem 0;
   background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
@@ -652,13 +652,13 @@ export default {
   margin: 0;
 }
 
-/* Loading and Error States */
+
 .loading-container,
 .error-container {
   padding: 2rem 0;
 }
 
-/* Booking Content */
+
 .booking-content {
   padding: 2rem 0;
 }
@@ -670,7 +670,7 @@ export default {
   align-items: start;
 }
 
-/* Section Headers */
+
 .section-header {
   margin-bottom: 1.5rem;
 }
@@ -682,7 +682,7 @@ export default {
   margin: 0;
 }
 
-/* Flight Details */
+
 .flight-details-section {
   background: white;
   border-radius: 1rem;
@@ -693,7 +693,7 @@ export default {
   top: 2rem;
 }
 
-/* Connecting Flight Overview */
+
 .flight-overview {
   background: #f8fafc;
   border-radius: 0.75rem;
@@ -767,7 +767,7 @@ export default {
   color: #3b82f6;
 }
 
-/* Flight Segments */
+
 .flight-segment {
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
@@ -802,7 +802,7 @@ export default {
   border: 1px solid #d1d5db;
 }
 
-/* Layover Information */
+
 .layover-info {
   background: #eff6ff;
   border-top: 1px solid #e5e7eb;
@@ -828,7 +828,7 @@ export default {
   font-weight: 500;
 }
 
-/* Connecting Flight Price Section */
+
 .connecting-price-section {
   background: #f8fafc;
   padding: 1rem;
@@ -858,7 +858,7 @@ export default {
   align-items: center;
 }
 
-/* Airline Section */
+
 .airline-section {
   display: flex;
   align-items: center;
@@ -913,7 +913,7 @@ export default {
   color: #666666;
 }
 
-/* Route Section */
+
 .route-section {
   display: flex;
   align-items: center;
@@ -1012,7 +1012,7 @@ export default {
   border-radius: 9999px;
 }
 
-/* Price Section */
+
 .price-section {
   text-align: right;
   display: flex;
@@ -1040,7 +1040,7 @@ export default {
   color: #666666;
 }
 
-/* Booking Summary */
+
 .booking-summary {
   background: #f8fafc;
   padding: 1rem 1.5rem;
@@ -1090,7 +1090,7 @@ export default {
   font-weight: 600;
 }
 
-/* Passenger Information */
+
 .passenger-info-section {
   background: white;
   border-radius: 1rem;
@@ -1239,7 +1239,7 @@ export default {
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* Submit Section */
+
 .submit-section {
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -1272,14 +1272,14 @@ export default {
   font-weight: 600;
 }
 
-/* Container */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
-/* Responsive */
+
 @media (max-width: 1023px) {
   .booking-layout {
     grid-template-columns: 1fr;

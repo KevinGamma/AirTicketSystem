@@ -5,7 +5,7 @@ import java.util.List;
 public class RescheduleRequest {
     private Long newFlightId;
     private String reason;
-    private List<Long> connectingFlightIds; // Added to support connecting flights in reschedule
+    private List<Long> connectingFlightIds; 
 
     public RescheduleRequest() {}
 

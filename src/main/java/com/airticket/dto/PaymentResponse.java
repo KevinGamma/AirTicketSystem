@@ -4,33 +4,33 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-/**
- * Payment Response DTO
- * 支付响应数据传输对象
- */
+
+
+
+
 public class PaymentResponse {
-    private boolean success;                // 是否成功
-    private String message;                 // 响应消息
-    private String paymentNumber;           // 支付单号
-    private String alipayTradeNo;          // 支付宝交易号
-    private BigDecimal amount;              // 支付金额
-    private String status;                  // 支付状态
-    private String paymentUrl;              // 支付页面URL (用于网页支付)
-    private String qrCode;                  // 二维码内容 (用于扫码支付)
-    private LocalDateTime paymentTime;      // 支付时间
+    private boolean success;                
+    private String message;                 
+    private String paymentNumber;           
+    private String alipayTradeNo;          
+    private BigDecimal amount;              
+    private String status;                  
+    private String paymentUrl;              
+    private String qrCode;                  
+    private LocalDateTime paymentTime;      
     
-    // 沙箱环境提示信息
-    private boolean sandboxMode;            // 是否沙箱模式
-    private String sandboxTips;             // 沙箱测试提示
-    private SandboxTestInfo sandboxTestInfo; // 沙箱测试信息
     
-    // 退款相关信息
-    private Map<String, Object> refundDetails; // 退款详情
+    private boolean sandboxMode;            
+    private String sandboxTips;             
+    private SandboxTestInfo sandboxTestInfo; 
+    
+    
+    private Map<String, Object> refundDetails; 
     
     public static class SandboxTestInfo {
-        private String buyerAccount;        // 测试买家账号
-        private String payPassword;        // 测试支付密码
-        private String testInstructions;   // 测试说明
+        private String buyerAccount;        
+        private String payPassword;        
+        private String testInstructions;   
         
         public SandboxTestInfo() {}
         
@@ -40,7 +40,7 @@ public class PaymentResponse {
             this.testInstructions = testInstructions;
         }
         
-        // Getters and Setters
+        
         public String getBuyerAccount() { return buyerAccount; }
         public void setBuyerAccount(String buyerAccount) { this.buyerAccount = buyerAccount; }
         
@@ -69,7 +69,7 @@ public class PaymentResponse {
         return new PaymentResponse(false, message);
     }
     
-    // Getters and Setters
+    
     public boolean isSuccess() {
         return success;
     }

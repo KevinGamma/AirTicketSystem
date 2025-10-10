@@ -2,13 +2,13 @@
   <div class="approval-requests">
     <h2>{{ $t('admin.approvalRequests') }}</h2>
     
-    <!-- Filter Tabs -->
+    
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane :label="$t('admin.pendingRequests')" name="pending"></el-tab-pane>
       <el-tab-pane :label="$t('admin.allRequests')" name="all"></el-tab-pane>
     </el-tabs>
     
-    <!-- Requests Table -->
+    
     <el-table :data="requests" stripe v-loading="loading">
       <el-table-column :label="$t('tickets.requestType')" width="120">
         <template #default="scope">
@@ -76,10 +76,10 @@
       </el-table-column>
     </el-table>
 
-    <!-- Request Details Dialog -->
+    
     <el-dialog v-model="requestDetailsVisible" :title="$t('admin.requestDetails')" width="800px">
       <div v-if="selectedRequest">
-        <!-- Request Information -->
+        
         <el-card style="margin-bottom: 20px;">
           <template #header>
             <div class="card-header">
@@ -113,7 +113,7 @@
           </div>
         </el-card>
 
-        <!-- Ticket Information -->
+        
         <el-card style="margin-bottom: 20px;">
           <template #header>
             <div class="card-header">
@@ -136,7 +136,7 @@
           </el-row>
         </el-card>
 
-        <!-- New Flight Information (for reschedule requests) -->
+        
         <el-card v-if="selectedRequest.requestType === 'RESCHEDULE' && selectedRequest.newFlight" style="margin-bottom: 20px;">
           <template #header>
             <div class="card-header">
@@ -155,7 +155,7 @@
           </el-row>
         </el-card>
 
-        <!-- Processing Actions -->
+        
         <div v-if="selectedRequest.status === 'PENDING'" class="action-buttons">
           <h4>{{ $t('admin.processRequest') }}</h4>
           <el-button type="success" @click="approveRequest(selectedRequest.id)">
@@ -172,7 +172,7 @@
       </template>
     </el-dialog>
 
-    <!-- Reject Request Dialog -->
+    
     <el-dialog v-model="rejectDialogVisible" :title="$t('admin.rejectRequest')" width="500px">
       <div>
         <p>{{ $t('admin.rejectConfirmMessage') }}</p>
@@ -216,10 +216,10 @@ export default {
       requests: [],
       loading: false,
       activeTab: 'pending',
-      // Request details dialog
+      
       requestDetailsVisible: false,
       selectedRequest: null,
-      // Reject dialog
+      
       rejectDialogVisible: false,
       rejectForm: {
         reason: ''
@@ -356,7 +356,7 @@ export default {
         return this.$t(`tickets.statuses.${translationKey}`)
       }
       
-      // Fallback: if translation key not found, return the status as-is or a default
+      
       console.warn(`No translation found for ticket status: ${status}`)
       return this.$t('tickets.statuses.booked')
     },

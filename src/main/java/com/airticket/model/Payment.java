@@ -4,32 +4,32 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.Instant;
 
-/**
- * Payment Model
- * 支付记录模型
- */
+
+
+
+
 public class Payment {
     private Long id;
     private Long ticketId;
-    private String paymentNumber;           // 支付单号
-    private String alipayTradeNo;          // 支付宝交易号
-    private BigDecimal amount;              // 支付金额
-    private String currency;                // 货币类型，默认CNY
-    private String paymentMethod;           // 支付方式: ALIPAY, WECHAT, CARD等
-    private String status;                  // 支付状态: PENDING, SUCCESS, FAILED, CANCELLED, REFUNDED
-    private String subject;                 // 支付主题/商品名称
-    private String body;                    // 支付描述
-    private String buyerLogonId;           // 买家支付宝账号
-    private String buyerUserId;            // 买家用户ID
-    private Instant paymentTime;      // 支付完成时间
-    private Instant createdAt;        // 创建时间
-    private Instant updatedAt;        // 更新时间
+    private String paymentNumber;           
+    private String alipayTradeNo;          
+    private BigDecimal amount;              
+    private String currency;                
+    private String paymentMethod;           
+    private String status;                  
+    private String subject;                 
+    private String body;                    
+    private String buyerLogonId;           
+    private String buyerUserId;            
+    private Instant paymentTime;      
+    private Instant createdAt;        
+    private Instant updatedAt;        
     
-    // 沙箱环境相关字段
-    private boolean sandboxMode;            // 是否为沙箱支付
-    private String sandboxBuyerAccount;     // 沙箱买家账号
     
-    // 关联对象
+    private boolean sandboxMode;            
+    private String sandboxBuyerAccount;     
+    
+    
     private Ticket ticket;
     
     public Payment() {}
@@ -47,7 +47,7 @@ public class Payment {
         this.sandboxMode = sandboxMode;
     }
     
-    // Getters and Setters
+    
     public Long getId() {
         return id;
     }

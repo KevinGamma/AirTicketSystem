@@ -39,19 +39,19 @@ public interface UserMapper {
     @Delete("DELETE FROM users WHERE role != 'ADMIN'")
     int deleteAllExceptAdmin();
     
-    // Try to add balance, but handle gracefully if column doesn't exist
+    
     @Update("UPDATE users SET balance = COALESCE(balance, 0) + #{amount} WHERE id = #{userId}")
     int addToBalance(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
     
-    // Try to deduct balance, but handle gracefully if column doesn't exist
+    
     @Update("UPDATE users SET balance = COALESCE(balance, 0) - #{amount} WHERE id = #{userId} AND COALESCE(balance, 0) >= #{amount}")
     int deductFromBalance(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
     
-    // Try to get balance, but return 0 if column doesn't exist
+    
     @Select("SELECT COALESCE(balance, 0) FROM users WHERE id = #{userId}")
     BigDecimal getBalance(Long userId);
     
-    // Add balance column to users table (will fail silently if column exists)
+    
     @Update("ALTER TABLE users ADD COLUMN balance DECIMAL(10,2) DEFAULT 0.00")
     void addBalanceColumn();
 }

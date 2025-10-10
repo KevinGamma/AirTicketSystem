@@ -1,10 +1,8 @@
 package com.airticket.dto;
 
 public class AdminApprovalResponse {
-    private String action; // "APPROVE" or "REJECT"
-    private String rejectionReason; // Required if action is "REJECT"
-
-    public AdminApprovalResponse() {}
+    private String action; 
+    private String rejectionReason; 
 
     public AdminApprovalResponse(String action, String rejectionReason) {
         this.action = action;
@@ -23,7 +21,4 @@ public class AdminApprovalResponse {
         return rejectionReason;
     }
 
-    public void setRejectionReason(String rejectionReason) {
-        this.rejectionReason = rejectionReason;
-    }
 }

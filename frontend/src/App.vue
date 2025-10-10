@@ -104,13 +104,13 @@ export default {
     ...mapState(['currentUser']),
     ...mapGetters(['isLoggedIn', 'isAdmin']),
     showSidebar() {
-      // Hide sidebar on auth pages
+      
       const authRoutes = ['/login', '/register']
       return !authRoutes.includes(this.$route.path)
     }
   },
   methods: {
-    // Methods can be added here as needed
+    
   },
   created() {
     this.$store.dispatch('initAuth')
@@ -119,7 +119,7 @@ export default {
 </script>
 
 <style>
-/* Global App Styles */
+
 #app {
   font-family: var(--font-family-primary);
   background: var(--color-bg-primary);
@@ -127,13 +127,13 @@ export default {
   min-height: 100vh;
 }
 
-/* App Layout */
+
 .app-layout {
   display: flex;
   min-height: calc(100vh - var(--header-height));
 }
 
-/* Sidebar */
+
 .app-sidebar {
   width: var(--sidebar-width);
   background: var(--color-bg-card);
@@ -226,7 +226,7 @@ export default {
   font-size: var(--icon-sm);
 }
 
-/* Main Content */
+
 .app-main {
   flex: 1;
   display: flex;
@@ -244,7 +244,7 @@ export default {
   max-width: 100%;
 }
 
-/* Responsive Design */
+
 @media (max-width: 1023px) {
   .app-sidebar {
     position: fixed;
@@ -279,7 +279,7 @@ export default {
 }
 
 
-/* Element Plus Theme Overrides */
+
 :deep(.el-menu) {
   background: transparent !important;
 }
@@ -294,7 +294,7 @@ export default {
   padding-left: calc(var(--space-8) + var(--space-4)) !important;
 }
 
-/* Focus and accessibility */
+
 :deep(.el-menu-item:focus) {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -305,7 +305,7 @@ export default {
   outline-offset: 2px;
 }
 
-/* Loading and transition states */
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity var(--transition-normal);
@@ -316,7 +316,7 @@ export default {
   opacity: 0;
 }
 
-/* Scrollbar styling */
+
 .app-sidebar::-webkit-scrollbar {
   width: 6px;
 }

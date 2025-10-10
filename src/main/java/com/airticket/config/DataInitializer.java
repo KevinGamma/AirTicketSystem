@@ -77,7 +77,7 @@ public class DataInitializer {
     private void updateExistingAirportsToChinese() {
         System.out.println("Updating existing airports to Chinese names...");
         
-        // Update existing airports with Chinese city names
+        
         Airport pekAirport = airportMapper.findById(1L);
         if (pekAirport != null && "Beijing".equals(pekAirport.getCity())) {
             pekAirport.setName("北京首都国际机场");
@@ -334,12 +334,12 @@ public class DataInitializer {
 
             new Flight("MU58" + dayStr, getAirlineIdByCode("MU"), 2L, 4L,
                 convertToUtc(date.withHour(22).withMinute(30)),
-                convertToUtc(date.plusDays(1).withHour(18).withMinute(40)), // 跨日期
+                convertToUtc(date.plusDays(1).withHour(18).withMinute(40)), 
                 300, new BigDecimal("4500.00")),
 
             new Flight("CA98" + dayStr, getAirlineIdByCode("CA"), 1L, 5L,
                 convertToUtc(date.withHour(23).withMinute(15)),
-                convertToUtc(date.plusDays(1).withHour(19).withMinute(30)), // 跨日期
+                convertToUtc(date.plusDays(1).withHour(19).withMinute(30)), 
                 350, new BigDecimal("5200.00")),
         };
     }

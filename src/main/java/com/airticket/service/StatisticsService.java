@@ -50,7 +50,7 @@ public class StatisticsService {
         } catch (Exception e) {
             System.err.println("Error in getDashboardStats: " + e.getMessage());
             e.printStackTrace();
-            // Return default values on error
+            
             stats.put("totalFlights", 0);
             stats.put("totalTickets", 0);
             stats.put("totalRevenue", 0.0);
@@ -63,8 +63,8 @@ public class StatisticsService {
     public Map<String, Object> getFlightStatistics(Long flightId) {
         Map<String, Object> stats = new HashMap<>();
         
-        // Flight-specific statistics
-        // This would need custom queries in the mapper
+        
+        
         stats.put("bookedSeats", 0);
         stats.put("availableSeats", 0);
         stats.put("revenue", 0);
@@ -110,9 +110,9 @@ public class StatisticsService {
         }
     }
 
-    /**
-     * 获取每日航班量数据
-     */
+    
+
+
     public List<Map<String, Object>> getDailyFlightVolume(int days) {
         List<Map<String, Object>> result = new ArrayList<>();
         
@@ -122,7 +122,7 @@ public class StatisticsService {
             
             if (flights == null || flights.isEmpty()) {
                 System.out.println("No flights found, returning empty data");
-                // Return empty data for the requested days
+                
                 for (int i = days - 1; i >= 0; i--) {
                     LocalDate date = LocalDate.now().minusDays(i);
                     String dateStr = date.format(DateTimeFormatter.ofPattern("MM-dd"));
@@ -136,7 +136,7 @@ public class StatisticsService {
                 return result;
             }
             
-            // 按日期分组统计航班数量
+            
             Map<String, Long> dailyCount = flights.stream()
                 .filter(flight -> flight != null)
                 .filter(flight -> flight.getDepartureTimeUtc() != null)
@@ -146,7 +146,7 @@ public class StatisticsService {
                     Collectors.counting()
                 ));
 
-            // 填充过去N天的数据
+            
             for (int i = days - 1; i >= 0; i--) {
                 LocalDate date = LocalDate.now().minusDays(i);
                 String dateStr = date.format(DateTimeFormatter.ofPattern("MM-dd"));
@@ -162,40 +162,40 @@ public class StatisticsService {
         } catch (Exception e) {
             System.err.println("Error getting daily flight volume: " + e.getMessage());
             e.printStackTrace();
-            // Return empty result on error
+            
             result.clear();
         }
         
         return result;
     }
 
-    /**
-     * 获取航空公司航班分布数据
-     */
+    
+
+
     public List<Map<String, Object>> getAirlineFlightDistribution() {
         List<Map<String, Object>> result = new ArrayList<>();
         
         try {
             System.out.println("Getting airline flight distribution...");
             
-            // Use a simpler approach with direct SQL counting to avoid memory issues
+            
             Map<Long, Long> airlineCount = new HashMap<>();
             
-            // Based on the flight data analysis, add all airlines with more comprehensive data
-            airlineCount.put(1L, 120L); // CA - 中国国际航空 (Beijing based, major hub)
-            airlineCount.put(2L, 115L); // MU - 中国东方航空 (Shanghai based)  
-            airlineCount.put(3L, 105L); // CZ - 中国南方航空 (Guangzhou based)
             
-            // Add additional virtual airlines for better demonstration
-            airlineCount.put(4L, 85L);  // Virtual airline for comprehensive display
-            airlineCount.put(5L, 70L);  // Virtual airline for comprehensive display
-            airlineCount.put(6L, 45L);  // Virtual airline for comprehensive display
+            airlineCount.put(1L, 120L); 
+            airlineCount.put(2L, 115L); 
+            airlineCount.put(3L, 105L); 
+            
+            
+            airlineCount.put(4L, 85L);  
+            airlineCount.put(5L, 70L);  
+            airlineCount.put(6L, 45L);  
             
             System.out.println("Using fallback airline counts: " + airlineCount);
 
             System.out.println("Airline flight counts: " + airlineCount);
 
-            // If we have flight counts, try to get airline info, but fallback to just IDs if needed
+            
             Map<Long, String> airlineNames = new HashMap<>();
             Map<Long, String> airlineCodes = new HashMap<>();
             
@@ -222,7 +222,7 @@ public class StatisticsService {
                 System.err.println("Error getting airline info, using fallback: " + e.getMessage());
             }
 
-            // 转换为图表数据格式 - 即使没有airline表数据也能工作
+            
             for (Map.Entry<Long, Long> entry : airlineCount.entrySet()) {
                 Long airlineId = entry.getKey();
                 Long flightCount = entry.getValue();
@@ -247,14 +247,14 @@ public class StatisticsService {
         return result;
     }
 
-    /**
-     * 获取机票预订趋势数据
-     */
+    
+
+
     public List<Map<String, Object>> getBookingTrends(int days) {
         List<Map<String, Object>> result = new ArrayList<>();
         var tickets = ticketMapper.findAll();
         
-        // 按日期分组统计预订数量和收入
+        
         Map<String, List<com.airticket.model.Ticket>> dailyTickets = tickets.stream()
             .filter(ticket -> ticket.getCreatedAt() != null)
             .filter(ticket -> ticket.getCreatedAt().atOffset(ZoneOffset.UTC).toLocalDate().isAfter(LocalDate.now().minusDays(days)))
@@ -262,7 +262,7 @@ public class StatisticsService {
                 ticket -> ticket.getCreatedAt().atOffset(ZoneOffset.UTC).toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd"))
             ));
 
-        // 填充过去N天的数据
+        
         for (int i = days - 1; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
             String dateStr = date.format(DateTimeFormatter.ofPattern("MM-dd"));
@@ -284,14 +284,14 @@ public class StatisticsService {
         return result;
     }
 
-    /**
-     * 获取收入分析数据（按月统计）
-     */
+    
+
+
     public List<Map<String, Object>> getRevenueAnalysis(int months) {
         List<Map<String, Object>> result = new ArrayList<>();
         var tickets = ticketMapper.findAll();
         
-        // 按月份分组统计收入
+        
         Map<String, Double> monthlyRevenue = tickets.stream()
             .filter(ticket -> ticket.getCreatedAt() != null)
             .filter(ticket -> "PAID".equals(ticket.getStatus()))
@@ -301,7 +301,7 @@ public class StatisticsService {
                 Collectors.summingDouble(ticket -> ticket.getPrice().doubleValue())
             ));
 
-        // 填充过去N个月的数据
+        
         for (int i = months - 1; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusMonths(i).withDayOfMonth(1);
             String monthStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM"));
@@ -317,31 +317,31 @@ public class StatisticsService {
         return result;
     }
 
-    /**
-     * 获取热门航线排行数据（基于预订次数）
-     */
+    
+
+
     public List<Map<String, Object>> getPopularRoutes(int limit) {
         List<Map<String, Object>> result = new ArrayList<>();
         
         try {
             System.out.println("Getting popular routes with limit: " + limit);
             
-            // 获取所有机票数据
+            
             var tickets = ticketMapper.findAll();
             if (tickets == null || tickets.isEmpty()) {
                 System.out.println("No tickets found for popular routes - returning empty result");
-                return result; // 返回空结果而不是模拟数据
+                return result; 
             }
             
             System.out.println("Found " + tickets.size() + " tickets for route analysis");
             
-            // 通过机票数据统计航线受欢迎程度（基于预订次数）
+            
             Map<String, Long> routeBookingCount = new HashMap<>();
             
             for (var ticket : tickets) {
                 try {
                     if (ticket != null && ticket.getFlightId() != null) {
-                        // 手动加载航班信息，因为ticket.getFlight()可能为null
+                        
                         var flight = flightService.getFlightById(ticket.getFlightId());
                         if (flight == null) {
                             System.err.println("Flight not found for ticket ID: " + ticket.getId() + ", flight ID: " + ticket.getFlightId());
@@ -350,7 +350,7 @@ public class StatisticsService {
                         
                         String route = null;
                         
-                        // 尝试通过Airport对象获取城市信息
+                        
                         if (flight.getDepartureAirport() != null && flight.getArrivalAirport() != null) {
                             String depCity = flight.getDepartureAirport().getCity();
                             String arrCity = flight.getArrivalAirport().getCity();
@@ -359,17 +359,17 @@ public class StatisticsService {
                             }
                         }
                         
-                        // 如果Airport对象为空，尝试基于机场ID生成航线描述
+                        
                         if (route == null && flight.getDepartureAirportId() != null && flight.getArrivalAirportId() != null) {
                             route = "机场" + flight.getDepartureAirportId() + " → 机场" + flight.getArrivalAirportId();
                         }
                         
-                        // 如果还是没有航线信息，使用航班号
+                        
                         if (route == null && flight.getFlightNumber() != null) {
                             route = "航线-" + flight.getFlightNumber().substring(0, Math.min(2, flight.getFlightNumber().length()));
                         }
                         
-                        // 如果仍然没有航线信息，使用ticket和flight ID组合作为标识符
+                        
                         if (route == null) {
                             route = "航班ID-" + ticket.getFlightId();
                         }
@@ -381,7 +381,7 @@ public class StatisticsService {
                     }
                 } catch (Exception e) {
                     System.err.println("Error processing ticket ID " + ticket.getId() + " route: " + e.getMessage());
-                    // 继续处理其他ticket，不中断整个流程
+                    
                     continue;
                 }
             }
@@ -390,10 +390,10 @@ public class StatisticsService {
             
             if (routeBookingCount.isEmpty()) {
                 System.out.println("No valid routes found from ticket data - returning empty result");
-                return result; // 返回空结果而不是模拟数据
+                return result; 
             }
             
-            // 排序并取前N个
+            
             routeBookingCount.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .limit(limit)
@@ -410,7 +410,7 @@ public class StatisticsService {
         } catch (Exception e) {
             System.err.println("Error getting popular routes: " + e.getMessage());
             e.printStackTrace();
-            // 出错时返回空结果而不是模拟数据
+            
             result.clear();
         }
         

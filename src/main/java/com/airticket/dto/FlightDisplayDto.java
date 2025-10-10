@@ -89,12 +89,12 @@ public class FlightDisplayDto {
                 departureZone = ZoneId.of("Asia/Shanghai");
             }
             
-            // Database times are UTC, convert to appropriate timezone for display
+            
             if (!isInternational) {
-                // For domestic flights, convert UTC to Beijing time
+                
                 dto.departureTime = flight.getDepartureTimeUtc().atZone(departureZone).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
             } else {
-                // For international flights, convert UTC to destination timezone
+                
                 dto.departureTime = flight.getDepartureTimeUtc().atZone(departureZone).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
             }
         }
@@ -109,12 +109,12 @@ public class FlightDisplayDto {
                 arrivalZone = ZoneId.of("Asia/Shanghai");
             }
             
-            // Database times are UTC, convert to appropriate timezone for display  
+            
             if (!isInternational) {
-                // For domestic flights, convert UTC to Beijing time
+                
                 dto.arrivalTime = flight.getArrivalTimeUtc().atZone(arrivalZone).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
             } else {
-                // For international flights, convert UTC to destination timezone
+                
                 dto.arrivalTime = flight.getArrivalTimeUtc().atZone(arrivalZone).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
             }
         }
@@ -140,7 +140,7 @@ public class FlightDisplayDto {
 
     private static String getCountryFromCity(String city) {
         if (city == null || city.trim().isEmpty()) {
-            return "中国"; // Default to China
+            return "中国"; 
         }
 
         city = city.trim().toUpperCase();

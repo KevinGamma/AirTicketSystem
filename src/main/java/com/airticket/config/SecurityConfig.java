@@ -69,7 +69,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/files/**").permitAll()
                 .requestMatchers("/airlines/validate-flight-number").permitAll()
                 .requestMatchers("/statistics/**").permitAll()
-                .requestMatchers("/payment/**").permitAll()  // 允许支付接口访问
+                .requestMatchers("/payment/**").permitAll()  
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/airlines/admin").hasRole("ADMIN")
                 .requestMatchers("/airlines/*").hasRole("ADMIN")

@@ -68,7 +68,7 @@
       </el-table-column>
     </el-table>
 
-    <!-- Airport Dialog -->
+    
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form :model="airportForm" :rules="rules" ref="airportFormRef" label-width="120px">
         <el-form-item :label="$t('admin.airportCode')" prop="code">
@@ -330,7 +330,7 @@ export default {
     },
     
     handleCodeInput(value) {
-      // Auto-convert to uppercase
+      
       this.airportForm.code = value.toUpperCase()
     },
     

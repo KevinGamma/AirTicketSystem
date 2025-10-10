@@ -115,7 +115,6 @@ import {
   QuestionFilled
 } from '@element-plus/icons-vue'
 import api from '../api'
-import dayjs from 'dayjs'
 
 export default {
   name: 'PaymentFailed',
@@ -162,11 +161,6 @@ export default {
     contactSupport() {
       ElMessage.info('客服功能开发中，请稍后再试')
     },
-
-    formatDateTime(datetime) {
-      return dayjs(datetime).format('YYYY年MM月DD日 HH:mm')
-    },
-
     getTicketTypeText(type) {
       const typeMap = {
         'ECONOMY': '经济舱',
@@ -184,7 +178,7 @@ export default {
 </script>
 
 <style scoped>
-/* Page Layout */
+
 .payment-failed-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
@@ -199,7 +193,7 @@ export default {
   width: 100%;
 }
 
-/* Failed Card */
+
 .failed-card {
   background: white;
   border-radius: 20px;
@@ -220,7 +214,7 @@ export default {
   }
 }
 
-/* Failed Icon */
+
 .failed-icon {
   margin-bottom: 30px;
 }
@@ -237,7 +231,7 @@ export default {
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
-/* Failed Message */
+
 .failed-message {
   margin-bottom: 30px;
 }
@@ -255,7 +249,7 @@ export default {
   margin: 0;
 }
 
-/* Error Details */
+
 .error-details {
   margin-bottom: 30px;
   text-align: left;
@@ -276,7 +270,7 @@ export default {
   margin-top: 8px;
 }
 
-/* Ticket Info */
+
 .ticket-info {
   background: #f8f9fa;
   border-radius: 16px;
@@ -330,7 +324,7 @@ export default {
   font-weight: 600;
 }
 
-/* Action Buttons */
+
 .action-buttons {
   display: flex;
   flex-direction: column;
@@ -358,7 +352,7 @@ export default {
   gap: 8px;
 }
 
-/* Help Information */
+
 .help-info {
   border-top: 1px solid #e0e0e0;
   padding-top: 20px;
@@ -385,7 +379,7 @@ export default {
   margin: 4px 0;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
   .failed-card {
     padding: 30px 20px;

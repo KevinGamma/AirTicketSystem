@@ -115,7 +115,7 @@ public class FlightService {
             System.out.println("  - Arrival city match: '" + request.getArrivalCity() + "'");
             System.out.println("  - Departure date match: " + request.getDepartureDate());
             
-            // Additional debugging - check if any flights match without date filter
+            
             System.out.println("\n=== DEBUGGING: Check if flights exist without date filter ===");
             List<Flight> allRouteFlights = allFlights.stream()
                 .filter(f -> f.getDepartureAirport() != null && f.getDepartureAirport().getCity() != null)
@@ -190,21 +190,21 @@ public class FlightService {
             return result;
         }
 
-        // 查询出所有第一段航班
+        
         List<Flight> firstLegFlights = flightMapper.findFlightsFromCity(departureCity, departureDate);
         if (firstLegFlights == null || firstLegFlights.isEmpty()) {
             System.out.println("第一段航班为空: " + departureCity + " 出发, 日期: " + departureDate);
             return result;
         }
 
-        // 过滤掉已经起飞的第一段航班
+        
         Instant now = Instant.now();
         firstLegFlights = firstLegFlights.stream()
             .filter(flight -> {
                 if (flight.getDepartureTimeUtc() == null) {
                     return false;
                 }
-                // 只保留还没起飞的航班
+                
                 boolean hasNotDeparted = now.isBefore(flight.getDepartureTimeUtc());
                 if (!hasNotDeparted) {
                     System.out.println("过滤掉已起飞的第一段航班: " + flight.getFlightNumber() + 
@@ -223,20 +223,20 @@ public class FlightService {
             }
 
             Instant firstLegArrival = firstLeg.getArrivalTimeUtc();
-            Instant earliestSecondLegDeparture = firstLegArrival.plusSeconds(3600); // 衔接时间 >= 1 小时
+            Instant earliestSecondLegDeparture = firstLegArrival.plusSeconds(3600); 
 
-            // 查询第二段航班，从第一段的到达城市出发到最终目的地，日期可能是当天或次日
+            
             String intermediateCity = firstLeg.getArrivalAirport() != null ? firstLeg.getArrivalAirport().getCity() : null;
             List<Flight> secondLegFlights = new ArrayList<>();
             
             if (intermediateCity != null) {
-                // 使用新的方法查找从中转城市到目的地的航班
+                
                 secondLegFlights.addAll(flightMapper.findConnectingFlightsFromCityToCity(
                     intermediateCity, arrivalCity, departureDate, earliestSecondLegDeparture));
                 secondLegFlights.addAll(flightMapper.findConnectingFlightsFromCityToCity(
                     intermediateCity, arrivalCity, departureDate.plusDays(1), earliestSecondLegDeparture));
             } else {
-                // 回退到原有方法
+                
                 secondLegFlights.addAll(flightMapper.findFlightsToCity(arrivalCity, departureDate, earliestSecondLegDeparture));
                 secondLegFlights.addAll(flightMapper.findFlightsToCity(arrivalCity, departureDate.plusDays(1), earliestSecondLegDeparture));
             }
@@ -250,18 +250,18 @@ public class FlightService {
                     continue;
                 }
 
-                // 关键修复：允许相同城市不同机场间的连接
+                
                 boolean canConnect = false;
                 boolean sameCityDifferentAirport = false;
                 
                 if (firstLeg.getArrivalAirportId().equals(secondLeg.getDepartureAirportId())) {
-                    // 同一机场连接
+                    
                     canConnect = true;
                 } else if (firstLeg.getArrivalAirport() != null && 
                           secondLeg.getDepartureAirport() != null &&
                           firstLeg.getArrivalAirport().getCity() != null && 
                           secondLeg.getDepartureAirport().getCity() != null) {
-                    // 检查是否为同一城市不同机场
+                    
                     String firstArrivalCity = firstLeg.getArrivalAirport().getCity().trim();
                     String secondDepartureCity = secondLeg.getDepartureAirport().getCity().trim();
                     if (firstArrivalCity.equalsIgnoreCase(secondDepartureCity)) {
@@ -277,15 +277,15 @@ public class FlightService {
                     continue;
                 }
 
-                // 动态衔接时间：同机场>=1小时，不同机场同城市>=2小时
-                long requiredConnectionMinutes = sameCityDifferentAirport ? 120 : 60; // 2小时 vs 1小时
+                
+                long requiredConnectionMinutes = sameCityDifferentAirport ? 120 : 60; 
                 Instant minimumSecondLegDeparture = firstLegArrival.plusSeconds(requiredConnectionMinutes * 60);
                 
                 if (!secondLeg.getDepartureTimeUtc().isBefore(minimumSecondLegDeparture)) {
                     List<Flight> flights = List.of(firstLeg, secondLeg);
                     ConnectingFlight connectingFlight = new ConnectingFlight(flights);
                     
-                    // 为同城不同机场添加标记
+                    
                     if (sameCityDifferentAirport) {
                         connectingFlight.setType("CONNECTING_INTERCITY_TRANSFER");
                     }
@@ -296,7 +296,7 @@ public class FlightService {
                             secondLeg.getFlightNumber() + connectionType + ", 衔接时间 (分钟): " +
                             Duration.between(firstLegArrival, secondLeg.getDepartureTimeUtc()).toMinutes());
                     
-                    // 输出转机提醒信息
+                    
                     if (connectingFlight.getTransferNotice() != null && !connectingFlight.getTransferNotice().isEmpty()) {
                         System.out.println("转机提醒: " + connectingFlight.getTransferNotice());
                     }
@@ -315,29 +315,39 @@ public class FlightService {
 
 
     public Flight createFlight(Flight flight) {
-        // Validate flight number format against airline
+        
         validateFlightNumber(flight);
+        
+        
+        if (flightMapper.countByFlightNumber(flight.getFlightNumber()) > 0) {
+            throw new RuntimeException(messageService.getMessage("flight.duplicate.flightNumber", flight.getFlightNumber()));
+        }
         
         flightMapper.insert(flight);
         return flight;
     }
     
     public Flight updateFlight(Flight flight) {
-        // Get the existing flight to preserve certain fields if not provided
+        
         Flight existingFlight = flightMapper.findById(flight.getId());
         if (existingFlight == null) {
             throw new RuntimeException("Flight not found with id: " + flight.getId());
         }
         
-        // Validate flight number format against airline
+        
         validateFlightNumber(flight);
         
-        // If availableSeats is not provided, keep the existing value
+        
+        if (flightMapper.countByFlightNumberExcludeId(flight.getFlightNumber(), flight.getId()) > 0) {
+            throw new RuntimeException(messageService.getMessage("flight.duplicate.flightNumber", flight.getFlightNumber()));
+        }
+        
+        
         if (flight.getAvailableSeats() == null) {
             flight.setAvailableSeats(existingFlight.getAvailableSeats());
         }
         
-        // If status is not provided, keep the existing value
+        
         if (flight.getStatus() == null || flight.getStatus().isEmpty()) {
             flight.setStatus(existingFlight.getStatus());
         }
@@ -347,7 +357,7 @@ public class FlightService {
     }
     
     public void deleteFlight(Long id) {
-        // Check if there are any tickets for this flight
+        
         int ticketCount = ticketMapper.countByFlightId(id);
         if (ticketCount > 0) {
             throw new RuntimeException(messageService.getMessage("flight.delete.hasTickets", ticketCount));
@@ -362,7 +372,7 @@ public class FlightService {
             return false;
         }
         
-        // Update status and check if flight has departed
+        
         updateFlightStatusBasedOnTime(flight);
         if (flight.getStatus().equals("已起飞") || flight.getStatus().equals("已降落")) {
             throw new RuntimeException(messageService.getMessage("flight.booking.departedFlight"));
@@ -384,17 +394,17 @@ public class FlightService {
         }
     }
     
-    /**
-     * Update flight status based on current time
-     * @param flight The flight to update
-     */
+    
+
+
+
     private void updateFlightStatusBasedOnTime(Flight flight) {
         if (flight == null) return;
         
         Instant now = Instant.now();
         String currentStatus = flight.getStatus();
         
-        // Don't update manually set statuses like CANCELLED, DELAYED
+        
         if ("CANCELLED".equals(currentStatus) || "DELAYED".equals(currentStatus)) {
             return;
         }
@@ -402,28 +412,28 @@ public class FlightService {
         String newStatus = null;
         
         if (flight.getArrivalTimeUtc() != null && now.isAfter(flight.getArrivalTimeUtc())) {
-            // Flight has landed - 已降落
+            
             newStatus = "已降落";
         } else if (flight.getDepartureTimeUtc() != null && now.isAfter(flight.getDepartureTimeUtc())) {
-            // Flight has departed but not yet landed - 已起飞
+            
             newStatus = "已起飞";
         } else {
-            // Flight hasn't departed yet
+            
             if (!"SCHEDULED".equals(currentStatus) && !"DELAYED".equals(currentStatus)) {
                 newStatus = "SCHEDULED";
             }
         }
         
-        // Update database if status changed
+        
         if (newStatus != null && !newStatus.equals(currentStatus)) {
             flight.setStatus(newStatus);
             flightMapper.updateStatus(flight.getId(), newStatus);
         }
     }
     
-    /**
-     * Update all flight statuses in batch - can be called by scheduler
-     */
+    
+
+
     public void updateAllFlightStatuses() {
         List<Flight> flights = flightMapper.findAll();
         for (Flight flight : flights) {
@@ -431,9 +441,9 @@ public class FlightService {
         }
     }
     
-    /**
-     * Validate flight number format against airline code
-     */
+    
+
+
     private void validateFlightNumber(Flight flight) {
         if (flight.getAirlineId() == null || flight.getFlightNumber() == null) {
             return;

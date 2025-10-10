@@ -3,38 +3,38 @@ package com.airticket.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * Reschedule Fee Information DTO
- * 改签费用信息数据传输对象
- */
+
+
+
+
 public class RescheduleFeeInfo {
     private Long ticketId;
     private String ticketNumber;
     private BigDecimal currentTicketPrice;
     private BigDecimal newTicketPrice;
     
-    // 服务费信息
+    
     private BigDecimal serviceFee;
     private BigDecimal baseFee;
     private BigDecimal percentageFee;
-    private String feeType; // "NORMAL" or "HIGH"
+    private String feeType; 
     
-    // 价格差异
-    private BigDecimal priceDifference; // 新票价 - 原票价
-    private BigDecimal totalAdditionalCost; // 服务费 + 价格差异 (如果为正)
-    private BigDecimal totalRefund; // 如果价格差异为负且大于服务费
     
-    // 时间相关信息
+    private BigDecimal priceDifference; 
+    private BigDecimal totalAdditionalCost; 
+    private BigDecimal totalRefund; 
+    
+    
     private long hoursUntilDeparture;
     private int highFeeThresholdHours;
     private Instant departureTime;
     
-    // 费用说明
+    
     private String feeExplanation;
     private String[] feeBreakdown;
     private String recommendation;
     
-    // 航班信息
+    
     private FlightInfo originalFlight;
     private FlightInfo newFlight;
     
@@ -60,7 +60,7 @@ public class RescheduleFeeInfo {
             this.price = price;
         }
         
-        // Getters and Setters
+        
         public Long getFlightId() { return flightId; }
         public void setFlightId(Long flightId) { this.flightId = flightId; }
         
@@ -85,7 +85,7 @@ public class RescheduleFeeInfo {
     
     public RescheduleFeeInfo() {}
     
-    // Getters and Setters
+    
     public Long getTicketId() { return ticketId; }
     public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
     

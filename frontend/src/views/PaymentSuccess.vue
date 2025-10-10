@@ -19,12 +19,12 @@ end<template>
           
           <div class="ticket-details">
             <div class="flight-info">
-              <!-- Connecting Flight Badge -->
+              
               <div v-if="isConnectingFlight" class="connecting-badge">
                 <el-tag type="success" size="small">联程航班</el-tag>
               </div>
               
-              <!-- Flight Numbers Display -->
+              
               <div class="flight-number">
                 <template v-if="isConnectingFlight">
                   {{ allFlights.map(f => f?.flightNumber).join(' + ') }}
@@ -34,16 +34,16 @@ end<template>
                 </template>
               </div>
               
-              <!-- Complete Route Display -->
+              
               <div class="route">{{ completeRoute }}</div>
               
-              <!-- Flight Time Display -->
+              
               <div class="flight-time">
                 {{ formatDateTime(allFlights[0]?.departureTimeUtc) }} -
                 {{ formatDateTime(allFlights[allFlights.length - 1]?.arrivalTimeUtc) }}
               </div>
               
-              <!-- Detailed Flight Segments for Connecting Flights -->
+              
               <div v-if="isConnectingFlight" class="flight-segments">
                 <div 
                   v-for="(flight, index) in allFlights" 
@@ -149,12 +149,12 @@ export default {
     }
   },
   computed: {
-    // Check if this is a connecting flight ticket
+    
     isConnectingFlight() {
       return this.ticket && this.ticket.connectingFlights && this.ticket.connectingFlights.length > 0
     },
     
-    // Get all flights for display
+    
     allFlights() {
       if (!this.ticket) return []
       
@@ -162,10 +162,10 @@ export default {
       if (this.isConnectingFlight) {
         flights.push(...(this.ticket.connectingFlights || []))
       }
-      return flights.filter(f => f) // Remove any null/undefined flights
+      return flights.filter(f => f) 
     },
     
-    // Get complete route display
+    
     completeRoute() {
       if (!this.ticket) return ''
       
@@ -226,7 +226,7 @@ export default {
   mounted() {
     this.loadTicket()
     
-    // Show success animation
+    
     setTimeout(() => {
       const icon = document.querySelector('.check-icon')
       if (icon) {
@@ -238,7 +238,7 @@ export default {
 </script>
 
 <style scoped>
-/* Page Layout */
+
 .payment-success-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -253,7 +253,7 @@ export default {
   width: 100%;
 }
 
-/* Success Card */
+
 .success-card {
   background: white;
   border-radius: 20px;
@@ -286,7 +286,7 @@ export default {
   }
 }
 
-/* Success Icon */
+
 .success-icon {
   margin-bottom: 30px;
 }
@@ -296,7 +296,7 @@ export default {
   color: #52c41a;
 }
 
-/* Success Message */
+
 .success-message {
   margin-bottom: 40px;
 }
@@ -314,7 +314,7 @@ export default {
   margin: 0;
 }
 
-/* Ticket Summary */
+
 .ticket-summary {
   background: #f8f9fa;
   border-radius: 16px;
@@ -449,17 +449,14 @@ export default {
   font-weight: 600;
 }
 
-/* Sandbox Notice */
+
 .sandbox-notice {
   margin-bottom: 30px;
 }
 
-/* Payment Reminder */
-.payment-reminder {
-  margin-bottom: 30px;
-}
 
-/* Action Buttons */
+
+
 .action-buttons {
   display: flex;
   flex-direction: column;
@@ -487,7 +484,7 @@ export default {
 }
 
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
   .success-card {
     padding: 30px 20px;

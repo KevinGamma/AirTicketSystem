@@ -22,12 +22,12 @@ public class Notification {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Instant updatedAt;
 
-    // Associated objects
+    
     private Ticket ticket;
     private Flight flight;
     private User user;
 
-    // Constructors
+    
     public Notification() {}
 
     public Notification(Long userId, String notificationType, String title, String message) {
@@ -40,7 +40,7 @@ public class Notification {
         this.updatedAt = Instant.now();
     }
 
-    // Notification types constants
+    
     public static final String TYPE_FLIGHT_REMINDER = "FLIGHT_REMINDER";
     public static final String TYPE_FLIGHT_TAKEOFF = "FLIGHT_TAKEOFF";
     public static final String TYPE_FLIGHT_LANDING = "FLIGHT_LANDING";
@@ -50,7 +50,7 @@ public class Notification {
     public static final String TYPE_PAYMENT_REQUIRED = "PAYMENT_REQUIRED";
     public static final String TYPE_REFUND_DIFFERENCE = "REFUND_DIFFERENCE";
 
-    // Getters and Setters
+    
     public Long getId() {
         return id;
     }

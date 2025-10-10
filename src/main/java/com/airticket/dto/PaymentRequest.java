@@ -3,15 +3,15 @@ package com.airticket.dto;
 import java.math.BigDecimal;
 
 public class PaymentRequest {
-    private Long ticketId;                  // 票据ID
-    private BigDecimal amount;              // 支付金额
-    private String paymentMethod;           // 支付方式: ALIPAY, WECHAT, CARD
-    private String returnUrl;               // 支付成功返回地址
-    private boolean useSandbox;             // 是否使用沙箱环境
+    private Long ticketId;                  
+    private BigDecimal amount;              
+    private String paymentMethod;           
+    private String returnUrl;               
+    private boolean useSandbox;             
     
-    // 沙箱测试相关字段
-    private String sandboxBuyerAccount;     // 沙箱买家账号 (可选，用于指定测试账号)
-    private String testScenario;            // 测试场景: SUCCESS, FAIL, TIMEOUT等
+    
+    private String sandboxBuyerAccount;     
+    private String testScenario;            
     
     public PaymentRequest() {}
     
@@ -19,10 +19,10 @@ public class PaymentRequest {
         this.ticketId = ticketId;
         this.amount = amount;
         this.paymentMethod = paymentMethod;
-        this.useSandbox = true; // 默认使用沙箱
+        this.useSandbox = true; 
     }
     
-    // Getters and Setters
+    
     public Long getTicketId() {
         return ticketId;
     }

@@ -114,7 +114,7 @@
         ORDER BY f.departure_time ASC
     </select>
 
-    <!-- Find flights departing from a specific city that arrive at the target city -->
+    
     <select id="findConnectingFlightsFromCityToCity" resultMap="FlightWithAssociations">
         SELECT f.*,
                da.code AS departureAirportCode,

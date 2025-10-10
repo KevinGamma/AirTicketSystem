@@ -214,7 +214,7 @@ public class TicketController {
             Ticket paidTicket = ticketService.payTicket(id);
             return ResponseEntity.ok(ApiResponse.success("Ticket paid successfully", paidTicket));
         } catch (Exception e) {
-            e.printStackTrace(); // This will help debug payment issues
+            e.printStackTrace(); 
             System.err.println("Payment error for ticket " + id + ": " + e.getMessage());
             return ResponseEntity.badRequest().body(ApiResponse.error("Failed to pay ticket: " + e.getMessage()));
         }
@@ -271,9 +271,9 @@ public class TicketController {
         }
     }
 
-    /**
-     * Request refund with admin approval (old method - kept for backward compatibility)
-     */
+    
+
+
     @PostMapping("/{id}/refund-request")
     public ResponseEntity<ApiResponse<AdminApprovalRequest>> requestRefund(@PathVariable Long id, @RequestBody RefundRequest request) {
         try {
@@ -300,9 +300,9 @@ public class TicketController {
         }
     }
 
-    /**
-     * Direct refund without admin approval (new primary method)
-     */
+    
+
+
     @PostMapping("/{id}/refund")
     public ResponseEntity<ApiResponse<Map<String, Object>>> processDirectRefund(@PathVariable Long id, @RequestBody RefundRequest request) {
         try {
@@ -310,7 +310,7 @@ public class TicketController {
             String username = auth.getName();
             User user = userService.findByUsername(username);
             
-            // Process direct refund
+            
             Map<String, Object> refundInfo = ticketService.processDirectRefund(id, request.getReason(), user.getId());
             
             return ResponseEntity.ok(ApiResponse.success("Ticket refunded successfully", refundInfo));
@@ -399,10 +399,10 @@ public class TicketController {
         }
     }
 
-    /**
-     * 获取详细的改签费用信息 - 包括费用明细、说明和建议
-     * GET /api/tickets/{id}/reschedule-fee-info/{newFlightId}
-     */
+    
+
+
+
     @GetMapping("/{id}/reschedule-fee-info/{newFlightId}")
     public ResponseEntity<ApiResponse<RescheduleFeeInfo>> getRescheduleFeeInfo(
             @PathVariable Long id, 
@@ -428,12 +428,12 @@ public class TicketController {
         }
     }
     
-    /**
-     * 批量获取多个航班的改签费用信息 - 用于用户比较不同改签选项
-     * POST /api/tickets/{id}/compare-reschedule-fees
-     * 
-     * 请求体: {"flightIds": [1, 2, 3]}
-     */
+    
+
+
+
+
+
     @PostMapping("/{id}/compare-reschedule-fees")
     public ResponseEntity<ApiResponse<List<RescheduleFeeInfo>>> compareRescheduleFees(
             @PathVariable Long id,
@@ -463,12 +463,12 @@ public class TicketController {
                     RescheduleFeeInfo feeInfo = ticketService.calculateRescheduleFeeInfo(id, flightId);
                     feeInfoList.add(feeInfo);
                 } catch (Exception e) {
-                    // 跳过无效的航班，继续处理其他航班
+                    
                     continue;
                 }
             }
             
-            // 按费用排序，便于用户比较
+            
             feeInfoList.sort((a, b) -> {
                 BigDecimal costA = a.getTotalAdditionalCost().subtract(a.getTotalRefund());
                 BigDecimal costB = b.getTotalAdditionalCost().subtract(b.getTotalRefund());
@@ -481,10 +481,10 @@ public class TicketController {
         }
     }
     
-    /**
-     * 创建改签付费支付订单 - 用于用户支付改签费用
-     * POST /api/tickets/{id}/reschedule-payment
-     */
+    
+
+
+
     @PostMapping("/{id}/reschedule-payment")
     public ResponseEntity<ApiResponse<PaymentResponse>> createReschedulePayment(@PathVariable Long id) {
         try {
@@ -501,18 +501,18 @@ public class TicketController {
                 return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
             }
             
-            // Check if the current ticket requires reschedule payment
+            
             if (!"PENDING_RESCHEDULE".equals(ticket.getStatus())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("This ticket does not require reschedule payment"));
             }
             
-            // Find the original ticket that was rescheduled to create this new ticket
+            
             Long originalTicketId = findOriginalTicketIdFromReschedule(id);
             if (originalTicketId == null) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Unable to find original ticket for this reschedule"));
             }
             
-            // Debug: Get all approval requests for this user to understand the issue
+            
             List<AdminApprovalRequest> allRequests = adminApprovalService.getRequestsByUserId(user.getId());
             logger.info("Debug - User {} has {} approval requests for originalTicketId {}", user.getId(), allRequests.size(), originalTicketId);
             for (AdminApprovalRequest req : allRequests) {
@@ -520,7 +520,7 @@ public class TicketController {
                            req.getId(), req.getRequestType(), req.getStatus(), req.getTicketId());
             }
             
-            // Find the approved reschedule request for the original ticket
+            
             AdminApprovalRequest request = allRequests.stream()
                 .filter(r -> "RESCHEDULE".equals(r.getRequestType()) 
                           && ("AWAITING_PAYMENT".equals(r.getStatus()) || "APPROVED".equals(r.getStatus()))
@@ -533,10 +533,10 @@ public class TicketController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("No pending reschedule payment found for this ticket"));
             }
             
-            // Determine the payment amount
+            
             BigDecimal paymentAmount = request.getTotalAmount();
             
-            // If totalAmount is not available (fallback scenario), calculate it from reschedule fee info
+            
             if (paymentAmount == null || paymentAmount.compareTo(BigDecimal.ZERO) <= 0) {
                 logger.info("Debug - TotalAmount not available in request, calculating from fee info");
                 try {
@@ -553,7 +553,7 @@ public class TicketController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("No payment amount found - this reschedule may not require additional payment"));
             }
             
-            // Create payment request for the reschedule fee
+            
             PaymentRequest paymentRequest = new PaymentRequest();
             paymentRequest.setTicketId(id);
             paymentRequest.setAmount(paymentAmount);
@@ -565,7 +565,7 @@ public class TicketController {
             PaymentResponse paymentResponse = alipayService.createPayment(paymentRequest);
             
             if (paymentResponse.isSuccess()) {
-                // Add additional context for reschedule payment
+                
                 paymentResponse.setMessage("改签费用支付订单创建成功，请完成支付以完成改签操作。支付金额：¥" + paymentAmount);
                 return ResponseEntity.ok(ApiResponse.success("Reschedule payment order created successfully", paymentResponse));
             } else {
@@ -577,10 +577,10 @@ public class TicketController {
         }
     }
     
-    /**
-     * 完成改签付费流程 - 在支付完成后调用
-     * POST /api/tickets/{id}/complete-reschedule/{paymentNumber}
-     */
+    
+
+
+
     @PostMapping("/{id}/complete-reschedule/{paymentNumber}")
     public ResponseEntity<ApiResponse<AdminApprovalRequest>> completeReschedulePayment(
             @PathVariable Long id, 
@@ -599,18 +599,18 @@ public class TicketController {
                 return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
             }
             
-            // Check if the current ticket requires reschedule payment
+            
             if (!"PENDING_RESCHEDULE".equals(ticket.getStatus())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("This ticket does not require reschedule payment"));
             }
             
-            // Find the original ticket that was rescheduled to create this new ticket
+            
             Long originalTicketId = findOriginalTicketIdFromReschedule(id);
             if (originalTicketId == null) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Unable to find original ticket for this reschedule"));
             }
             
-            // Find the approved reschedule request for the original ticket
+            
             AdminApprovalRequest request = adminApprovalService.getRequestsByUserId(user.getId()).stream()
                 .filter(r -> "RESCHEDULE".equals(r.getRequestType()) 
                           && ("AWAITING_PAYMENT".equals(r.getStatus()) || "APPROVED".equals(r.getStatus()))
@@ -622,7 +622,7 @@ public class TicketController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("No pending reschedule payment found"));
             }
             
-            // Process the payment and complete reschedule
+            
             AdminApprovalRequest completedRequest = adminApprovalService.processReschedulePayment(request.getId(), paymentNumber);
             
             return ResponseEntity.ok(ApiResponse.success("Reschedule payment completed successfully! Your flight has been rescheduled.", completedRequest));
@@ -655,9 +655,9 @@ public class TicketController {
         }
     }
 
-    /**
-     * Get refund information without processing the refund
-     */
+    
+
+
     @GetMapping("/{id}/refund-info")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getRefundInfo(@PathVariable Long id) {
         try {
@@ -674,7 +674,7 @@ public class TicketController {
                 return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
             }
             
-            // Check if ticket can be refunded
+            
             if (!"PAID".equals(ticket.getStatus()) && !"BOOKED".equals(ticket.getStatus())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Only paid or booked tickets can be refunded"));
             }
@@ -683,7 +683,7 @@ public class TicketController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Ticket is already cancelled or refunded"));
             }
             
-            // Check time constraints
+            
             Flight flight = flightService.getFlightById(ticket.getFlightId());
             boolean canRefund = true;
             String timeWarning = null;
@@ -716,7 +716,7 @@ public class TicketController {
         }
     }
 
-    // Admin hard delete - permanently removes ticket from database
+    
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteTicket(@PathVariable Long id) {
@@ -733,7 +733,7 @@ public class TicketController {
         }
     }
 
-    // User soft delete - hides ticket from user view but keeps in database
+    
     @PostMapping("/{id}/delete")
     public ResponseEntity<ApiResponse<Void>> softDeleteTicket(@PathVariable Long id) {
         try {
@@ -771,10 +771,10 @@ public class TicketController {
         }
     }
     
-    /**
-     * 测试用途：手动完成改签支付 - 用于沙箱环境测试
-     * POST /api/tickets/{id}/complete-reschedule-payment-test
-     */
+    
+
+
+
     @PostMapping("/{id}/complete-reschedule-payment-test")
     public ResponseEntity<ApiResponse<String>> completeReschedulePaymentTest(@PathVariable Long id) {
         try {
@@ -795,10 +795,10 @@ public class TicketController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Ticket is not in PENDING_RESCHEDULE status"));
             }
             
-            // Manually update the ticket to PAID status
+            
             ticketService.updateTicketStatus(id, "PAID", Instant.now());
             
-            // Find and update the approval request directly
+            
             Long originalTicketId = ticket.getOriginalTicketId();
             if (originalTicketId != null) {
                 List<AdminApprovalRequest> requests = adminApprovalService.getRequestsByUserId(user.getId());
@@ -815,7 +815,7 @@ public class TicketController {
                                rescheduleRequest.getId(), rescheduleRequest.getStatus());
                     
                     try {
-                        // Directly call the AdminApprovalService method to complete the payment
+                        
                         AdminApprovalRequest completedRequest = adminApprovalService.processReschedulePayment(
                             rescheduleRequest.getId(), testPaymentNumber);
                         
@@ -824,11 +824,11 @@ public class TicketController {
                     } catch (Exception e) {
                         logger.error("Failed to process reschedule payment via service: {}", e.getMessage(), e);
                         
-                        // Fallback: Direct database updates (bypass payment system)
+                        
                         try {
                             logger.info("Using direct database update fallback");
                             
-                            // Create a mapper to directly update the approval request status
+                            
                             adminApprovalService.directUpdateApprovalStatus(
                                 rescheduleRequest.getId(), 
                                 "PAYMENT_COMPLETED", 
@@ -856,10 +856,10 @@ public class TicketController {
         }
     }
     
-    /**
-     * 调试用途：显示票据和相关审批请求的完整状态
-     * GET /api/tickets/{id}/debug-status
-     */
+    
+
+
+
     @GetMapping("/{id}/debug-status")
     public ResponseEntity<ApiResponse<Map<String, Object>>> debugTicketStatus(@PathVariable Long id) {
         try {
@@ -878,7 +878,7 @@ public class TicketController {
             
             Map<String, Object> debugInfo = new HashMap<>();
             
-            // 票据信息
+            
             Map<String, Object> ticketInfo = new HashMap<>();
             ticketInfo.put("id", ticket.getId());
             ticketInfo.put("ticketNumber", ticket.getTicketNumber());
@@ -888,10 +888,10 @@ public class TicketController {
             ticketInfo.put("isOriginalTicket", ticket.getIsOriginalTicket());
             debugInfo.put("ticket", ticketInfo);
             
-            // 查找相关审批请求
+            
             List<AdminApprovalRequest> allRequests = new ArrayList<>();
             
-            // 如果是新票据，查找原票据的审批请求
+            
             if (ticket.getOriginalTicketId() != null) {
                 List<AdminApprovalRequest> originalRequests = adminApprovalService.getRequestsByUserId(user.getId()).stream()
                     .filter(r -> r.getTicketId().equals(ticket.getOriginalTicketId()))
@@ -899,7 +899,7 @@ public class TicketController {
                 allRequests.addAll(originalRequests);
             }
             
-            // 查找当前票据的审批请求
+            
             List<AdminApprovalRequest> currentRequests = adminApprovalService.getRequestsByUserId(user.getId()).stream()
                 .filter(r -> r.getTicketId().equals(ticket.getId()))
                 .collect(java.util.stream.Collectors.toList());
@@ -920,7 +920,7 @@ public class TicketController {
             }
             debugInfo.put("approvalRequests", requestsInfo);
             
-            // 前端按钮显示逻辑
+            
             Map<String, Object> frontendLogic = new HashMap<>();
             frontendLogic.put("canPayRescheduleFee", "PENDING_RESCHEDULE".equals(ticket.getStatus()));
             frontendLogic.put("canPay", "BOOKED".equals(ticket.getStatus()));
@@ -935,10 +935,10 @@ public class TicketController {
         }
     }
     
-    /**
-     * 手动触发改签支付监控 - 用于测试
-     * POST /api/tickets/trigger-payment-monitoring
-     */
+    
+
+
+
     @PostMapping("/trigger-payment-monitoring")
     public ResponseEntity<ApiResponse<String>> triggerPaymentMonitoring() {
         try {
@@ -946,10 +946,10 @@ public class TicketController {
             String username = auth.getName();
             User user = userService.findByUsername(username);
             
-            // Only allow admin or for testing purposes, allow any user
+            
             logger.info("Manual payment monitoring triggered by user: {}", username);
             
-            // Trigger the monitoring service
+            
             reschedulePaymentMonitorService.runPaymentMonitoring();
             
             return ResponseEntity.ok(ApiResponse.success("Payment monitoring triggered successfully", "Monitoring completed"));
@@ -960,9 +960,9 @@ public class TicketController {
         }
     }
     
-    /**
-     * Helper method to check if the given ticketId is a new ticket created from rescheduling the original ticket
-     */
+    
+
+
     private boolean isNewTicketFromReschedule(Long newTicketId, Long originalTicketId) {
         try {
             Ticket originalTicket = ticketService.getTicketById(originalTicketId);
@@ -974,9 +974,9 @@ public class TicketController {
         }
     }
     
-    /**
-     * Helper method to find the original ticket ID that was rescheduled to create the given new ticket
-     */
+    
+
+
     private Long findOriginalTicketIdFromReschedule(Long newTicketId) {
         try {
             Ticket newTicket = ticketService.getTicketById(newTicketId);
@@ -986,10 +986,10 @@ public class TicketController {
         }
     }
     
-    /**
-     * Get pending requests for a ticket
-     * GET /api/tickets/{id}/pending-requests
-     */
+    
+
+
+
     @GetMapping("/{id}/pending-requests")
     public ResponseEntity<ApiResponse<List<AdminApprovalRequest>>> getPendingRequests(@PathVariable Long id) {
         try {
@@ -1014,10 +1014,10 @@ public class TicketController {
         }
     }
     
-    /**
-     * Cancel a pending request
-     * DELETE /api/tickets/requests/{requestId}
-     */
+    
+
+
+
     @DeleteMapping("/requests/{requestId}")
     public ResponseEntity<ApiResponse<String>> cancelRequest(@PathVariable Long requestId) {
         try {
@@ -1033,9 +1033,9 @@ public class TicketController {
         }
     }
     
-    /**
-     * Debug endpoint to analyze timezone conversion issues
-     */
+    
+
+
     @GetMapping("/debug/timezone-analysis")
     public ResponseEntity<Map<String, Object>> getTimezoneDebugInfo() {
         try {
@@ -1045,12 +1045,12 @@ public class TicketController {
             
             Map<String, Object> debugInfo = new HashMap<>();
             
-            // System timezone information
+            
             debugInfo.put("systemTimezone", java.time.ZoneId.systemDefault().toString());
             debugInfo.put("currentTime", java.time.Instant.now().toString());
             debugInfo.put("currentTimeFormatted", java.time.LocalDateTime.now().toString());
             
-            // Get user tickets with detailed timezone analysis
+            
             List<Ticket> tickets = ticketService.getTicketsByUserId(user.getId());
             List<Map<String, Object>> ticketAnalysis = new ArrayList<>();
             
@@ -1061,15 +1061,15 @@ public class TicketController {
                     analysis.put("ticketNumber", ticket.getTicketNumber());
                     analysis.put("flightNumber", ticket.getFlight().getFlightNumber());
                     
-                    // Raw database values
+                    
                     analysis.put("rawDepartureTimeUtc", ticket.getFlight().getDepartureTimeUtc());
                     analysis.put("rawArrivalTimeUtc", ticket.getFlight().getArrivalTimeUtc());
                     
-                    // JSON property values (what gets serialized)
+                    
                     analysis.put("jsonDepartureTime", ticket.getFlight().getDepartureTime());
                     analysis.put("jsonArrivalTime", ticket.getFlight().getArrivalTime());
                     
-                    // Timezone conversions
+                    
                     if (ticket.getFlight().getDepartureTimeUtc() != null) {
                         try {
                             java.time.ZoneId shanghaiZone = java.time.ZoneId.of("Asia/Shanghai");
@@ -1084,7 +1084,7 @@ public class TicketController {
                             analysis.put("departureInShanghai", depInShanghai);
                             analysis.put("arrivalInShanghai", arrInShanghai);
                             
-                            // Calculate the 8-hour offset issue
+                            
                             java.time.LocalDateTime depAsLocal = ticket.getFlight().getDepartureTimeUtc()
                                 .atZone(utcZone).toLocalDateTime();
                             analysis.put("departureAsLocalDateTime", depAsLocal);

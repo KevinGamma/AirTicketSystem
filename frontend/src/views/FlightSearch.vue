@@ -1,6 +1,6 @@
 <template>
   <div class="flight-search-page">
-    <!-- Header Section -->
+    
     <header class="page-header">
       <div class="container">
         <div class="header-content">
@@ -12,7 +12,7 @@
       </div>
     </header>
 
-    <!-- Search Form Section -->
+    
     <section class="search-form-section">
       <div class="container">
         <div class="search-form-card">
@@ -23,7 +23,7 @@
             class="flight-search-form"
             @submit.prevent="handleSearch"
           >
-            <!-- Flight Options -->
+            
             <div class="flight-options-section">
               <div class="option-group">
                 <el-checkbox v-model="searchForm.includeConnecting" size="large">
@@ -33,9 +33,9 @@
               </div>
             </div>
 
-            <!-- Main Search Fields -->
+            
             <div class="search-fields-grid">
-              <!-- Origin and Destination -->
+              
               <div class="location-row">
                 <div class="location-field">
                   <label class="field-label">出发城市</label>
@@ -47,7 +47,7 @@
                       clearable
                       class="location-select"
                     >
-                      <!-- Domestic Cities -->
+                      
                       <el-option-group label="国内城市" v-if="groupedAirports.domestic.length > 0">
                         <el-option
                           v-for="cityGroup in groupedAirports.domestic"
@@ -68,7 +68,7 @@
                         </el-option>
                       </el-option-group>
 
-                      <!-- International Cities -->
+                      
                       <el-option-group label="国际城市" v-if="groupedAirports.international.length > 0">
                         <el-option
                           v-for="cityGroup in groupedAirports.international"
@@ -92,7 +92,7 @@
                   </el-form-item>
                 </div>
 
-                <!-- Swap Button -->
+                
                 <div class="swap-button-container">
                   <el-button 
                     circle 
@@ -114,7 +114,7 @@
                       clearable
                       class="location-select"
                     >
-                      <!-- Domestic Cities -->
+                      
                       <el-option-group label="国内城市" v-if="availableDestinations.domestic.length > 0">
                         <el-option
                           v-for="cityGroup in availableDestinations.domestic"
@@ -135,7 +135,7 @@
                         </el-option>
                       </el-option-group>
 
-                      <!-- International Cities -->
+                      
                       <el-option-group label="国际城市" v-if="availableDestinations.international.length > 0">
                         <el-option
                           v-for="cityGroup in availableDestinations.international"
@@ -160,7 +160,7 @@
                 </div>
               </div>
 
-              <!-- Date Fields -->
+              
               <div class="date-row">
                 <div class="date-field">
                   <label class="field-label">出发日期</label>
@@ -180,7 +180,7 @@
 
             </div>
 
-            <!-- Search Button -->
+            
             <div class="search-button-section">
               <el-button
                 type="primary"
@@ -198,7 +198,7 @@
       </div>
     </section>
 
-    <!-- Search Results Section -->
+    
     <section class="search-results-section" v-if="searchResults.length > 0 || searching">
       <div class="container">
         <div class="results-header">
@@ -237,12 +237,12 @@
           </div>
         </div>
 
-        <!-- Loading State -->
+        
         <div v-if="searching" class="loading-state">
           <el-skeleton animated :rows="5" />
         </div>
 
-        <!-- Results List -->
+        
         <div v-else class="results-list">
           <div
             v-for="flight in searchResults"
@@ -296,7 +296,7 @@
                     {{ flight.isConnecting ? `${flight.flights ? flight.flights.length : 2}段中转` : '直飞' }}
                   </div>
                   
-                  <!-- Cross-airport transfer notice -->
+                  
                   <div v-if="hasCrossAirportTransfer(flight)" class="transfer-notice">
                     <div class="transfer-warning">
                       <el-icon class="warning-icon"><Warning /></el-icon>
@@ -346,7 +346,7 @@
           </div>
         </div>
 
-        <!-- Empty State -->
+        
         <div v-if="!searching && searchResults.length === 0 && hasSearched" class="empty-results">
           <el-empty description="未找到符合条件的航班">
             <el-button type="primary" @click="resetSearch">重新搜索</el-button>
@@ -370,7 +370,7 @@ import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import api from '../api'
 
-// Extend dayjs with timezone plugins
+
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
@@ -401,11 +401,11 @@ export default {
       searching: false,
       hasSearched: false,
       sortOption: '',
-      searchRules: {}  // Will be set in created() hook
+      searchRules: {}  
     }
   },
   computed: {
-    // Group airports by city and separate domestic/international
+    
     groupedAirports() {
       if (!Array.isArray(this.airports) || this.airports.length === 0) {
         return { domestic: [], international: [] }
@@ -416,7 +416,7 @@ export default {
         '武汉', '沈阳', '大连', '青岛', '厦门', '福州', '长沙', '郑州', '昆明', '乌鲁木齐', 
         '哈尔滨', '长春', '石家庄', '太原', '合肥', '南昌', '贵阳', '兰州', '银川', '西宁', 
         '拉萨', '呼和浩特', 
-        // 🔧 Missing domestic cities that were incorrectly in international list
+        
         '海口', '济南', '南宁', '珠海'
       ]
       
@@ -429,7 +429,7 @@ export default {
           cityGroups.set(airport.city, {
             city: airport.city,
             airports: [],
-            primaryAirport: airport, // Use first airport as primary
+            primaryAirport: airport, 
             isDomestic: domesticCities.includes(airport.city)
           })
         }
@@ -437,7 +437,7 @@ export default {
         cityGroups.get(airport.city).airports.push(airport)
       })
       
-      // Separate domestic and international cities
+      
       const domestic = []
       const international = []
       
@@ -449,20 +449,20 @@ export default {
         }
       })
       
-      // Sort each group by city name
+      
       domestic.sort((a, b) => a.city.localeCompare(b.city, 'zh-CN'))
       international.sort((a, b) => a.city.localeCompare(b.city, 'zh-CN'))
       
       return { domestic, international }
     },
 
-    // Filter out the selected origin from destination options
+    
     availableDestinations() {
       if (!this.searchForm?.origin) {
         return this.groupedAirports
       }
       
-      // Filter out the selected origin from both domestic and international
+      
       return {
         domestic: this.groupedAirports.domestic.filter(group => group.city !== this.searchForm.origin),
         international: this.groupedAirports.international.filter(group => group.city !== this.searchForm.origin)
@@ -470,16 +470,16 @@ export default {
     }
   },
   methods: {
-    // Timezone utilities
+    
     getCityTimezone(city) {
       const timezoneMap = {
-        // International cities
+        
         '纽约': 'America/New_York',
         '洛杉矶': 'America/Los_Angeles',
         '东京': 'Asia/Tokyo',
         '首尔': 'Asia/Seoul',
         '新加坡': 'Asia/Singapore',
-        // All Chinese domestic cities use Asia/Shanghai
+        
         '北京': 'Asia/Shanghai',
         '上海': 'Asia/Shanghai',
         '广州': 'Asia/Shanghai',
@@ -496,7 +496,7 @@ export default {
       return internationalCities.includes(departureCity) || internationalCities.includes(arrivalCity);
     },
     
-    // Check if connecting flight has cross-airport transfers
+    
     hasCrossAirportTransfer(flight) {
       if (!flight.isConnecting || !flight.flights || flight.flights.length < 2) {
         return false;
@@ -506,18 +506,18 @@ export default {
         const currentFlight = flight.flights[i];
         const nextFlight = flight.flights[i + 1];
         
-        // Validate time sequence first
+        
         if (currentFlight.arrivalTimeUtc && nextFlight.departureTimeUtc) {
           const arrivalTime = dayjs.utc(currentFlight.arrivalTimeUtc);
           const departureTime = dayjs.utc(nextFlight.departureTimeUtc);
           
-          // For connecting flights, we should trust the backend validation
-          // The backend already ensures proper connection times with timezone handling
-          // We'll only log extreme cases that might indicate data issues
+          
+          
+          
           if (arrivalTime.isAfter(departureTime)) {
             const timeDiff = Math.abs(departureTime.diff(arrivalTime, 'hours', true));
             
-            // Only flag as error if the time difference is extreme (>48 hours)
+            
             if (timeDiff > 48) {
               console.warn('Possible data issue - very long layover:', {
                 currentFlight: currentFlight.flightNumber,
@@ -538,8 +538,8 @@ export default {
           }
         }
         
-        // Check if arrival airport of current leg is different from departure airport of next leg
-        // but they are in the same city
+        
+        
         if (currentFlight.arrivalAirport && nextFlight.departureAirport) {
           const arrivalAirportId = currentFlight.arrivalAirport.id;
           const departureAirportId = nextFlight.departureAirport.id;
@@ -554,7 +554,7 @@ export default {
       return false;
     },
     
-    // Get cross-airport transfer details
+    
     getCrossAirportTransfers(flight) {
       const transfers = [];
       if (!flight.isConnecting || !flight.flights || flight.flights.length < 2) {
@@ -565,13 +565,13 @@ export default {
         const currentFlight = flight.flights[i];
         const nextFlight = flight.flights[i + 1];
         
-        // Validate time sequence first
+        
         if (currentFlight.arrivalTimeUtc && nextFlight.departureTimeUtc) {
           const arrivalTime = dayjs.utc(currentFlight.arrivalTimeUtc);
           const departureTime = dayjs.utc(nextFlight.departureTimeUtc);
           
-          // Trust backend validation for connecting flights
-          // Only skip extreme cases that indicate possible data corruption
+          
+          
           if (arrivalTime.isAfter(departureTime)) {
             const timeDiff = Math.abs(departureTime.diff(arrivalTime, 'hours', true));
             if (timeDiff > 48) {
@@ -593,12 +593,12 @@ export default {
           const departureCity = nextFlight.departureAirport.city;
           
           if (arrivalAirportId !== departureAirportId && arrivalCity === departureCity) {
-            // Calculate transfer time to show if adequate
+            
             const arrivalTime = dayjs.utc(currentFlight.arrivalTimeUtc);
             const departureTime = dayjs.utc(nextFlight.departureTimeUtc);
             let transferMinutes = departureTime.diff(arrivalTime, 'minutes');
             
-            // Debug: Check what's going on with the timestamps
+            
             console.log('Transfer time calculation debug:', {
               flight1: currentFlight.flightNumber,
               arrivalUTC: currentFlight.arrivalTimeUtc,
@@ -675,37 +675,6 @@ export default {
         return false
       }
     },
-
-
-    handleOriginChange() {
-      try {
-        if (this.searchForm.destination === this.searchForm.origin) {
-          this.searchForm.destination = ''
-        }
-        
-        this.$nextTick(() => {
-          if (this.$refs.searchFormRef) {
-            this.$refs.searchFormRef.validateField('destination')
-          }
-        })
-      } catch (error) {
-        console.error('Error in handleOriginChange:', error)
-      }
-    },
-
-    handleDestinationChange() {
-      try {
-        this.$nextTick(() => {
-          if (this.$refs.searchFormRef) {
-            this.$refs.searchFormRef.validateField('destination')
-          }
-        })
-      } catch (error) {
-        console.error('Error in handleDestinationChange:', error)
-      }
-    },
-
-
     swapLocations() {
       const temp = this.searchForm.origin
       this.searchForm.origin = this.searchForm.destination
@@ -743,7 +712,7 @@ export default {
         return
       }
 
-      // Use the primary airport (first airport) from each city for the search
+      
       const originAirportId = originCityGroup.primaryAirport.id
       const destinationAirportId = destinationCityGroup.primaryAirport.id
 
@@ -757,12 +726,12 @@ export default {
       })
 
       if (response.data.success) {
-        // Convert direct flights to consistent format
+        
         this.searchResults = (response.data.data || []).map(flight => ({
           ...flight,
           isConnecting: false,
           type: 'DIRECT',
-          // Ensure availableSeats is available for direct flights
+          
           availableSeats: flight.availableSeats
         }))
         
@@ -981,7 +950,7 @@ export default {
   created() {
     console.log('FlightSearch component created')
     try {
-      // Initialize validation rules after component is created
+      
       console.log('Setting up validation rules')
       this.searchRules = {
         origin: [
@@ -1004,7 +973,7 @@ export default {
   mounted() {
     console.log('FlightSearch component mounted')
     
-    // Add global error handler for this component
+    
     this.$nextTick(() => {
       window.addEventListener('error', (event) => {
         console.error('Global error caught:', event.error)
@@ -1023,10 +992,10 @@ export default {
     try {
       this.loadAirports()
       
-      // Handle query parameters from dashboard quick actions
+      
       const { from, to } = this.$route.query
       if (from && to) {
-        // Since we now work with city names directly, just set the city names
+        
         this.$nextTick(() => {
           this.searchForm.origin = from
           this.searchForm.destination = to
@@ -1040,13 +1009,13 @@ export default {
 </script>
 
 <style scoped>
-/* Page Layout */
+
 .flight-search-page {
   min-height: 100vh;
   background: #f5f5f5;
 }
 
-/* Header */
+
 .page-header {
   padding: 2rem 0 1.5rem;
   background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
@@ -1069,7 +1038,7 @@ export default {
   margin: 0;
 }
 
-/* Search Form */
+
 .search-form-section {
   padding: 0 0 2rem;
   margin-top: -1rem;
@@ -1103,7 +1072,7 @@ export default {
   font-style: italic;
 }
 
-/* Search Fields */
+
 .search-fields-grid {
   display: flex;
   flex-direction: column;
@@ -1152,7 +1121,7 @@ export default {
   transform: rotate(180deg);
 }
 
-/* City selection with domestic/international separation */
+
 :deep(.el-select-group__title) {
   font-size: 14px;
   font-weight: 600;
@@ -1237,7 +1206,7 @@ export default {
   line-height: 1.2;
 }
 
-/* Fix dropdown display issues */
+
 :deep(.el-select-dropdown) {
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -1263,7 +1232,7 @@ export default {
   font-weight: 500;
 }
 
-/* Fix text cutting issues */
+
 :deep(.el-select-dropdown__item .city-info) {
   padding: 8px 0;
   width: 100%;
@@ -1275,20 +1244,20 @@ export default {
   overflow: visible;
 }
 
-/* Improve filterable input styling */
+
 :deep(.el-select .el-input .el-input__inner) {
   font-size: 14px;
   line-height: 1.5;
   height: 40px;
 }
 
-/* Better placeholder styling */
+
 :deep(.el-select .el-input .el-input__inner::placeholder) {
   color: #9ca3af;
   font-weight: 400;
 }
 
-/* Ensure proper group spacing */
+
 :deep(.el-select-group__wrap) {
   margin-bottom: 0;
 }
@@ -1301,7 +1270,7 @@ export default {
   margin-bottom: 0;
 }
 
-/* Date Fields */
+
 .date-row {
   display: flex;
   justify-content: flex-start;
@@ -1318,7 +1287,7 @@ export default {
   width: 100%;
 }
 
-/* Passenger and Class */
+
 .passenger-row {
   display: flex;
   justify-content: flex-start;
@@ -1336,7 +1305,7 @@ export default {
   width: 100%;
 }
 
-/* Search Button */
+
 .search-button-section {
   margin-top: var(--space-8);
   text-align: center;
@@ -1349,7 +1318,7 @@ export default {
   gap: var(--space-2);
 }
 
-/* Search Results */
+
 .search-results-section {
   padding: var(--space-8) 0;
 }
@@ -1397,7 +1366,7 @@ export default {
   white-space: nowrap;
 }
 
-/* Loading State */
+
 .loading-state {
   background: var(--color-bg-card);
   border-radius: var(--radius-lg);
@@ -1405,7 +1374,7 @@ export default {
   border: 1px solid var(--color-border-primary);
 }
 
-/* Flight Results */
+
 .results-list {
   display: flex;
   flex-direction: column;
@@ -1433,7 +1402,7 @@ export default {
   align-items: center;
 }
 
-/* Airline Section */
+
 .airline-section {
   display: flex;
   align-items: center;
@@ -1488,7 +1457,7 @@ export default {
   color: var(--color-text-secondary);
 }
 
-/* Route Section */
+
 .route-section {
   display: flex;
   align-items: center;
@@ -1558,7 +1527,7 @@ export default {
   white-space: nowrap;
 }
 
-/* Flight Path */
+
 .flight-path {
   flex: 1;
   display: flex;
@@ -1600,14 +1569,14 @@ export default {
   background: #d1fae5;
 }
 
-/* Connecting flight styling */
+
 .flight-result-card:has(.transfer-icon) .flight-type,
 .flight-type.connecting {
   color: #d97706;
   background: #fef3c7;
 }
 
-/* Cross-airport transfer notice styling */
+
 .transfer-notice {
   margin-top: 8px;
   padding: 8px 12px;
@@ -1661,7 +1630,7 @@ export default {
   transform: rotate(90deg);
 }
 
-/* Price Section */
+
 .price-section {
   text-align: right;
   display: flex;
@@ -1727,13 +1696,13 @@ export default {
   color: var(--color-text-tertiary);
 }
 
-/* Empty Results */
+
 .empty-results {
   text-align: center;
   padding: var(--space-12) var(--space-6);
 }
 
-/* Responsive Design */
+
 @media (max-width: 1023px) {
   .location-row {
     grid-template-columns: 1fr;
@@ -1854,7 +1823,7 @@ export default {
   }
 }
 
-/* Form validation styles */
+
 :deep(.el-form-item.is-error .el-input__inner),
 :deep(.el-form-item.is-error .el-select .el-input__inner) {
   border-color: var(--color-error);
@@ -1866,7 +1835,7 @@ export default {
   padding-top: var(--space-1);
 }
 
-/* Container */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
