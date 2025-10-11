@@ -1,22 +1,23 @@
 package com.airticket.config;
 
-import com.airticket.mapper.UserMapper;
 import com.airticket.mapper.AirportMapper;
 import com.airticket.mapper.FlightMapper;
-import com.airticket.model.User;
+import com.airticket.mapper.UserMapper;
 import com.airticket.model.Airport;
 import com.airticket.model.Flight;
-import com.airticket.service.UserService;
+import com.airticket.model.User;
 import com.airticket.service.AirlineService;
 import com.airticket.service.AirportService;
+import com.airticket.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Configuration

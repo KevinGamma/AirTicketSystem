@@ -309,17 +309,24 @@ public class AlipayService {
                 }
                 return paymentResponse;
             } else {
-                logger.error("支付状态查询失败: code={}, msg={}, subCode={}, subMsg={}",
-                        response.getCode(), response.getMsg(), response.getSubCode(), response.getSubMsg());
-                if ("40004".equals(response.getCode()) || "ACQ.TRADE_NOT_EXIST".equals(response.getSubCode())) {
+                String code = response.getCode();
+                String subCode = response.getSubCode();
+                String subMsg = response.getSubMsg();
+                if ("40004".equals(code) || "ACQ.TRADE_NOT_EXIST".equals(subCode)) {
+                    logger.warn("支付宝未找到交易记录: paymentNumber={}, code={}, subCode={}, subMsg={}",
+                            paymentNumber, code, subCode, subMsg);
                     PaymentResponse paymentResponse = new PaymentResponse(true, "查询成功");
                     paymentResponse.setPaymentNumber(paymentNumber);
-                    paymentResponse.setStatus("PENDING");
-                    paymentResponse.setMessage("等待支付");
+                    paymentResponse.setStatus("NOT_FOUND");
+                    paymentResponse.setMessage("支付宝暂未生成该支付交易，请完成支付页面操作后再试");
                     paymentResponse.setSandboxMode(true);
+                    paymentResponse.setSandboxTips("完成支付宝沙箱支付流程（确认付款）后再刷新状态");
                     return paymentResponse;
                 }
-                return PaymentResponse.error("查询支付状态失败: " + response.getSubMsg());
+                logger.error("支付状态查询失败: code={}, msg={}, subCode={}, subMsg={}",
+                        code, response.getMsg(), subCode, subMsg);
+                String errorMessage = (subMsg != null && !subMsg.isBlank()) ? subMsg : response.getMsg();
+                return PaymentResponse.error("查询支付状态失败: " + errorMessage);
             }
         } catch (AlipayApiException e) {
             logger.error("查询支付状态API调用失败: {}", e.getErrMsg(), e);

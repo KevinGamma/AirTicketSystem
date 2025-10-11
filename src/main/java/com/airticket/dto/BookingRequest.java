@@ -19,6 +19,9 @@ public class BookingRequest {
     private String seatNumber;
     private List<Long> connectingFlightIds;
 
+    public BookingRequest() {
+    }
+
     public BookingRequest(Long flightId, String passengerName, String passengerIdNumber) {
         this.flightId = flightId;
         this.passengerName = passengerName;
