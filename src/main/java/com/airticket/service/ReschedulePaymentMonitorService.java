@@ -35,6 +35,9 @@ public class ReschedulePaymentMonitorService {
     @Autowired
     private AlipayService alipayService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Scheduled(fixedDelay = 10000) 
     public void monitorPendingReschedulePayments() {
         runPaymentMonitoring();
@@ -149,6 +152,13 @@ public class ReschedulePaymentMonitorService {
                     
                     adminApprovalRequestMapper.updateStatus(
                         rescheduleRequest.getId(), "PAYMENT_COMPLETED", null, null, LocalDateTime.now()
+                    );
+
+                    Ticket originalTicket = ticketMapper.findById(originalTicketId);
+                    notificationService.createReschedulePaymentCompletedNotification(
+                        rescheduleRequest,
+                        originalTicket,
+                        ticket
                     );
                     
                     logger.info("Reschedule payment completion processed successfully: ticketId={}, requestId={}", 

@@ -28,12 +28,8 @@ public class UserService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("User not found: " + username);
         }
-        
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .authorities("ROLE_" + user.getRole())
-                .build();
+
+        return new AuthenticatedUserPrincipal(user);
     }
     
     public User findByUsername(String username) {

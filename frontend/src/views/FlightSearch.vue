@@ -713,17 +713,14 @@ export default {
       }
 
       
-      const originAirportId = originCityGroup.primaryAirport.id
-      const destinationAirportId = destinationCityGroup.primaryAirport.id
+      const searchRequest = {
+        departureCity: originCityGroup.city,
+        arrivalCity: destinationCityGroup.city,
+        departureDate: this.searchForm.departureDate,
+        passengers: 1
+      }
 
-      const response = await api.get('/flights/search', {
-        params: {
-          originAirportId: originAirportId,
-          destinationAirportId: destinationAirportId,
-          departureDate: this.searchForm.departureDate,
-          passengers: 1
-        }
-      })
+      const response = await api.post('/flights/search', searchRequest)
 
       if (response.data.success) {
         

@@ -28,7 +28,9 @@ public interface NotificationMapper {
     })
     Notification findById(@Param("id") Long id);
 
-    @Select("SELECT * FROM notifications WHERE user_id = #{userId} ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}")
+    @Select("SELECT * FROM notifications " +
+            "WHERE user_id = #{userId} AND sent_time IS NOT NULL " +
+            "ORDER BY sent_time DESC, created_at DESC LIMIT #{limit} OFFSET #{offset}")
     @Results({
         @Result(column = "user_id", property = "userId"),
         @Result(column = "ticket_id", property = "ticketId"),
@@ -43,7 +45,9 @@ public interface NotificationMapper {
     })
     List<Notification> findByUserIdPaginated(@Param("userId") Long userId, @Param("limit") int limit, @Param("offset") int offset);
 
-    @Select("SELECT * FROM notifications WHERE user_id = #{userId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM notifications " +
+            "WHERE user_id = #{userId} AND sent_time IS NOT NULL " +
+            "ORDER BY sent_time DESC, created_at DESC")
     @Results({
         @Result(column = "user_id", property = "userId"),
         @Result(column = "ticket_id", property = "ticketId"),
@@ -58,7 +62,7 @@ public interface NotificationMapper {
     })
     List<Notification> findByUserId(@Param("userId") Long userId);
 
-    @Select("SELECT COUNT(*) FROM notifications WHERE user_id = #{userId} AND is_read = FALSE")
+    @Select("SELECT COUNT(*) FROM notifications WHERE user_id = #{userId} AND is_read = FALSE AND sent_time IS NOT NULL")
     int countUnreadByUserId(@Param("userId") Long userId);
 
     @Update("UPDATE notifications SET is_read = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}")
@@ -102,4 +106,58 @@ public interface NotificationMapper {
         @Result(column = "updated_at", property = "updatedAt")
     })
     List<Notification> findByTicketIdAndType(@Param("ticketId") Long ticketId, @Param("notificationType") String notificationType);
+
+    @Select("SELECT * FROM notifications WHERE flight_id = #{flightId} AND notification_type = #{notificationType}")
+    @Results({
+        @Result(column = "user_id", property = "userId"),
+        @Result(column = "ticket_id", property = "ticketId"),
+        @Result(column = "flight_id", property = "flightId"),
+        @Result(column = "request_id", property = "requestId"),
+        @Result(column = "notification_type", property = "notificationType"),
+        @Result(column = "is_read", property = "isRead"),
+        @Result(column = "scheduled_time", property = "scheduledTime"),
+        @Result(column = "sent_time", property = "sentTime"),
+        @Result(column = "created_at", property = "createdAt"),
+        @Result(column = "updated_at", property = "updatedAt")
+    })
+    List<Notification> findByFlightIdAndType(@Param("flightId") Long flightId, @Param("notificationType") String notificationType);
+
+    @Select("SELECT * FROM notifications WHERE request_id = #{requestId} AND notification_type = #{notificationType}")
+    @Results({
+        @Result(column = "user_id", property = "userId"),
+        @Result(column = "ticket_id", property = "ticketId"),
+        @Result(column = "flight_id", property = "flightId"),
+        @Result(column = "request_id", property = "requestId"),
+        @Result(column = "notification_type", property = "notificationType"),
+        @Result(column = "is_read", property = "isRead"),
+        @Result(column = "scheduled_time", property = "scheduledTime"),
+        @Result(column = "sent_time", property = "sentTime"),
+        @Result(column = "created_at", property = "createdAt"),
+        @Result(column = "updated_at", property = "updatedAt")
+    })
+    List<Notification> findByRequestIdAndType(@Param("requestId") Long requestId, @Param("notificationType") String notificationType);
+
+    @Select("SELECT * FROM notifications " +
+            "WHERE user_id = #{userId} AND flight_id = #{flightId} AND notification_type = #{notificationType} " +
+            "ORDER BY created_at ASC")
+    @Results({
+        @Result(column = "user_id", property = "userId"),
+        @Result(column = "ticket_id", property = "ticketId"),
+        @Result(column = "flight_id", property = "flightId"),
+        @Result(column = "request_id", property = "requestId"),
+        @Result(column = "notification_type", property = "notificationType"),
+        @Result(column = "is_read", property = "isRead"),
+        @Result(column = "scheduled_time", property = "scheduledTime"),
+        @Result(column = "sent_time", property = "sentTime"),
+        @Result(column = "created_at", property = "createdAt"),
+        @Result(column = "updated_at", property = "updatedAt")
+    })
+    List<Notification> findByUserIdAndFlightIdAndType(
+        @Param("userId") Long userId,
+        @Param("flightId") Long flightId,
+        @Param("notificationType") String notificationType
+    );
+
+    @Delete("DELETE FROM notifications WHERE id = #{id}")
+    void deleteById(@Param("id") Long id);
 }

@@ -42,9 +42,14 @@ public class Notification {
 
     
     public static final String TYPE_FLIGHT_REMINDER = "FLIGHT_REMINDER";
+    public static final String TYPE_FLIGHT_REMINDER_24H = "FLIGHT_REMINDER_24H";
+    public static final String TYPE_FLIGHT_REMINDER_3H = "FLIGHT_REMINDER_3H";
+    public static final String TYPE_FLIGHT_REMINDER_1H = "FLIGHT_REMINDER_1H";
+    public static final String TYPE_FLIGHT_REMINDER_FINAL = "FLIGHT_REMINDER_FINAL";
     public static final String TYPE_FLIGHT_TAKEOFF = "FLIGHT_TAKEOFF";
     public static final String TYPE_FLIGHT_LANDING = "FLIGHT_LANDING";
     public static final String TYPE_RESCHEDULE_APPROVED = "RESCHEDULE_APPROVED";
+    public static final String TYPE_RESCHEDULE_COMPLETED = "RESCHEDULE_COMPLETED";
     public static final String TYPE_RESCHEDULE_REJECTED = "RESCHEDULE_REJECTED";
     public static final String TYPE_REFUND_PROCESSED = "REFUND_PROCESSED";
     public static final String TYPE_PAYMENT_REQUIRED = "PAYMENT_REQUIRED";

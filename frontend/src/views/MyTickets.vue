@@ -1016,7 +1016,7 @@
               </div>
               <div class="fare-divider total-divider"></div>
               <div class="fare-item fare-total">
-                <span class="fare-label">总计费用(需另加120元机建燃油费)：</span>
+                <span class="fare-label">总计费用：</span>
                 <span class="fare-value total-amount">{{ getTotalFeeText() }}</span>
               </div>
             </div>
@@ -1339,6 +1339,24 @@ export default {
   methods: {
     goTo(path) {
       this.$router.push(path)
+    },
+
+    getRescheduleRefundAmount(request) {
+      const refundAmount = Number(request?.refundAmount)
+      if (Number.isFinite(refundAmount) && refundAmount > 0) {
+        return refundAmount
+      }
+
+      const totalAmount = Number(request?.totalAmount)
+      if (Number.isFinite(totalAmount) && totalAmount < 0) {
+        return Math.abs(totalAmount)
+      }
+
+      return 0
+    },
+
+    hasRescheduleRefund(request) {
+      return this.getRescheduleRefundAmount(request) > 0
     },
     
     
@@ -1704,9 +1722,9 @@ export default {
           }
           
           for (const request of ticketRequests) {
-            
-            if (request.totalAmount < 0 && request.paymentStatus === 'COMPLETED') {
-              const refundAmount = Math.abs(request.totalAmount)
+            const refundAmount = this.getRescheduleRefundAmount(request)
+
+            if (refundAmount > 0 && request.paymentStatus === 'COMPLETED') {
               
               
               setTimeout(() => {
@@ -1794,9 +1812,9 @@ export default {
               req.ticket && req.ticket.id === ticket.id && req.requestType === 'RESCHEDULE' && req.status === 'APPROVED'
             )
             
-            const refundRequest = ticketRequests.find(req => req.totalAmount < 0)
+            const refundRequest = ticketRequests.find(req => this.hasRescheduleRefund(req))
             if (refundRequest) {
-              const refundAmount = Math.abs(refundRequest.totalAmount)
+              const refundAmount = this.getRescheduleRefundAmount(refundRequest)
               setTimeout(() => {
                 ElMessage.info(`检测到您有¥${refundAmount}的改签退款，处理完成后将退回原支付方式`, { duration: 8000 })
               }, 2000)
@@ -1894,6 +1912,7 @@ export default {
               requestType: req.requestType,
               status: req.status,
               totalAmount: req.totalAmount,
+              refundAmount: req.refundAmount,
               paymentStatus: req.paymentStatus,
               requestTime: req.requestTime,
               reason: req.reason,
@@ -1944,15 +1963,16 @@ export default {
         console.log('=== CHECKING FOR REFUNDS ===')
         console.log('Found reschedule requests:', rescheduleRequests.length)
         rescheduleRequests.forEach((req, index) => {
-          console.log(`Request ${index + 1} refund check:`, {
-            id: req.id,
-            totalAmount: req.totalAmount,
-            isNegative: req.totalAmount < 0,
-            paymentStatus: req.paymentStatus
-          })
+            console.log(`Request ${index + 1} refund check:`, {
+              id: req.id,
+              totalAmount: req.totalAmount,
+              refundAmount: req.refundAmount,
+              hasRefund: this.hasRescheduleRefund(req),
+              paymentStatus: req.paymentStatus
+            })
         })
         
-        const refundRequest = rescheduleRequests.find(req => req.totalAmount < 0)
+        const refundRequest = rescheduleRequests.find(req => this.hasRescheduleRefund(req))
         console.log('Refund request found:', refundRequest)
         
         if (!refundRequest) {
@@ -1964,6 +1984,7 @@ ${rescheduleRequests.map((req, index) =>
   `${index + 1}. 请求ID: ${req.id}
      状态: ${req.status}
      总金额: ¥${req.totalAmount || '未设置'}
+     退款金额: ¥${req.refundAmount || '未设置'}
      支付状态: ${req.paymentStatus || '未知'}`
 ).join('\n\n')}
 
@@ -1975,7 +1996,7 @@ ${rescheduleRequests.map((req, index) =>
           return
         }
         
-        const refundAmount = Math.abs(refundRequest.totalAmount)
+        const refundAmount = this.getRescheduleRefundAmount(refundRequest)
         
         await ElMessageBox.confirm(
           `检测到您的改签应产生¥${refundAmount}的退款。\n\n是否要提交退款申请？`, 
@@ -3039,7 +3060,7 @@ ${rescheduleRequests.map((req, index) =>
       
       if (shouldRefund) {
         const refundAmount = Math.abs(this.serviceFee - Math.abs(fareDifference))
-        return `提交申请 (将退款¥${(refundAmount-120)})`
+        return `提交申请 (将退款¥${refundAmount})`
       } else if (totalCost > 0) {
         return `提交申请 (需支付¥${totalCost})`
       } else {
@@ -4844,4 +4865,3 @@ ${rescheduleRequests.map((req, index) =>
   margin: 0 4px;
 }
 </style>
-

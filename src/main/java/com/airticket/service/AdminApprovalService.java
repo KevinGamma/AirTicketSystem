@@ -270,7 +270,8 @@ public class AdminApprovalService {
         try {
             logger.info("Processing reschedule refund for request {} with amount ¥{}", request.getId(), refundAmount);
 
-            Payment payment = paymentMapper.findByTicketId(request.getTicketId());
+            List<Payment> payments = paymentMapper.findByTicketIdOrderByCreatedAtDesc(request.getTicketId());
+            Payment payment = (payments != null && !payments.isEmpty()) ? payments.getFirst() : null;
 
             try {
                 ensureBalanceColumnExists();
@@ -302,6 +303,12 @@ public class AdminApprovalService {
                     if (refundResponse.getRefundDetails() != null) {
                         String refundNo = (String) refundResponse.getRefundDetails().get("refundNo");
                         adminApprovalRequestMapper.updateRefundNumber(request.getId(), refundNo);
+                    }
+                    int balanceRollback = userMapper.deductFromBalance(request.getUserId(), refundAmount);
+                    if (balanceRollback > 0) {
+                        logger.info("Rolled back temporary balance credit after successful Alipay refund, requestId={}", request.getId());
+                    } else {
+                        logger.warn("Failed to roll back temporary balance credit after successful Alipay refund, requestId={}", request.getId());
                     }
                 } else {
                     logger.warn("Payment system refund processing failed for request {}: {}, but user balance has been credited",
@@ -367,6 +374,7 @@ public class AdminApprovalService {
             Ticket newTicket = ticketService.getTicketById(originalTicket.getRescheduledToTicketId());
             if (newTicket != null && "PENDING_RESCHEDULE".equals(newTicket.getStatus())) {
                 ticketService.updateTicketStatus(newTicket.getId(), "PAID", Instant.now());
+                notificationService.createReschedulePaymentCompletedNotification(request, originalTicket, newTicket);
             }
         }
 
@@ -509,30 +517,42 @@ public class AdminApprovalService {
 
             ticketService.loadConnectingFlights(currentTicket);
             Flight mainFlight = flightService.getFlightById(currentTicket.getFlightId());
+            if (mainFlight == null || mainFlight.getDepartureAirport() == null || mainFlight.getArrivalAirport() == null) {
+                logger.warn("Main flight information is incomplete for ticket {}", currentTicket.getId());
+                return false;
+            }
 
             Long originAirportId;
             Long finalDestinationAirportId;
+            String originCity;
+            String finalDestinationCity;
 
             if (currentTicket.getConnectingFlights() != null && !currentTicket.getConnectingFlights().isEmpty()) {
                 originAirportId = mainFlight.getDepartureAirport().getId();
+                originCity = mainFlight.getDepartureAirport().getCity();
                 Flight lastConnectingFlight = currentTicket.getConnectingFlights().get(currentTicket.getConnectingFlights().size() - 1);
                 finalDestinationAirportId = lastConnectingFlight.getArrivalAirport().getId();
+                finalDestinationCity = lastConnectingFlight.getArrivalAirport().getCity();
             } else {
                 originAirportId = mainFlight.getDepartureAirport().getId();
+                originCity = mainFlight.getDepartureAirport().getCity();
                 finalDestinationAirportId = mainFlight.getArrivalAirport().getId();
+                finalDestinationCity = mainFlight.getArrivalAirport().getCity();
             }
 
             boolean isValidDestination = false;
 
-            if (newFlight.getDepartureAirport().getId().equals(originAirportId)) {
+            if (sameAirportOrCity(newFlight.getDepartureAirport().getId(), originAirportId,
+                    newFlight.getDepartureAirport().getCity(), originCity)) {
                 isValidDestination = true;
-                logger.debug("Origin match validation: New flight {} starts from original origin {}",
-                        newFlightId, originAirportId);
+                logger.debug("Origin match validation: New flight {} starts from original origin {} / {}",
+                        newFlightId, originAirportId, originCity);
             }
-            else if (newFlight.getArrivalAirport().getId().equals(finalDestinationAirportId)) {
+            else if (sameAirportOrCity(newFlight.getArrivalAirport().getId(), finalDestinationAirportId,
+                    newFlight.getArrivalAirport().getCity(), finalDestinationCity)) {
                 isValidDestination = true;
-                logger.debug("Destination match validation: New flight {} goes to final destination {}",
-                        newFlightId, finalDestinationAirportId);
+                logger.debug("Destination match validation: New flight {} goes to final destination {} / {}",
+                        newFlightId, finalDestinationAirportId, finalDestinationCity);
             }
             else if (currentTicket.getConnectingFlights() != null && !currentTicket.getConnectingFlights().isEmpty()) {
                 List<Flight> allOriginalFlights = new java.util.ArrayList<>();
@@ -540,8 +560,10 @@ public class AdminApprovalService {
                 allOriginalFlights.addAll(currentTicket.getConnectingFlights());
 
                 for (Flight originalFlight : allOriginalFlights) {
-                    if (newFlight.getDepartureAirport().getId().equals(originalFlight.getDepartureAirport().getId()) ||
-                            newFlight.getArrivalAirport().getId().equals(originalFlight.getArrivalAirport().getId())) {
+                    if (sameAirportOrCity(newFlight.getDepartureAirport().getId(), originalFlight.getDepartureAirport().getId(),
+                            newFlight.getDepartureAirport().getCity(), originalFlight.getDepartureAirport().getCity()) ||
+                            sameAirportOrCity(newFlight.getArrivalAirport().getId(), originalFlight.getArrivalAirport().getId(),
+                                    newFlight.getArrivalAirport().getCity(), originalFlight.getArrivalAirport().getCity())) {
                         isValidDestination = true;
                         logger.debug("Connecting segment validation: New flight {} connects to original journey", newFlightId);
                         break;
@@ -573,11 +595,12 @@ public class AdminApprovalService {
             }
 
             if (!isValidDestination) {
-                logger.info("Reschedule validation failed for ticket {} to flight {}: Origin {} -> {}, New flight {} -> {}, Final destination {}",
+                logger.info("Reschedule validation failed for ticket {} to flight {}: Origin {}({}) -> {}({}), New flight {}({}) -> {}({}), Final destination {}({})",
                         currentTicket.getId(), newFlightId,
-                        originAirportId, finalDestinationAirportId,
-                        newFlight.getDepartureAirport().getId(), newFlight.getArrivalAirport().getId(),
-                        finalDestinationAirportId);
+                        originAirportId, originCity, finalDestinationAirportId, finalDestinationCity,
+                        newFlight.getDepartureAirport().getId(), newFlight.getDepartureAirport().getCity(),
+                        newFlight.getArrivalAirport().getId(), newFlight.getArrivalAirport().getCity(),
+                        finalDestinationAirportId, finalDestinationCity);
             }
 
             return isValidDestination;
@@ -587,5 +610,15 @@ public class AdminApprovalService {
                     currentTicket.getId(), newFlightId, e.getMessage(), e);
             return true;
         }
+    }
+
+    private boolean sameAirportOrCity(Long airportId1, Long airportId2, String city1, String city2) {
+        if (airportId1 != null && airportId1.equals(airportId2)) {
+            return true;
+        }
+        if (city1 == null || city2 == null) {
+            return false;
+        }
+        return city1.trim().equalsIgnoreCase(city2.trim());
     }
 }

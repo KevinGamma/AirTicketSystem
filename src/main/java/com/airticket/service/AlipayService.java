@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,6 +30,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class AlipayService {
@@ -50,8 +52,13 @@ public class AlipayService {
     @Autowired
     private AdminApprovalRequestMapper adminApprovalRequestMapper;
 
+    public boolean isSandboxEnabled() {
+        return alipayConfig.isSandbox();
+    }
+
     public PaymentResponse createPayment(PaymentRequest request) {
         try {
+            request.setUseSandbox(alipayConfig.isSandbox());
             logger.info("创建支付订单 - 沙箱模式: {}", request.isUseSandbox());
             Ticket ticket = ticketMapper.findById(request.getTicketId());
             if (ticket == null) {
@@ -159,6 +166,7 @@ public class AlipayService {
         );
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public String handleNotify(Map<String, String> params) {
         try {
             logger.info("收到支付宝异步通知 - 沙箱模式");
@@ -171,7 +179,7 @@ public class AlipayService {
                 return "fail";
             }
             if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
-                return handlePaymentSuccess(outTradeNo, tradeNo, new BigDecimal(totalAmount));
+                return handlePaymentSuccessIdempotent(outTradeNo, tradeNo, new BigDecimal(totalAmount));
             }
             logger.info("支付状态: {}, 无需处理", tradeStatus);
             return "success";
@@ -219,6 +227,94 @@ public class AlipayService {
         } catch (Exception e) {
             logger.error("处理支付成功回调失败", e);
             return "fail";
+        }
+    }
+
+    private String handlePaymentSuccessIdempotent(String paymentNumber, String alipayTradeNo, BigDecimal amount) {
+        try {
+            logger.info("寮€濮嬫墽琛屾敮浠樺洖璋冨够绛夊鐞? paymentNumber={}, alipayTradeNo={}, amount={}",
+                    paymentNumber, alipayTradeNo, amount);
+            Payment payment = paymentMapper.findByPaymentNumber(paymentNumber);
+            if (payment == null) {
+                logger.error("鏀粯鍥炶皟瀵瑰簲鐨勬敮浠樿褰曚笉瀛樺湪: {}", paymentNumber);
+                return "fail";
+            }
+            if (payment.getAmount() != null && payment.getAmount().compareTo(amount) != 0) {
+                logger.error("鏀粯鍥炶皟閲戦涓庢湰鍦版敮浠樿褰曚笉涓€鑷? paymentNumber={}, callbackAmount={}, localAmount={}",
+                        paymentNumber, amount, payment.getAmount());
+                return "fail";
+            }
+            if ("SUCCESS".equals(payment.getStatus())) {
+                if (payment.getAlipayTradeNo() != null && !Objects.equals(payment.getAlipayTradeNo(), alipayTradeNo)) {
+                    logger.error("鏀粯宸叉垚鍔燂紝浣嗗洖璋冧腑鐨勪氦鏄撳彿涓嶄竴鑷? paymentNumber={}, storedTradeNo={}, callbackTradeNo={}",
+                            paymentNumber, payment.getAlipayTradeNo(), alipayTradeNo);
+                    return "fail";
+                }
+                logger.info("鏀粯鍥炶皟宸插鐞嗭紝杩涜鐘舵€佽ˉ鍋? paymentNumber={}", paymentNumber);
+                reconcileSuccessfulPayment(payment, paymentNumber);
+                return "success";
+            }
+            if ("REFUNDED".equals(payment.getStatus())) {
+                logger.error("鏀粯璁板綍宸查€€娆撅紝鎷掔粷鍚庣画鎴愬姛鍥炶皟: {}", paymentNumber);
+                return "fail";
+            }
+
+            Instant paymentTime = Instant.now();
+            int updatedRows = paymentMapper.markPaymentSuccessIfStatusMatches(
+                    paymentNumber, payment.getStatus(), alipayTradeNo, paymentTime
+            );
+            if (updatedRows == 0) {
+                Payment latestPayment = paymentMapper.findByPaymentNumber(paymentNumber);
+                if (latestPayment != null && "SUCCESS".equals(latestPayment.getStatus())) {
+                    if (latestPayment.getAlipayTradeNo() != null
+                            && !Objects.equals(latestPayment.getAlipayTradeNo(), alipayTradeNo)) {
+                        logger.error("骞跺彂鍥炶皟鍚庣殑鏀粯浜ゆ槗鍙蜂笉涓€鑷? paymentNumber={}, storedTradeNo={}, callbackTradeNo={}",
+                                paymentNumber, latestPayment.getAlipayTradeNo(), alipayTradeNo);
+                        return "fail";
+                    }
+                    logger.info("鏀粯鍥炶皟宸辫鍏朵粬璇锋眰澶勭悊锛岃烦杩囬噸澶嶆洿鏂? paymentNumber={}", paymentNumber);
+                    reconcileSuccessfulPayment(latestPayment, paymentNumber);
+                    return "success";
+                }
+                logger.warn("鏀粯鐘舵€佹洿鏂板け璐ワ紝褰撳墠鐘舵€佷笉鍐嶅厑璁稿鐞? paymentNumber={}, status={}",
+                        paymentNumber, latestPayment != null ? latestPayment.getStatus() : null);
+                return "fail";
+            }
+
+            payment.setStatus("SUCCESS");
+            payment.setAlipayTradeNo(alipayTradeNo);
+            payment.setPaymentTime(paymentTime);
+            reconcileSuccessfulPayment(payment, paymentNumber);
+            logger.info("鏀粯鍥炶皟骞剁瓑澶勭悊瀹屾垚: paymentNumber={}", paymentNumber);
+            return "success";
+        } catch (Exception e) {
+            logger.error("鏀粯鍥炶皟骞剁瓑澶勭悊澶辫触", e);
+            return "fail";
+        }
+    }
+
+    private void reconcileSuccessfulPayment(Payment payment, String paymentNumber) {
+        Ticket ticket = ticketMapper.findById(payment.getTicketId());
+        if (ticket == null) {
+            logger.warn("鏀粯宸叉垚鍔燂紝浣嗘壘涓嶅埌鍏宠仈绁ㄦ嵁: paymentNumber={}, ticketId={}",
+                    paymentNumber, payment.getTicketId());
+            return;
+        }
+
+        boolean isReschedulePayment = "PENDING_RESCHEDULE".equals(ticket.getStatus());
+        if (!"PAID".equals(ticket.getStatus())) {
+            Instant ticketPaymentTime = payment.getPaymentTime() != null ? payment.getPaymentTime() : Instant.now();
+            ticket.setStatus("PAID");
+            ticket.setPaymentTime(ticketPaymentTime);
+            ticket.setUpdatedAt(Instant.now());
+            ticketMapper.updateStatus(ticket);
+            logger.info("绁ㄦ嵁鐘舵€佸凡鏇存柊涓篜AID: ticketId={}, isReschedulePayment={}", ticket.getId(), isReschedulePayment);
+        } else {
+            logger.info("绁ㄦ嵁宸叉槸PAID锛岃烦杩囬噸澶嶆洿鏂? ticketId={}", ticket.getId());
+        }
+
+        if (isReschedulePayment || ticket.getOriginalTicketId() != null) {
+            completeReschedulePayment(ticket, paymentNumber);
         }
     }
 
@@ -522,7 +618,7 @@ public class AlipayService {
 
 
     private boolean isTestEnvironment(Payment payment) {
-        return payment.getPaymentNumber().startsWith("PAY") ||
+        return payment.isSandboxMode() ||
                payment.getAlipayTradeNo() == null ||
                payment.getAlipayTradeNo().startsWith("SIMULATED") ||
                payment.getAlipayTradeNo().startsWith("MOCK") ||

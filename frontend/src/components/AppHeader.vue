@@ -114,7 +114,7 @@
           <div class="notification-content">
             <h4>{{ notification.title }}</h4>
             <p>{{ notification.message }}</p>
-            <span class="notification-time">{{ formatNotificationTime(notification.createdAt) }}</span>
+            <span class="notification-time">{{ formatNotificationTime(notification.sentTime || notification.createdAt) }}</span>
           </div>
         </div>
       </div>
@@ -267,9 +267,14 @@ export default {
     getNotificationIcon(type) {
       const iconMap = {
         'FLIGHT_REMINDER': 'Clock',
+        'FLIGHT_REMINDER_24H': 'Clock',
+        'FLIGHT_REMINDER_3H': 'Clock',
+        'FLIGHT_REMINDER_1H': 'Clock',
+        'FLIGHT_REMINDER_FINAL': 'Clock',
         'FLIGHT_TAKEOFF': 'ArrowUp',
         'FLIGHT_LANDING': 'Location',
         'RESCHEDULE_APPROVED': 'Check',
+        'RESCHEDULE_COMPLETED': 'Check',
         'RESCHEDULE_REJECTED': 'Close',
         'REFUND_PROCESSED': 'Money',
         'PAYMENT_REQUIRED': 'Wallet',
@@ -281,9 +286,14 @@ export default {
     getNotificationIconClass(type) {
       const classMap = {
         'FLIGHT_REMINDER': 'icon-reminder',
+        'FLIGHT_REMINDER_24H': 'icon-reminder',
+        'FLIGHT_REMINDER_3H': 'icon-reminder',
+        'FLIGHT_REMINDER_1H': 'icon-reminder',
+        'FLIGHT_REMINDER_FINAL': 'icon-reminder',
         'FLIGHT_TAKEOFF': 'icon-takeoff',
         'FLIGHT_LANDING': 'icon-landing',
         'RESCHEDULE_APPROVED': 'icon-success',
+        'RESCHEDULE_COMPLETED': 'icon-success',
         'RESCHEDULE_REJECTED': 'icon-error',
         'REFUND_PROCESSED': 'icon-money',
         'PAYMENT_REQUIRED': 'icon-payment',

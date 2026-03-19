@@ -45,8 +45,9 @@ public class PaymentController {
             }
             
             
+            request.setUseSandbox(alipayService.isSandboxEnabled());
             if (!request.isUseSandbox()) {
-                request.setUseSandbox(true);
+                request.setUseSandbox(alipayService.isSandboxEnabled());
                 logger.info("自动启用沙箱模式进行测试");
             }
             

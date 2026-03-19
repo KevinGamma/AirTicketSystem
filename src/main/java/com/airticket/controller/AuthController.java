@@ -7,6 +7,7 @@ import com.airticket.dto.UpdateProfileRequest;
 import com.airticket.model.User;
 import com.airticket.service.FileStorageService;
 import com.airticket.service.MessageService;
+import com.airticket.service.AuthenticatedUserPrincipal;
 import com.airticket.service.UserService;
 import com.airticket.util.JwtUtil;
 import jakarta.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,11 +46,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            authenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
             );
 
-            User user = userService.findByUsername(loginRequest.getUsername());
+            User user = extractAuthenticatedUser(authentication, loginRequest.getUsername());
             String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
 
             Map<String, Object> response = new HashMap<>();
@@ -59,6 +61,14 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(messageService.getMessage("auth.login.invalidCredentials")));
         }
+    }
+
+    private User extractAuthenticatedUser(Authentication authentication, String username) {
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof AuthenticatedUserPrincipal authenticatedUserPrincipal) {
+            return authenticatedUserPrincipal.toSafeUser();
+        }
+        return userService.findByUsername(username);
     }
 
     @PostMapping("/register")

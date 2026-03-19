@@ -4,6 +4,9 @@ public class AdminApprovalResponse {
     private String action; 
     private String rejectionReason; 
 
+    public AdminApprovalResponse() {
+    }
+
     public AdminApprovalResponse(String action, String rejectionReason) {
         this.action = action;
         this.rejectionReason = rejectionReason;
@@ -19,6 +22,10 @@ public class AdminApprovalResponse {
 
     public String getRejectionReason() {
         return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 
 }

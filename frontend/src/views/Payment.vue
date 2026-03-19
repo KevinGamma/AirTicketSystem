@@ -340,8 +340,6 @@ export default {
             setTimeout(() => {
               this.redirectToAlipayPage(paymentUrl)
             }, 1500)
-
-            this.startPaymentStatusCheck()
           } else {
             this.simulateSandboxPayment()
           }
@@ -477,6 +475,8 @@ export default {
           
           if (paymentStatus === 'SUCCESS') {
             this.handlePaymentSuccess()
+          } else if (paymentStatus === 'NOT_FOUND') {
+            return
           } else if (paymentStatus === 'FAILED' || paymentStatus === 'CANCELLED') {
             this.handlePaymentError()
           }

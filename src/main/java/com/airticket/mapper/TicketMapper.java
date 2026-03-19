@@ -14,7 +14,7 @@ public interface TicketMapper {
     @Select("SELECT * FROM tickets WHERE id = #{id}")
     Ticket findById(Long id);
     
-    @Select("SELECT * FROM tickets WHERE user_id = #{userId} AND (deleted_by_user IS NULL OR deleted_by_user = false) ORDER BY created_at DESC")
+    @Select("SELECT * FROM tickets WHERE user_id = #{userId} AND deleted_by_user = false ORDER BY created_at DESC")
     List<Ticket> findByUserId(Long userId);
     
     @Select("SELECT * FROM tickets WHERE ticket_number = #{ticketNumber}")
@@ -31,7 +31,7 @@ public interface TicketMapper {
 
     @Select("SELECT * FROM tickets WHERE user_id = #{userId} AND " +
             "(status = '已改签' OR original_ticket_id IS NOT NULL) AND " +
-            "(deleted_by_user IS NULL OR deleted_by_user = false) ORDER BY created_at DESC")
+            "deleted_by_user = false ORDER BY created_at DESC")
     List<Ticket> findRescheduledTicketsByUserId(Long userId);
     
     @Insert("INSERT INTO tickets (ticket_number, user_id, flight_id, seat_number, " +
@@ -90,8 +90,8 @@ public interface TicketMapper {
             "LEFT JOIN flights f ON t.flight_id = f.id " +
             "WHERE t.status = 'BOOKED' " +
             "AND t.booking_time IS NOT NULL " +
-            "AND (#{currentTime} > DATE_ADD(t.booking_time, INTERVAL 10 MINUTE) " +
-            "OR #{currentTime} > DATE_SUB(f.departure_time, INTERVAL 40 MINUTE))")
+            "AND (t.booking_time < DATE_SUB(#{currentTime}, INTERVAL 10 MINUTE) " +
+            "OR f.departure_time < DATE_ADD(#{currentTime}, INTERVAL 40 MINUTE))")
     List<Ticket> findExpiredBookedTickets(@Param("currentTime") java.time.Instant currentTime);
     
     @Select("SELECT * FROM tickets WHERE status = #{status}")
@@ -104,14 +104,9 @@ public interface TicketMapper {
     @Select("SELECT t.* FROM tickets t " +
             "LEFT JOIN flights f ON t.flight_id = f.id " +
             "WHERE t.status = 'PAID' " +
-            "AND f.departure_time > NOW() " +
-            "AND NOT EXISTS (" +
-            "    SELECT 1 FROM notifications n " +
-            "    WHERE n.ticket_id = t.id " +
-            "    AND n.notification_type = 'FLIGHT_REMINDER' " +
-            "    AND n.scheduled_time IS NOT NULL" +
-            ")")
-    List<Ticket> findPaidTicketsWithoutReminders();
+            "AND t.deleted_by_user = FALSE " +
+            "AND f.departure_time > UTC_TIMESTAMP()")
+    List<Ticket> findPaidTicketsForReminderScheduling();
     
     
     @Insert("INSERT INTO ticket_connecting_flights (ticket_id, connecting_flight_id, sequence_number) " +
@@ -127,4 +122,3 @@ public interface TicketMapper {
     @Delete("DELETE FROM ticket_connecting_flights WHERE ticket_id = #{ticketId}")
     int deleteTicketConnectingFlightsByTicketId(@Param("ticketId") Long ticketId);
 }
-

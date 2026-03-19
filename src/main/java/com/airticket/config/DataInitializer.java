@@ -8,6 +8,7 @@ import com.airticket.model.Flight;
 import com.airticket.model.User;
 import com.airticket.service.AirlineService;
 import com.airticket.service.AirportService;
+import com.airticket.service.DatabaseOptimizationService;
 import com.airticket.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -16,9 +17,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class DataInitializer {
@@ -43,6 +50,9 @@ public class DataInitializer {
     
     @Autowired
     private AirportService airportService;
+
+    @Autowired
+    private DatabaseOptimizationService databaseOptimizationService;
     
     @Autowired
     private com.airticket.mapper.AirlineMapper airlineMapper;
@@ -67,6 +77,7 @@ public class DataInitializer {
             airlineService.initializeDefaultAirlines();
             initializeFlights();
             updateExistingFlightAircraftTypes();
+            databaseOptimizationService.optimizeDatabase();
         };
     }
     
@@ -209,157 +220,127 @@ public class DataInitializer {
     
     private void initializeFlights() {
         if (flightMapper.findAll().isEmpty()) {
-            System.out.println("Initializing comprehensive flight schedule for one month...");
-            
-            LocalDateTime baseDate = LocalDateTime.now().plusDays(1);
-
-            for (int day = 0; day < 30; day++) {
-                LocalDateTime currentDate = baseDate.plusDays(day);
-                createDailyFlights(currentDate, "morning", day);
-                createDailyFlights(currentDate, "afternoon", day);
-                createDailyFlights(currentDate, "evening", day);
-            }
+            initializeFlightsForceNew();
         } else {
             System.out.println("Flights already exist");
         }
     }
-    
-    private void createDailyFlights(LocalDateTime date, String timeSlot, int dayOffset) {
-        Flight[] dailyFlights = null;
-        
-        switch (timeSlot) {
-            case "morning":
-                dailyFlights = getMorningFlights(date, dayOffset);
-                break;
-            case "afternoon":
-                dailyFlights = getAfternoonFlights(date, dayOffset);
-                break;
-            case "evening":
-                dailyFlights = getEveningFlights(date, dayOffset);
-                break;
-        }
-        
-        if (dailyFlights != null) {
-            for (Flight flight : dailyFlights) {
-                setRandomAircraftType(flight, dayOffset);
+
+    private int generateMonthlyFlightSchedule() {
+        Map<String, Airport> airportByCode = loadAirportMap();
+        List<RouteTemplate> routeTemplates = buildRouteTemplates();
+        LocalDate baseDate = LocalDate.now(ZoneId.of("Asia/Shanghai")).plusDays(1);
+        int createdCount = 0;
+
+        for (int dayOffset = 0; dayOffset < 30; dayOffset++) {
+            LocalDate flightDate = baseDate.plusDays(dayOffset);
+
+            for (int routeIndex = 0; routeIndex < routeTemplates.size(); routeIndex++) {
+                Flight flight = buildFlight(routeTemplates.get(routeIndex), airportByCode, flightDate, dayOffset, routeIndex);
+                if (flight == null) {
+                    continue;
+                }
+
                 flightMapper.insert(flight);
-                System.out.println("Created flight: " + flight.getFlightNumber() + " on " + date.toLocalDate());
+                createdCount++;
             }
         }
+
+        return createdCount;
     }
-    
-    private Instant convertToUtc(LocalDateTime localDateTime) {
-        return localDateTime.atZone(ZoneId.of("Asia/Shanghai")).toInstant();
-    }
-    
-    private Flight[] getMorningFlights(LocalDateTime date, int dayOffset) {
-        String dayStr = String.format("%02d", (dayOffset % 30) + 1);
-        
-        return new Flight[]{
-            new Flight("CA12" + dayStr, getAirlineIdByCode("CA"), 1L, 2L,
-                convertToUtc(date.withHour(6).withMinute(30)),
-                convertToUtc(date.withHour(9).withMinute(0)),
-                180, new BigDecimal("1280.00")),
 
-            new Flight("MU56" + dayStr, getAirlineIdByCode("MU"), 2L, 1L,
-                convertToUtc(date.withHour(7).withMinute(15)),
-                convertToUtc(date.withHour(9).withMinute(45)),
-                200, new BigDecimal("1290.00")),
-
-            new Flight("CZ34" + dayStr, getAirlineIdByCode("CZ"), 1L, 3L,
-                convertToUtc(date.withHour(8).withMinute(0)),
-                convertToUtc(date.withHour(11).withMinute(45)),
-                220, new BigDecimal("1890.00")),
-
-            new Flight("CZ45" + dayStr, getAirlineIdByCode("CZ"), 3L, 2L,
-                convertToUtc(date.withHour(9).withMinute(30)),
-                convertToUtc(date.withHour(12).withMinute(15)),
-                160, new BigDecimal("1580.00")),
-
-            new Flight("MU78" + dayStr, getAirlineIdByCode("MU"), 2L, 3L,
-                convertToUtc(date.withHour(10).withMinute(45)),
-                convertToUtc(date.withHour(13).withMinute(30)),
-                180, new BigDecimal("1620.00")),
-        };
-    }
-    
-    private Flight[] getAfternoonFlights(LocalDateTime date, int dayOffset) {
-        String dayStr = String.format("%02d", (dayOffset % 30) + 1);
-        
-        return new Flight[]{
-            new Flight("CA21" + dayStr, getAirlineIdByCode("CA"), 1L, 2L,
-                convertToUtc(date.withHour(13).withMinute(20)),
-                convertToUtc(date.withHour(15).withMinute(50)),
-                180, new BigDecimal("1350.00")),
-
-            new Flight("MU65" + dayStr, getAirlineIdByCode("MU"), 2L, 1L,
-                convertToUtc(date.withHour(14).withMinute(30)),
-                convertToUtc(date.withHour(17).withMinute(0)),
-                200, new BigDecimal("1380.00")),
-
-            new Flight("CZ43" + dayStr, getAirlineIdByCode("CZ"), 3L, 1L,
-                convertToUtc(date.withHour(15).withMinute(15)),
-                convertToUtc(date.withHour(18).withMinute(45)),
-                220, new BigDecimal("1920.00")),
-
-            new Flight("CA18" + dayStr, getAirlineIdByCode("CA"), 1L, 6L,
-                convertToUtc(date.withHour(16).withMinute(0)),
-                convertToUtc(date.withHour(20).withMinute(20)),
-                200, new BigDecimal("2800.00")),
-
-            new Flight("MU50" + dayStr, getAirlineIdByCode("MU"), 2L, 7L,
-                convertToUtc(date.withHour(17).withMinute(40)),
-                convertToUtc(date.withHour(20).withMinute(50)),
-                180, new BigDecimal("1600.00")),
-        };
-    }
-    
-    private Flight[] getEveningFlights(LocalDateTime date, int dayOffset) {
-        String dayStr = String.format("%02d", (dayOffset % 30) + 1);
-        
-        return new Flight[]{
-            new Flight("CA31" + dayStr, getAirlineIdByCode("CA"), 1L, 2L,
-                convertToUtc(date.withHour(19).withMinute(30)),
-                convertToUtc(date.withHour(22).withMinute(0)),
-                180, new BigDecimal("1420.00")),
-
-            new Flight("MU75" + dayStr, getAirlineIdByCode("MU"), 2L, 1L,
-                convertToUtc(date.withHour(20).withMinute(15)),
-                convertToUtc(date.withHour(22).withMinute(45)),
-                200, new BigDecimal("1450.00")),
-
-            new Flight("CZ35" + dayStr, getAirlineIdByCode("CZ"), 3L, 8L,
-                convertToUtc(date.withHour(21).withMinute(0)),
-                convertToUtc(date.plusDays(1).withHour(1).withMinute(15)),
-                220, new BigDecimal("1200.00")),
-
-            new Flight("MU58" + dayStr, getAirlineIdByCode("MU"), 2L, 4L,
-                convertToUtc(date.withHour(22).withMinute(30)),
-                convertToUtc(date.plusDays(1).withHour(18).withMinute(40)), 
-                300, new BigDecimal("4500.00")),
-
-            new Flight("CA98" + dayStr, getAirlineIdByCode("CA"), 1L, 5L,
-                convertToUtc(date.withHour(23).withMinute(15)),
-                convertToUtc(date.plusDays(1).withHour(19).withMinute(30)), 
-                350, new BigDecimal("5200.00")),
-        };
-    }
-    
-    private void setRandomAircraftType(Flight flight, int dayOffset) {
-        String[] aircraftTypes = {
-            "B737-800",
-            "B777-300ER", 
-            "A320",
-            "A330-200",
-            "B787-9",
-            "A350-900"
-        };
-
-        if (flight.getDepartureAirportId() <= 3L && flight.getArrivalAirportId() <= 3L) {
-            flight.setAircraftType(aircraftTypes[dayOffset % 3]);
-        } else {
-            flight.setAircraftType(aircraftTypes[3 + (dayOffset % 3)]);
+    private Map<String, Airport> loadAirportMap() {
+        Map<String, Airport> airportByCode = new LinkedHashMap<>();
+        for (Airport airport : airportMapper.findAll()) {
+            airportByCode.put(airport.getCode(), airport);
         }
+        return airportByCode;
+    }
+
+    private List<RouteTemplate> buildRouteTemplates() {
+        List<RouteTemplate> routes = new ArrayList<>();
+
+        routes.add(new RouteTemplate("CA", 1100, "PEK", "PVG", 7, 30, 130, 188, 1280, 35, "B737-800"));
+        routes.add(new RouteTemplate("MU", 2100, "PVG", "PEK", 8, 20, 135, 198, 1260, 30, "A320"));
+        routes.add(new RouteTemplate("CZ", 3100, "CAN", "PEK", 9, 0, 185, 220, 1760, 45, "A330-200"));
+        routes.add(new RouteTemplate("HU", 4100, "SZX", "PVG", 7, 50, 150, 176, 1180, 25, "B737-800"));
+        routes.add(new RouteTemplate("3U", 5100, "CTU", "PEK", 6, 55, 175, 164, 1420, 30, "A320"));
+        routes.add(new RouteTemplate("CA", 1200, "PEK", "CAN", 12, 40, 190, 200, 1820, 40, "A330-200"));
+        routes.add(new RouteTemplate("MU", 2200, "SHA", "SZX", 11, 20, 145, 170, 980, 20, "A320"));
+        routes.add(new RouteTemplate("CZ", 3200, "CAN", "CTU", 13, 35, 150, 190, 1120, 25, "B737-800"));
+        routes.add(new RouteTemplate("FM", 4200, "SHA", "WUH", 14, 15, 100, 160, 760, 15, "A320"));
+        routes.add(new RouteTemplate("9C", 6200, "HGH", "XIY", 15, 10, 150, 186, 820, 18, "A320"));
+        routes.add(new RouteTemplate("MU", 2300, "PVG", "KMG", 16, 0, 210, 200, 1390, 25, "A330-200"));
+        routes.add(new RouteTemplate("CA", 1300, "PEK", "URC", 9, 10, 255, 210, 2280, 50, "B787-9"));
+        routes.add(new RouteTemplate("HU", 4300, "HAK", "PEK", 20, 25, 235, 190, 1680, 35, "A330-200"));
+        routes.add(new RouteTemplate("CZ", 3300, "SZX", "NKG", 18, 5, 130, 180, 980, 20, "A320"));
+        routes.add(new RouteTemplate("3U", 5300, "CTU", "SYX", 17, 20, 160, 168, 1280, 28, "A320"));
+        routes.add(new RouteTemplate("CA", 1400, "PEK", "TAO", 19, 15, 95, 162, 680, 12, "B737-800"));
+        routes.add(new RouteTemplate("MU", 2400, "PVG", "CSX", 21, 0, 115, 168, 740, 16, "A320"));
+        routes.add(new RouteTemplate("CZ", 3400, "CAN", "HAK", 22, 10, 85, 174, 620, 10, "B737-800"));
+        routes.add(new RouteTemplate("FM", 4400, "SHA", "CGO", 8, 40, 125, 158, 690, 14, "A320"));
+        routes.add(new RouteTemplate("9C", 6400, "PKX", "KMG", 10, 5, 220, 186, 1160, 24, "A320"));
+        routes.add(new RouteTemplate("HU", 4500, "SZX", "CTU", 19, 40, 160, 180, 1080, 22, "B737-800"));
+        routes.add(new RouteTemplate("CA", 1500, "PEK", "XIY", 16, 45, 140, 188, 890, 18, "B737-800"));
+
+        routes.add(new RouteTemplate("CA", 7100, "PEK", "NRT", 9, 30, 210, 252, 2380, 55, "A330-200"));
+        routes.add(new RouteTemplate("MU", 7200, "PVG", "ICN", 10, 15, 115, 220, 1680, 30, "A320"));
+        routes.add(new RouteTemplate("CZ", 7300, "CAN", "SIN", 11, 20, 245, 260, 2280, 50, "A330-200"));
+        routes.add(new RouteTemplate("HU", 7400, "SZX", "BKK", 13, 5, 210, 236, 1880, 45, "B787-9"));
+        routes.add(new RouteTemplate("CA", 7500, "PEK", "LHR", 14, 10, 660, 320, 5480, 120, "B777-300ER"));
+        routes.add(new RouteTemplate("MU", 7600, "PVG", "LAX", 12, 50, 720, 330, 5980, 140, "B787-9"));
+        routes.add(new RouteTemplate("CZ", 7700, "CAN", "DXB", 18, 40, 510, 280, 3680, 90, "A350-900"));
+        routes.add(new RouteTemplate("CA", 7800, "PEK", "SFO", 15, 25, 690, 320, 5860, 130, "B787-9"));
+        routes.add(new RouteTemplate("MU", 7210, "ICN", "PVG", 14, 5, 120, 220, 1580, 28, "A320"));
+        routes.add(new RouteTemplate("CA", 7110, "NRT", "PEK", 15, 30, 220, 252, 2280, 50, "A330-200"));
+        routes.add(new RouteTemplate("CZ", 7310, "SIN", "CAN", 8, 45, 250, 260, 2180, 48, "A330-200"));
+        routes.add(new RouteTemplate("HU", 7410, "BKK", "SZX", 16, 20, 205, 236, 1820, 42, "B787-9"));
+        routes.add(new RouteTemplate("CA", 7510, "LHR", "PEK", 12, 20, 590, 320, 5380, 115, "B777-300ER"));
+        routes.add(new RouteTemplate("MU", 7610, "LAX", "PVG", 11, 30, 830, 330, 6180, 150, "B787-9"));
+        routes.add(new RouteTemplate("CZ", 7710, "DXB", "CAN", 22, 15, 450, 280, 3580, 88, "A350-900"));
+        routes.add(new RouteTemplate("CA", 7810, "SFO", "PEK", 13, 40, 760, 320, 5960, 135, "B787-9"));
+        routes.add(new RouteTemplate("MU", 7620, "PVG", "SYD", 20, 10, 610, 300, 4880, 100, "A350-900"));
+        routes.add(new RouteTemplate("MU", 7630, "SYD", "PVG", 12, 15, 640, 300, 4980, 105, "A350-900"));
+
+        return routes;
+    }
+
+    private Flight buildFlight(RouteTemplate route, Map<String, Airport> airportByCode, LocalDate flightDate, int dayOffset, int routeIndex) {
+        Airport departureAirport = airportByCode.get(route.departureCode());
+        Airport arrivalAirport = airportByCode.get(route.arrivalCode());
+
+        if (departureAirport == null || arrivalAirport == null) {
+            System.err.println("Skipping route " + route.departureCode() + " -> " + route.arrivalCode() + " because airport data is missing");
+            return null;
+        }
+
+        Long airlineId = getAirlineIdByCode(route.airlineCode());
+        if (airlineId == null) {
+            return null;
+        }
+
+        int departureShiftMinutes = Math.floorMod(dayOffset + routeIndex, 4) * 5;
+        LocalDateTime departureLocalTime = flightDate.atTime(route.departureHour(), route.departureMinute()).plusMinutes(departureShiftMinutes);
+        Instant departureInstant = departureLocalTime.atZone(ZoneId.of(departureAirport.getTimeZone())).toInstant();
+        Instant arrivalInstant = departureInstant.plus(Duration.ofMinutes(route.durationMinutes()));
+
+        Flight flight = new Flight(
+                buildFlightNumber(route, dayOffset),
+                airlineId,
+                departureAirport.getId(),
+                arrivalAirport.getId(),
+                departureInstant,
+                arrivalInstant,
+                route.totalSeats(),
+                BigDecimal.valueOf(route.basePrice())
+                        .add(BigDecimal.valueOf((long) Math.floorMod(dayOffset + routeIndex, 6) * route.priceStep()))
+        );
+        flight.setAircraftType(route.aircraftType());
+        return flight;
+    }
+
+    private String buildFlightNumber(RouteTemplate route, int dayOffset) {
+        return String.format("%s%d%02d", route.airlineCode(), route.numberPrefix(), dayOffset + 1);
     }
     
     private void updateExistingFlightAircraftTypes() {
@@ -459,19 +440,23 @@ public class DataInitializer {
 
     private void initializeFlightsForceNew() {
         System.out.println("Initializing comprehensive flight schedule for one month...");
-        
-        LocalDateTime baseDate = LocalDateTime.now().plusDays(1);
 
-        for (int day = 0; day < 30; day++) {
-            LocalDateTime currentDate = baseDate.plusDays(day);
+        int createdCount = generateMonthlyFlightSchedule();
 
-            createDailyFlights(currentDate, "morning", day);
+        System.out.println("Flight schedule initialization completed, created " + createdCount + " flights");
+    }
 
-            createDailyFlights(currentDate, "afternoon", day);
-
-            createDailyFlights(currentDate, "evening", day);
-        }
-        
-        System.out.println("Flight schedule initialization completed");
+    private record RouteTemplate(
+            String airlineCode,
+            int numberPrefix,
+            String departureCode,
+            String arrivalCode,
+            int departureHour,
+            int departureMinute,
+            int durationMinutes,
+            int totalSeats,
+            long basePrice,
+            long priceStep,
+            String aircraftType) {
     }
 }

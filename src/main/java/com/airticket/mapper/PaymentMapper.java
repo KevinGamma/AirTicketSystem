@@ -32,7 +32,7 @@ public interface PaymentMapper {
     })
     Payment findByPaymentNumber(@Param("paymentNumber") String paymentNumber);
     
-    @Select("SELECT * FROM payments WHERE ticket_id = #{ticketId}")
+    @Select("SELECT * FROM payments WHERE ticket_id = #{ticketId} ORDER BY created_at DESC LIMIT 1")
     @Results({
         @Result(property = "id", column = "id"),
         @Result(property = "ticketId", column = "ticket_id"),
@@ -53,6 +53,14 @@ public interface PaymentMapper {
             "payment_time = #{paymentTime}, updated_at = NOW() " +
             "WHERE payment_number = #{paymentNumber}")
     void updatePaymentStatus(Payment payment);
+
+    @Update("UPDATE payments SET status = 'SUCCESS', alipay_trade_no = #{alipayTradeNo}, " +
+            "payment_time = #{paymentTime}, updated_at = NOW() " +
+            "WHERE payment_number = #{paymentNumber} AND status = #{expectedStatus}")
+    int markPaymentSuccessIfStatusMatches(@Param("paymentNumber") String paymentNumber,
+                                          @Param("expectedStatus") String expectedStatus,
+                                          @Param("alipayTradeNo") String alipayTradeNo,
+                                          @Param("paymentTime") java.time.Instant paymentTime);
     
     @Update("UPDATE payments SET status = #{status}, updated_at = NOW() " +
             "WHERE payment_number = #{paymentNumber}")

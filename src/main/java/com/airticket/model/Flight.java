@@ -186,13 +186,13 @@ public class Flight {
     @JsonProperty("departureTime")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     public Instant getDepartureTime() {
-        System.out.println("Flight.getDepartureTime() called for flight " + this.id + 
+        com.airticket.util.AppLog.debug("Flight.getDepartureTime() called for flight " + this.id + 
                           " (" + this.flightNumber + "): returning " + this.departureTimeUtc);
         return this.departureTimeUtc;
     }
 
     public void setDepartureTime(Instant departureTime) {
-        System.out.println("Flight.setDepartureTime() called for flight " + this.id + 
+        com.airticket.util.AppLog.debug("Flight.setDepartureTime() called for flight " + this.id + 
                           " (" + this.flightNumber + "): setting to " + departureTime);
         this.departureTimeUtc = departureTime;
     }
@@ -200,13 +200,13 @@ public class Flight {
     @JsonProperty("arrivalTime")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     public Instant getArrivalTime() {
-        System.out.println("Flight.getArrivalTime() called for flight " + this.id + 
+        com.airticket.util.AppLog.debug("Flight.getArrivalTime() called for flight " + this.id + 
                           " (" + this.flightNumber + "): returning " + this.arrivalTimeUtc);
         return this.arrivalTimeUtc;  
     }
 
     public void setArrivalTime(Instant arrivalTime) {
-        System.out.println("Flight.setArrivalTime() called for flight " + this.id + 
+        com.airticket.util.AppLog.debug("Flight.setArrivalTime() called for flight " + this.id + 
                           " (" + this.flightNumber + "): setting to " + arrivalTime);
         this.arrivalTimeUtc = arrivalTime;
     }

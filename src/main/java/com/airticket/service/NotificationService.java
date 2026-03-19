@@ -1,12 +1,13 @@
 package com.airticket.service;
 
+import com.airticket.mapper.FlightMapper;
 import com.airticket.mapper.NotificationMapper;
 import com.airticket.mapper.TicketMapper;
-import com.airticket.mapper.FlightMapper;
+import com.airticket.model.AdminApprovalRequest;
+import com.airticket.model.Flight;
 import com.airticket.model.Notification;
 import com.airticket.model.Ticket;
-import com.airticket.model.Flight;
-import com.airticket.model.AdminApprovalRequest;
+import com.airticket.util.TimeZoneUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,384 +16,544 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 
 @Service
 public class NotificationService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
-    
+
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Shanghai");
+    private static final Duration REMINDER_24_HOURS = Duration.ofHours(24);
+    private static final Duration REMINDER_3_HOURS = Duration.ofHours(3);
+    private static final Duration REMINDER_1_HOUR = Duration.ofHours(1);
+    private static final Duration MIN_URGENT_REMINDER_WINDOW = Duration.ofMinutes(20);
+
     @Autowired
     private NotificationMapper notificationMapper;
-    
+
     @Autowired
     private TicketMapper ticketMapper;
-    
+
     @Autowired
     private FlightMapper flightMapper;
-    
-    
-    private final Set<String> scheduledNotifications = new HashSet<>();
-
-    
-
 
     public List<Notification> getNotificationsByUserId(Long userId, int limit, int offset) {
         return notificationMapper.findByUserIdPaginated(userId, limit, offset);
     }
 
-    
-
-
     public int getUnreadCount(Long userId) {
         return notificationMapper.countUnreadByUserId(userId);
     }
-
-    
-
 
     @Transactional
     public void markAsRead(Long notificationId) {
         notificationMapper.markAsRead(notificationId);
     }
 
-    
-
-
     @Transactional
     public void markAllAsRead(Long userId) {
         notificationMapper.markAllAsReadByUserId(userId);
     }
 
-    
-
-
     @Transactional
     public void scheduleFlightReminder(Ticket ticket) {
         try {
-            if (ticket.getFlight() == null || ticket.getFlight().getDepartureTimeUtc() == null) {
-                logger.warn("Cannot schedule flight reminder for ticket {} - flight or departure time is null", ticket.getId());
+            Ticket reminderTicket = loadTicketFlight(ticket);
+            if (reminderTicket == null || reminderTicket.getId() == null || reminderTicket.getFlight() == null) {
+                logger.debug("Skipping reminder scheduling because ticket or flight data is incomplete");
                 return;
             }
 
-            String key = "REMINDER_" + ticket.getId();
-            if (scheduledNotifications.contains(key)) {
-                return; 
+            Flight flight = reminderTicket.getFlight();
+            Instant departureTime = flight.getDepartureTimeUtc();
+            if (departureTime == null) {
+                logger.debug("Skipping reminder scheduling for ticket {} because departure time is missing", reminderTicket.getId());
+                return;
             }
 
-            Instant reminderTime = ticket.getFlight().getDepartureTimeUtc().minus(1, ChronoUnit.HOURS);
-            
-            
-            if (reminderTime.isAfter(Instant.now())) {
-                Notification notification = new Notification(
-                    ticket.getUserId(),
-                    Notification.TYPE_FLIGHT_REMINDER,
-                    "航班提醒",
-                    String.format("您的航班 %s 将在1小时后起飞，请提前到达机场办理值机手续。", 
-                                ticket.getFlight().getFlightNumber())
+            Instant now = Instant.now();
+            if (!departureTime.isAfter(now)) {
+                return;
+            }
+
+            boolean scheduledAny = false;
+            scheduledAny |= scheduleReminderStage(
+                reminderTicket,
+                Notification.TYPE_FLIGHT_REMINDER_24H,
+                "行程提醒",
+                departureTime.minus(REMINDER_24_HOURS),
+                buildReminderMessage(reminderTicket, flight, "您的航班将在24小时后起飞，请提前确认行程、证件和出行时间。")
+            );
+            scheduledAny |= scheduleReminderStage(
+                reminderTicket,
+                Notification.TYPE_FLIGHT_REMINDER_3H,
+                "值机提醒",
+                departureTime.minus(REMINDER_3_HOURS),
+                buildReminderMessage(reminderTicket, flight, "您的航班将在3小时后起飞，建议尽快办理值机并安排前往机场。")
+            );
+            scheduledAny |= scheduleReminderStage(
+                reminderTicket,
+                Notification.TYPE_FLIGHT_REMINDER_1H,
+                "登机提醒",
+                departureTime.minus(REMINDER_1_HOUR),
+                buildReminderMessage(reminderTicket, flight, "您的航班将在1小时后起飞，请留意登机时间和登机口信息。")
+            );
+
+            if (!scheduledAny && departureTime.isAfter(now.plus(MIN_URGENT_REMINDER_WINDOW))) {
+                scheduleReminderStage(
+                    reminderTicket,
+                    Notification.TYPE_FLIGHT_REMINDER_FINAL,
+                    "临近起飞提醒",
+                    now,
+                    buildReminderMessage(reminderTicket, flight, "您的航班即将起飞，请立即确认出行安排并尽快前往登机。")
                 );
-                notification.setTicketId(ticket.getId());
-                notification.setFlightId(ticket.getFlightId());
-                notification.setScheduledTime(reminderTime);
-                
-                notificationMapper.insert(notification);
-                scheduledNotifications.add(key);
-                logger.info("Scheduled flight reminder for ticket {} at {}", ticket.getId(), reminderTime);
             }
         } catch (Exception e) {
-            logger.error("Error scheduling flight reminder for ticket " + ticket.getId(), e);
+            logger.error("Error scheduling flight reminder for ticket {}", ticket != null ? ticket.getId() : null, e);
         }
     }
-
-    
-
 
     @Transactional
     public void createFlightTakeoffNotification(Flight flight, List<Long> passengerUserIds) {
+        if (flight == null || flight.getId() == null || passengerUserIds == null || passengerUserIds.isEmpty()) {
+            return;
+        }
+
         try {
-            for (Long userId : passengerUserIds) {
-                Notification notification = new Notification(
-                    userId,
-                    Notification.TYPE_FLIGHT_TAKEOFF,
-                    "航班起飞",
-                    String.format("您的航班 %s 已成功起飞，祝您旅途愉快！", flight.getFlightNumber())
-                );
-                notification.setFlightId(flight.getId());
-                notification.setSentTime(Instant.now());
-                
-                notificationMapper.insert(notification);
+            if (!notificationMapper.findByFlightIdAndType(flight.getId(), Notification.TYPE_FLIGHT_TAKEOFF).isEmpty()) {
+                return;
             }
-            logger.info("Created takeoff notifications for flight {} for {} passengers", 
-                       flight.getFlightNumber(), passengerUserIds.size());
+
+            String message = "您乘坐的航班 " + safeFlightNumber(flight) + " 已起飞，祝您旅途顺利。";
+            for (Long userId : passengerUserIds) {
+                insertImmediateNotification(
+                    userId,
+                    null,
+                    flight.getId(),
+                    null,
+                    Notification.TYPE_FLIGHT_TAKEOFF,
+                    "航班已起飞",
+                    message
+                );
+            }
         } catch (Exception e) {
-            logger.error("Error creating takeoff notification for flight " + flight.getFlightNumber(), e);
+            logger.error("Error creating takeoff notification for flight {}", flight.getId(), e);
         }
     }
-
-    
-
 
     @Transactional
     public void createFlightLandingNotification(Flight flight, List<Long> passengerUserIds) {
+        if (flight == null || flight.getId() == null || passengerUserIds == null || passengerUserIds.isEmpty()) {
+            return;
+        }
+
         try {
-            for (Long userId : passengerUserIds) {
-                Notification notification = new Notification(
-                    userId,
-                    Notification.TYPE_FLIGHT_LANDING,
-                    "航班到达",
-                    String.format("您的航班 %s 已安全到达目的地，欢迎您再次选择我们的服务！", flight.getFlightNumber())
-                );
-                notification.setFlightId(flight.getId());
-                notification.setSentTime(Instant.now());
-                
-                notificationMapper.insert(notification);
+            if (!notificationMapper.findByFlightIdAndType(flight.getId(), Notification.TYPE_FLIGHT_LANDING).isEmpty()) {
+                return;
             }
-            logger.info("Created landing notifications for flight {} for {} passengers", 
-                       flight.getFlightNumber(), passengerUserIds.size());
+
+            String message = "您乘坐的航班 " + safeFlightNumber(flight) + " 已到达目的地，感谢您的使用。";
+            for (Long userId : passengerUserIds) {
+                insertImmediateNotification(
+                    userId,
+                    null,
+                    flight.getId(),
+                    null,
+                    Notification.TYPE_FLIGHT_LANDING,
+                    "航班已到达",
+                    message
+                );
+            }
         } catch (Exception e) {
-            logger.error("Error creating landing notification for flight " + flight.getFlightNumber(), e);
+            logger.error("Error creating landing notification for flight {}", flight.getId(), e);
         }
     }
-
-    
-
 
     @Transactional
     public void createRescheduleApprovalNotification(AdminApprovalRequest request, Ticket originalTicket, Ticket newTicket) {
+        if (request == null) {
+            return;
+        }
+
         try {
-            String message;
-            String notificationType = Notification.TYPE_RESCHEDULE_APPROVED;
-            
-            
+            Ticket resolvedNewTicket = loadTicketFlight(newTicket);
+            String flightSummary = formatFlightSummary(resolvedNewTicket);
+
             BigDecimal additionalFee = request.getAdditionalFee();
             BigDecimal refundAmount = request.getRefundAmount();
-            
-            if (additionalFee != null && additionalFee.compareTo(BigDecimal.ZERO) > 0) {
-                message = String.format("您的改签申请已通过！新航班：%s，需支付额外费用 ¥%.2f。请及时完成支付。", 
-                                      newTicket.getFlight() != null ? newTicket.getFlight().getFlightNumber() : "新航班", 
-                                      additionalFee);
+
+            String notificationType;
+            String title;
+            String message;
+
+            if (isPositive(additionalFee)) {
                 notificationType = Notification.TYPE_PAYMENT_REQUIRED;
-            } else if (refundAmount != null && refundAmount.compareTo(BigDecimal.ZERO) > 0) {
-                message = String.format("您的改签申请已通过！新航班：%s，将退还差额 ¥%.2f 至您的原支付方式。", 
-                                      newTicket.getFlight() != null ? newTicket.getFlight().getFlightNumber() : "新航班", 
-                                      refundAmount);
+                title = "改签审核通过，待支付";
+                message = "您的改签申请已通过。新航班" + flightSummary +
+                    " 已为您保留，请支付补差 " + formatAmount(additionalFee) + " 后完成改签。";
+            } else if (isPositive(refundAmount)) {
                 notificationType = Notification.TYPE_REFUND_DIFFERENCE;
+                title = "改签审核通过";
+                message = "您的改签申请已通过。新航班" + flightSummary +
+                    " 已生效，本次改签将退还差价 " + formatAmount(refundAmount) + "。";
             } else {
-                message = String.format("您的改签申请已通过！新航班：%s，无需额外费用。", 
-                                      newTicket.getFlight() != null ? newTicket.getFlight().getFlightNumber() : "新航班");
+                notificationType = Notification.TYPE_RESCHEDULE_APPROVED;
+                title = "改签审核通过";
+                message = "您的改签申请已通过。新航班" + flightSummary + " 已生效，本次改签无需额外支付。";
             }
 
-            Notification notification = new Notification(
-                request.getUserId(),
+            insertRequestNotificationIfAbsent(
+                request,
+                originalTicket != null ? originalTicket.getId() : null,
+                resolvedNewTicket != null ? resolvedNewTicket.getFlightId() : null,
                 notificationType,
-                "改签申请通过",
+                title,
                 message
             );
-            notification.setTicketId(originalTicket.getId());
-            notification.setRequestId(request.getId());
-            notification.setSentTime(Instant.now());
-            
-            notificationMapper.insert(notification);
-            logger.info("Created reschedule approval notification for request {}", request.getId());
-            
         } catch (Exception e) {
-            logger.error("Error creating reschedule approval notification for request " + request.getId(), e);
+            logger.error("Error creating reschedule approval notification for request {}", request.getId(), e);
         }
     }
 
-    
+    @Transactional
+    public void createReschedulePaymentCompletedNotification(AdminApprovalRequest request, Ticket originalTicket, Ticket newTicket) {
+        if (request == null) {
+            return;
+        }
 
+        try {
+            Ticket resolvedNewTicket = loadTicketFlight(newTicket);
+            String message = "您的改签补差支付已完成。新航班" + formatFlightSummary(resolvedNewTicket) + " 已出票并生效。";
+
+            insertRequestNotificationIfAbsent(
+                request,
+                originalTicket != null ? originalTicket.getId() : null,
+                resolvedNewTicket != null ? resolvedNewTicket.getFlightId() : null,
+                Notification.TYPE_RESCHEDULE_COMPLETED,
+                "改签已完成",
+                message
+            );
+        } catch (Exception e) {
+            logger.error("Error creating reschedule completion notification for request {}", request.getId(), e);
+        }
+    }
 
     @Transactional
     public void createRescheduleRejectionNotification(AdminApprovalRequest request, String rejectionReason) {
+        if (request == null) {
+            return;
+        }
+
         try {
-            String message = "很抱歉，您的改签申请未通过。";
-            if (rejectionReason != null && !rejectionReason.trim().isEmpty()) {
-                message += "原因：" + rejectionReason;
+            String message = "很抱歉，您的改签申请未通过审核。";
+            if (rejectionReason != null && !rejectionReason.isBlank()) {
+                message += " 原因：" + rejectionReason.trim();
             }
 
-            Notification notification = new Notification(
-                request.getUserId(),
+            insertRequestNotificationIfAbsent(
+                request,
+                request.getTicketId(),
+                null,
                 Notification.TYPE_RESCHEDULE_REJECTED,
                 "改签申请未通过",
                 message
             );
-            notification.setRequestId(request.getId());
-            notification.setSentTime(Instant.now());
-            
-            notificationMapper.insert(notification);
-            logger.info("Created reschedule rejection notification for request {}", request.getId());
-            
         } catch (Exception e) {
-            logger.error("Error creating reschedule rejection notification for request " + request.getId(), e);
+            logger.error("Error creating reschedule rejection notification for request {}", request.getId(), e);
         }
     }
-
-    
-
 
     @Transactional
     public void createRefundProcessedNotification(Long userId, Long ticketId, BigDecimal refundAmount, String ticketNumber) {
+        if (userId == null || ticketId == null || refundAmount == null) {
+            return;
+        }
+
         try {
-            Notification notification = new Notification(
+            if (!notificationMapper.findByTicketIdAndType(ticketId, Notification.TYPE_REFUND_PROCESSED).isEmpty()) {
+                return;
+            }
+
+            String message = "您的机票 " + (ticketNumber != null ? ticketNumber : "") +
+                " 退款已受理，退款金额为 " + formatAmount(refundAmount) + "。";
+            insertImmediateNotification(
                 userId,
+                ticketId,
+                null,
+                null,
                 Notification.TYPE_REFUND_PROCESSED,
                 "退款处理完成",
-                String.format("您的票据 %s 退款已处理完成，退款金额 ¥%.2f 将在3-5个工作日内退回您的原支付方式。", 
-                            ticketNumber != null ? ticketNumber : "未知", refundAmount)
+                message.trim()
             );
-            notification.setTicketId(ticketId);
-            notification.setSentTime(Instant.now());
-            
-            notificationMapper.insert(notification);
-            logger.info("Created refund processed notification for user {} ticket {} amount {}", 
-                       userId, ticketId, refundAmount);
-            
         } catch (Exception e) {
-            logger.error("Error creating refund processed notification for user " + userId, e);
+            logger.error("Error creating refund processed notification for ticket {}", ticketId, e);
         }
     }
-
-    
-
-
 
     @Scheduled(fixedDelay = 30000)
     @Transactional
     public void processScheduledNotifications() {
         try {
             Instant now = Instant.now();
-            
-            
+
             List<Notification> pendingNotifications = notificationMapper.findPendingScheduledNotifications(now);
             for (Notification notification : pendingNotifications) {
                 try {
-                    notification.setSentTime(now);
                     notificationMapper.markAsSent(notification.getId(), now);
                     logger.info("Sent scheduled notification {} of type {}", notification.getId(), notification.getNotificationType());
                 } catch (Exception e) {
-                    logger.error("Failed to send scheduled notification " + notification.getId(), e);
+                    logger.error("Failed to send scheduled notification {}", notification.getId(), e);
                 }
             }
 
-            
             checkFlightStatusNotifications(now);
-            
-            
             scheduleRemindersForNewTickets();
-
         } catch (Exception e) {
             logger.error("Error in scheduled notification processing", e);
         }
     }
 
-    
-
-
     private void checkFlightStatusNotifications(Instant now) {
         try {
-            
             Instant takeoffWindowStart = now.minus(5, ChronoUnit.MINUTES);
             Instant takeoffWindowEnd = now.plus(1, ChronoUnit.MINUTES);
-            
-            
-            Instant landingWindowStart = now.minus(5, ChronoUnit.MINUTES);
-            Instant landingWindowEnd = now.plus(1, ChronoUnit.MINUTES);
-            
-            
+
             List<Flight> departingFlights = flightMapper.findFlightsByDepartureTimeRange(takeoffWindowStart, takeoffWindowEnd);
             for (Flight flight : departingFlights) {
-                
-                List<Notification> existingTakeoffNotifs = notificationMapper.findByTicketIdAndType(null, Notification.TYPE_FLIGHT_TAKEOFF);
-                boolean alreadySent = existingTakeoffNotifs.stream()
-                    .anyMatch(n -> flight.getId().equals(n.getFlightId()));
-                    
-                if (!alreadySent) {
+                if (notificationMapper.findByFlightIdAndType(flight.getId(), Notification.TYPE_FLIGHT_TAKEOFF).isEmpty()) {
                     List<Long> passengerIds = ticketMapper.findUserIdsByFlightId(flight.getId());
-                    if (!passengerIds.isEmpty()) {
-                        createFlightTakeoffNotification(flight, passengerIds);
-                    }
+                    createFlightTakeoffNotification(flight, passengerIds);
                 }
             }
-            
-            
+
+            Instant landingWindowStart = now.minus(5, ChronoUnit.MINUTES);
+            Instant landingWindowEnd = now.plus(1, ChronoUnit.MINUTES);
+
             List<Flight> arrivingFlights = flightMapper.findFlightsByArrivalTimeRange(landingWindowStart, landingWindowEnd);
             for (Flight flight : arrivingFlights) {
-                
-                List<Notification> existingLandingNotifs = notificationMapper.findByTicketIdAndType(null, Notification.TYPE_FLIGHT_LANDING);
-                boolean alreadySent = existingLandingNotifs.stream()
-                    .anyMatch(n -> flight.getId().equals(n.getFlightId()));
-                    
-                if (!alreadySent) {
+                if (notificationMapper.findByFlightIdAndType(flight.getId(), Notification.TYPE_FLIGHT_LANDING).isEmpty()) {
                     List<Long> passengerIds = ticketMapper.findUserIdsByFlightId(flight.getId());
-                    if (!passengerIds.isEmpty()) {
-                        createFlightLandingNotification(flight, passengerIds);
-                    }
+                    createFlightLandingNotification(flight, passengerIds);
                 }
             }
-            
         } catch (Exception e) {
             logger.error("Error checking flight status notifications", e);
         }
     }
 
-    
-
-
     private void scheduleRemindersForNewTickets() {
         try {
-            
-            List<Ticket> paidTickets = ticketMapper.findPaidTicketsWithoutReminders();
+            List<Ticket> paidTickets = ticketMapper.findPaidTicketsForReminderScheduling();
             for (Ticket ticket : paidTickets) {
                 scheduleFlightReminder(ticket);
             }
         } catch (Exception e) {
-            logger.error("Error scheduling reminders for new tickets", e);
+            logger.error("Error scheduling reminders for paid tickets", e);
         }
     }
 
-    
-
-
-    @Scheduled(cron = "0 0 2 * * ?") 
+    @Scheduled(cron = "0 0 2 * * ?")
     @Transactional
     public void cleanupOldNotifications() {
         try {
-            Instant cutoffTime = Instant.now().minus(30, ChronoUnit.DAYS);
-            
-            
-            
             logger.info("Notification cleanup scheduled (implementation pending)");
-            
         } catch (Exception e) {
             logger.error("Error in notification cleanup", e);
         }
     }
-    
-    
-
 
     @Transactional
     public void createTestNotification(Long userId, String title, String message) {
-        try {
-            Notification testNotification = new Notification(
-                userId,
-                Notification.TYPE_FLIGHT_REMINDER,
-                title != null ? title : "测试通知",
-                message != null ? message : "这是一个测试通知，用于验证通知系统是否正常工作。"
+        insertImmediateNotification(
+            userId,
+            null,
+            null,
+            null,
+            Notification.TYPE_FLIGHT_REMINDER,
+            title != null ? title : "测试通知",
+            message != null ? message : "这是一条测试通知，用于验证通知系统是否正常工作。"
+        );
+    }
+
+    private boolean scheduleReminderStage(Ticket ticket, String notificationType, String title, Instant scheduledTime, String message) {
+        if (ticket == null || ticket.getId() == null || scheduledTime == null) {
+            return false;
+        }
+
+        Instant now = Instant.now();
+        if (scheduledTime.isBefore(now.minusSeconds(30))) {
+            return false;
+        }
+
+        if (ticket.getUserId() != null && ticket.getFlightId() != null) {
+            List<Notification> existingNotifications = notificationMapper.findByUserIdAndFlightIdAndType(
+                ticket.getUserId(),
+                ticket.getFlightId(),
+                notificationType
             );
-            testNotification.setSentTime(Instant.now());
-            
-            notificationMapper.insert(testNotification);
-            logger.info("Test notification created successfully for user {}, notification ID: {}", userId, testNotification.getId());
-            
-        } catch (Exception e) {
-            logger.error("Error creating test notification for user " + userId, e);
-            throw e;
+            if (!existingNotifications.isEmpty()) {
+                deduplicateNotifications(existingNotifications);
+                return true;
+            }
+        } else if (!notificationMapper.findByTicketIdAndType(ticket.getId(), notificationType).isEmpty()) {
+            return true;
+        }
+
+        Notification notification = new Notification(ticket.getUserId(), notificationType, title, message);
+        notification.setTicketId(ticket.getId());
+        notification.setFlightId(ticket.getFlightId());
+        notification.setScheduledTime(scheduledTime);
+        notificationMapper.insert(notification);
+        logger.info("Scheduled {} for ticket {} at {}", notificationType, ticket.getId(), scheduledTime);
+        return true;
+    }
+
+    private void insertRequestNotificationIfAbsent(
+        AdminApprovalRequest request,
+        Long ticketId,
+        Long flightId,
+        String notificationType,
+        String title,
+        String message
+    ) {
+        if (request.getId() != null && !notificationMapper.findByRequestIdAndType(request.getId(), notificationType).isEmpty()) {
+            return;
+        }
+
+        insertImmediateNotification(
+            request.getUserId(),
+            ticketId,
+            flightId,
+            request.getId(),
+            notificationType,
+            title,
+            message
+        );
+    }
+
+    private void insertImmediateNotification(
+        Long userId,
+        Long ticketId,
+        Long flightId,
+        Long requestId,
+        String notificationType,
+        String title,
+        String message
+    ) {
+        if (userId == null) {
+            return;
+        }
+
+        Notification notification = new Notification(userId, notificationType, title, message);
+        Instant now = Instant.now();
+        notification.setTicketId(ticketId);
+        notification.setFlightId(flightId);
+        notification.setRequestId(requestId);
+        notification.setSentTime(now);
+        notification.setCreatedAt(now);
+        notification.setUpdatedAt(now);
+        notificationMapper.insert(notification);
+    }
+
+    private Ticket loadTicketFlight(Ticket ticket) {
+        if (ticket == null || ticket.getFlight() != null || ticket.getFlightId() == null) {
+            return ticket;
+        }
+
+        Flight flight = flightMapper.findById(ticket.getFlightId());
+        if (flight != null) {
+            ticket.setFlight(flight);
+        }
+        return ticket;
+    }
+
+    private String buildReminderMessage(Ticket ticket, Flight flight, String prefix) {
+        return prefix + " 航班信息：" + formatFlightSummary(ticket);
+    }
+
+    private String formatFlightSummary(Ticket ticket) {
+        if (ticket == null) {
+            return "待确认。";
+        }
+        return formatFlightSummary(loadTicketFlight(ticket) != null ? ticket.getFlight() : null);
+    }
+
+    private String formatFlightSummary(Flight flight) {
+        if (flight == null) {
+            return "待确认。";
+        }
+
+        String route = safeCity(flight, true) + " -> " + safeCity(flight, false);
+        String departureText = formatDepartureTime(flight);
+        return " " + safeFlightNumber(flight) + "（" + route + "，" + departureText + "）";
+    }
+
+    private String formatDepartureTime(Flight flight) {
+        if (flight == null || flight.getDepartureTimeUtc() == null) {
+            return "时间待确认";
+        }
+
+        ZoneId zone = resolveDepartureZone(flight);
+        String formatted = TimeZoneUtil.formatInTimeZone(flight.getDepartureTimeUtc(), zone);
+        return formatted != null ? formatted : "时间待确认";
+    }
+
+    private ZoneId resolveDepartureZone(Flight flight) {
+        if (flight != null && flight.getDepartureAirport() != null) {
+            String timeZone = flight.getDepartureAirport().getTimeZone();
+            if (TimeZoneUtil.isValidTimeZone(timeZone)) {
+                return ZoneId.of(timeZone);
+            }
+        }
+        return DEFAULT_ZONE;
+    }
+
+    private String safeFlightNumber(Flight flight) {
+        return flight != null && flight.getFlightNumber() != null ? flight.getFlightNumber() : "待确认航班";
+    }
+
+    private String safeCity(Flight flight, boolean departure) {
+        if (flight == null) {
+            return departure ? "出发地" : "目的地";
+        }
+
+        if (departure) {
+            if (flight.getDepartureAirport() != null && flight.getDepartureAirport().getCity() != null) {
+                return flight.getDepartureAirport().getCity();
+            }
+            return "出发地";
+        }
+
+        if (flight.getArrivalAirport() != null && flight.getArrivalAirport().getCity() != null) {
+            return flight.getArrivalAirport().getCity();
+        }
+        return "目的地";
+    }
+
+    private String formatAmount(BigDecimal amount) {
+        return amount == null ? "¥0.00" : "¥" + amount.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private boolean isPositive(BigDecimal amount) {
+        return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private void deduplicateNotifications(List<Notification> notifications) {
+        if (notifications == null || notifications.size() <= 1) {
+            return;
+        }
+
+        for (int i = 1; i < notifications.size(); i++) {
+            Notification duplicate = notifications.get(i);
+            if (duplicate.getId() != null) {
+                notificationMapper.deleteById(duplicate.getId());
+            }
         }
     }
 }

@@ -8,18 +8,18 @@ import com.airticket.mapper.AdminApprovalRequestMapper;
 import com.airticket.mapper.FlightMapper;
 import com.airticket.mapper.TicketMapper;
 import com.airticket.mapper.UserMapper;
+import com.airticket.model.AdminApprovalRequest;
+import com.airticket.model.ConnectingFlight;
 import com.airticket.model.Ticket;
 import com.airticket.model.Flight;
 import com.airticket.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Instant;
 import com.airticket.util.TimeZoneUtil;
 import java.util.ArrayList;
@@ -35,6 +35,16 @@ import org.slf4j.LoggerFactory;
 public class TicketService {
     
     private static final Logger logger = LoggerFactory.getLogger(TicketService.class);
+
+    private static final class RescheduleFlightOption {
+        private final Flight primaryFlight;
+        private final BigDecimal displayedPrice;
+
+        private RescheduleFlightOption(Flight primaryFlight, BigDecimal displayedPrice) {
+            this.primaryFlight = primaryFlight;
+            this.displayedPrice = displayedPrice;
+        }
+    }
     
     @Autowired
     private TicketMapper ticketMapper;
@@ -452,7 +462,7 @@ public class TicketService {
     }
     
     @Transactional
-    public Ticket changeTicket(Long ticketId, Long newFlightId, String reason) {
+    public Ticket changeTicket(Long ticketId, Long newFlightId) {
         Ticket ticket = ticketMapper.findById(ticketId);
         if (ticket == null) {
             throw new RuntimeException("Ticket not found");
@@ -475,7 +485,7 @@ public class TicketService {
     }
     
     @Transactional
-    public boolean cancelTicket(Long ticketId, String reason) {
+    public void cancelTicket(Long ticketId, String reason) {
         Ticket ticket = ticketMapper.findById(ticketId);
         if (ticket == null) {
             throw new RuntimeException("Ticket not found");
@@ -490,8 +500,7 @@ public class TicketService {
         ticket.setStatus("CANCELLED");
         ticket.setUpdatedAt(Instant.now());
         ticketMapper.updateStatus(ticket);
-        
-        return true;
+
     }
     
     @Transactional
@@ -649,7 +658,7 @@ public class TicketService {
         
         if (ticket.getConnectingFlights() != null && !ticket.getConnectingFlights().isEmpty()) {
             
-            Flight lastConnectingFlight = ticket.getConnectingFlights().get(ticket.getConnectingFlights().size() - 1);
+            Flight lastConnectingFlight = ticket.getConnectingFlights().getLast();
             finalDestinationAirportId = lastConnectingFlight.getArrivalAirport().getId();
             
             System.out.println("Connecting flight reschedule: Origin=" + mainFlight.getDepartureAirport().getCity() + 
@@ -773,6 +782,79 @@ public class TicketService {
         
         return result;
     }
+
+    private RescheduleFlightOption resolveRescheduleFlightOption(Ticket originalTicket, Long newFlightId) {
+        Flight selectedFlight = flightService.getFlightById(newFlightId);
+        if (selectedFlight == null) {
+            throw new RuntimeException("Flight not found");
+        }
+
+        BigDecimal fallbackPrice = calculatePrice(selectedFlight, originalTicket.getTicketType());
+
+        try {
+            loadConnectingFlights(originalTicket);
+
+            Flight originalMainFlight = flightService.getFlightById(originalTicket.getFlightId());
+            if (originalMainFlight == null ||
+                    originalMainFlight.getDepartureAirport() == null ||
+                    originalMainFlight.getArrivalAirport() == null ||
+                    selectedFlight.getDepartureTimeUtc() == null) {
+                return new RescheduleFlightOption(selectedFlight, fallbackPrice);
+            }
+
+            String originCity = originalMainFlight.getDepartureAirport().getCity();
+            String finalDestinationCity = originalMainFlight.getArrivalAirport().getCity();
+
+            if (originalTicket.getConnectingFlights() != null && !originalTicket.getConnectingFlights().isEmpty()) {
+                Flight lastConnectingFlight = originalTicket.getConnectingFlights().get(originalTicket.getConnectingFlights().size() - 1);
+                if (lastConnectingFlight.getArrivalAirport() != null) {
+                    finalDestinationCity = lastConnectingFlight.getArrivalAirport().getCity();
+                }
+            }
+
+            if (originCity == null || finalDestinationCity == null) {
+                return new RescheduleFlightOption(selectedFlight, fallbackPrice);
+            }
+
+            LocalDate rescheduleDate = selectedFlight.getDepartureTimeUtc()
+                    .atZone(java.time.ZoneOffset.UTC)
+                    .toLocalDate();
+
+            List<ConnectingFlight> connectingOptions = flightService.findConnectingFlights(
+                    originCity, finalDestinationCity, rescheduleDate
+            );
+
+            for (ConnectingFlight option : connectingOptions) {
+                if (option.getFlights() == null || option.getFlights().size() <= 1) {
+                    continue;
+                }
+
+                Flight firstFlight = option.getFlights().get(0);
+                if (!newFlightId.equals(firstFlight.getId())) {
+                    continue;
+                }
+
+                Flight resolvedFlight = firstFlight;
+                resolvedFlight.setConnectingFlights(new ArrayList<>(option.getFlights().subList(1, option.getFlights().size())));
+                resolvedFlight.setAvailableSeats(option.getAvailableSeats());
+                resolvedFlight.setDepartureTimeUtc(option.getDepartureTimeUtc());
+                resolvedFlight.setArrivalTimeUtc(option.getArrivalTimeUtc());
+
+                BigDecimal displayedPrice = option.getTotalPrice();
+                if (displayedPrice == null || displayedPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                    displayedPrice = fallbackPrice;
+                }
+
+                logger.info("Resolved reschedule option as connecting journey: firstFlightId={}, segments={}, displayedPrice={}",
+                        newFlightId, option.getFlights().size(), displayedPrice);
+                return new RescheduleFlightOption(resolvedFlight, displayedPrice);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to resolve connecting reschedule option for flight {}: {}", newFlightId, e.getMessage());
+        }
+
+        return new RescheduleFlightOption(selectedFlight, fallbackPrice);
+    }
     
     @Transactional
     public Ticket rescheduleTicket(Long ticketId, Long newFlightId, String reason) {
@@ -803,7 +885,8 @@ public class TicketService {
         }
         
         Flight currentFlight = flightService.getFlightById(originalTicket.getFlightId());
-        Flight newFlight = flightService.getFlightById(newFlightId);
+        RescheduleFlightOption resolvedOption = resolveRescheduleFlightOption(originalTicket, newFlightId);
+        Flight newFlight = resolvedOption.primaryFlight;
         
         if (currentFlight == null || newFlight == null) {
             throw new RuntimeException("Flight not found");
@@ -925,7 +1008,7 @@ public class TicketService {
         newTicket.setTicketType(originalTicket.getTicketType());
         
         
-        BigDecimal newTicketPrice = calculatePrice(newFlight, originalTicket.getTicketType());
+        BigDecimal newTicketPrice = resolvedOption.displayedPrice;
         newTicket.setPrice(newTicketPrice);
         
         
@@ -995,7 +1078,8 @@ public class TicketService {
         }
         
         Flight currentFlight = flightService.getFlightById(originalTicket.getFlightId());
-        Flight newFlight = flightService.getFlightById(newFlightId);
+        RescheduleFlightOption resolvedOption = resolveRescheduleFlightOption(originalTicket, newFlightId);
+        Flight newFlight = resolvedOption.primaryFlight;
         
         if (currentFlight == null || newFlight == null) {
             throw new RuntimeException("Flight not found");
@@ -1144,7 +1228,7 @@ public class TicketService {
         newTicket.setTicketType(originalTicket.getTicketType());
         
         
-        BigDecimal newTicketPrice = calculatePrice(newFlight, originalTicket.getTicketType());
+        BigDecimal newTicketPrice = resolvedOption.displayedPrice;
         newTicket.setPrice(newTicketPrice);
         
         
@@ -1187,6 +1271,34 @@ public class TicketService {
         ticket.setUpdatedAt(Instant.now());
         
         ticketMapper.updateTicketStatus(ticketId, status, paymentTime);
+
+        if ("PAID".equals(status)) {
+            try {
+                notificationService.scheduleFlightReminder(ticket);
+            } catch (Exception e) {
+                logger.error("Failed to schedule flight reminder after ticket status update: {}", ticketId, e);
+            }
+
+            if (ticket.getOriginalTicketId() != null) {
+                try {
+                    Ticket originalTicket = getTicketById(ticket.getOriginalTicketId());
+                    if (originalTicket != null) {
+                        List<AdminApprovalRequest> requests = adminApprovalRequestMapper.findByTicketId(originalTicket.getId());
+                        for (AdminApprovalRequest request : requests) {
+                            if ("RESCHEDULE".equals(request.getRequestType()) &&
+                                ("AWAITING_PAYMENT".equals(request.getStatus()) ||
+                                 "APPROVED".equals(request.getStatus()) ||
+                                 "PAYMENT_COMPLETED".equals(request.getStatus()))) {
+                                notificationService.createReschedulePaymentCompletedNotification(request, originalTicket, ticket);
+                                break;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to create reschedule completion notification after ticket status update: {}", ticketId, e);
+                }
+            }
+        }
     }
     
     public BigDecimal calculateRescheduleServiceFee(Ticket ticket) {
@@ -1245,7 +1357,8 @@ public class TicketService {
         System.out.println("Ticket booking time: " + ticket.getBookingTime());
         
         Flight currentFlight = flightService.getFlightById(ticket.getFlightId());
-        Flight newFlight = flightService.getFlightById(newFlightId);
+        RescheduleFlightOption resolvedOption = resolveRescheduleFlightOption(ticket, newFlightId);
+        Flight newFlight = resolvedOption.primaryFlight;
         
         if (currentFlight == null || newFlight == null) {
             throw new RuntimeException("Flight not found");
@@ -1262,7 +1375,9 @@ public class TicketService {
         System.out.println("ℹ️ If user wants connecting flights, they should select the entire journey through the UI");
         
         
-        newFlight.setConnectingFlights(null);
+        if (newFlight.getConnectingFlights() != null && !newFlight.getConnectingFlights().isEmpty()) {
+            System.out.println("Resolved reschedule option includes " + newFlight.getConnectingFlights().size() + " connecting segment(s)");
+        }
         
         RescheduleFeeInfo feeInfo = new RescheduleFeeInfo();
         
@@ -1303,7 +1418,7 @@ public class TicketService {
         
         
         BigDecimal currentTicketPrice = ticket.getPrice(); 
-        BigDecimal newTicketPrice = calculatePrice(newFlight, ticket.getTicketType());
+        BigDecimal newTicketPrice = resolvedOption.displayedPrice;
         BigDecimal priceDifference = newTicketPrice.subtract(currentTicketPrice);
         
         System.out.println("=== PRICE COMPARISON ===");

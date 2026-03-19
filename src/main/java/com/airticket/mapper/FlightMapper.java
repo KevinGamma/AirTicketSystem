@@ -72,9 +72,10 @@ public interface FlightMapper {
     })
     Flight findById(Long id);
 
-    List<Flight> searchFlights(@Param("departureCity") String departureCity, 
-                              @Param("arrivalCity") String arrivalCity, 
-                              @Param("departureDate") LocalDate departureDate);
+    List<Flight> searchFlights(@Param("departureCity") String departureCity,
+                              @Param("arrivalCity") String arrivalCity,
+                              @Param("departureTimeStart") Instant departureTimeStart,
+                              @Param("departureTimeEnd") Instant departureTimeEnd);
     
     @Insert("INSERT INTO flights (flight_number, airline_id, departure_airport_id, arrival_airport_id, " +
             "departure_time, arrival_time, total_seats, available_seats, price, aircraft_type) " +
@@ -239,15 +240,18 @@ public interface FlightMapper {
 
 
     List<Flight> findFlightsFromCity(@Param("departureCity") String departureCity,
-                                     @Param("departureDate") LocalDate departureDate);
+                                     @Param("departureTimeStart") Instant departureTimeStart,
+                                     @Param("departureTimeEnd") Instant departureTimeEnd);
 
     List<Flight> findFlightsToCity(@Param("arrivalCity") String arrivalCity,
-                                   @Param("departureDate") LocalDate departureDate,
+                                   @Param("departureTimeStart") Instant departureTimeStart,
+                                   @Param("departureTimeEnd") Instant departureTimeEnd,
                                    @Param("earliestDepartureTime") Instant earliestDepartureTime);
     
     List<Flight> findConnectingFlightsFromCityToCity(@Param("departureCity") String departureCity,
                                                     @Param("arrivalCity") String arrivalCity,
-                                                    @Param("departureDate") LocalDate departureDate,
+                                                    @Param("departureTimeStart") Instant departureTimeStart,
+                                                    @Param("departureTimeEnd") Instant departureTimeEnd,
                                                     @Param("earliestDepartureTime") Instant earliestDepartureTime);
 
     @Select("SELECT tcf.connecting_flight_id " +

@@ -49,7 +49,7 @@ public class FileStorageService {
                 Files.deleteIfExists(filePath);
             }
         } catch (Exception e) {
-            System.err.println("Failed to delete file: " + fileUrl);
+            com.airticket.util.AppLog.error("Failed to delete file: " + fileUrl);
         }
     }
 

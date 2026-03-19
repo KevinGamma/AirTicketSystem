@@ -27,56 +27,56 @@ public class ResetService {
 
     @Transactional
     public void resetEntireDatabase() {
-        System.out.println("Starting complete database reset...");
+        com.airticket.util.AppLog.debug("Starting complete database reset...");
         adminApprovalRequestMapper.deleteAll();
         paymentMapper.deleteAll();
         ticketMapper.deleteAll();
         flightMapper.deleteAll();
         airlineMapper.deleteAll();
         userMapper.deleteAllExceptAdmin();
-        System.out.println("Complete database reset completed successfully");
+        com.airticket.util.AppLog.debug("Complete database reset completed successfully");
     }
 
     @Transactional
     public void resetUserData() {
-        System.out.println("Starting user data reset...");
+        com.airticket.util.AppLog.debug("Starting user data reset...");
 
         adminApprovalRequestMapper.deleteAll();
         paymentMapper.deleteAll();
         ticketMapper.deleteAll();
         userMapper.deleteAllExceptAdmin();
         
-        System.out.println("User data reset completed successfully");
+        com.airticket.util.AppLog.debug("User data reset completed successfully");
     }
 
 
     @Transactional
     public void resetTicketData() {
-        System.out.println("Starting ticket data reset...");
+        com.airticket.util.AppLog.debug("Starting ticket data reset...");
 
         adminApprovalRequestMapper.deleteAll();
         paymentMapper.deleteAll();
         ticketMapper.deleteAll();
         flightMapper.resetAvailableSeats();
         
-        System.out.println("Ticket data reset completed successfully");
+        com.airticket.util.AppLog.debug("Ticket data reset completed successfully");
     }
 
     @Transactional
     public void resetFlightData() {
-        System.out.println("Starting flight data reset...");
+        com.airticket.util.AppLog.debug("Starting flight data reset...");
 
         adminApprovalRequestMapper.deleteAll();
         paymentMapper.deleteAll();
         ticketMapper.deleteAll();
         flightMapper.deleteAll();
         
-        System.out.println("Flight data reset completed successfully");
+        com.airticket.util.AppLog.debug("Flight data reset completed successfully");
     }
 
     @Transactional
     public void resetAirlineData() {
-        System.out.println("Starting airline data reset...");
+        com.airticket.util.AppLog.debug("Starting airline data reset...");
 
         adminApprovalRequestMapper.deleteAll();
         paymentMapper.deleteAll();
@@ -84,7 +84,7 @@ public class ResetService {
         flightMapper.deleteAll();
         airlineMapper.deleteAll();
         
-        System.out.println("Airline data reset completed successfully");
+        com.airticket.util.AppLog.debug("Airline data reset completed successfully");
     }
 
     public ResetStatistics getResetStatistics() {
@@ -94,7 +94,7 @@ public class ResetService {
             var users = userMapper.findAll();
             stats.setUserCount(users != null ? users.size() : 0);
         } catch (Exception e) {
-            System.err.println("Error getting user count: " + e.getMessage());
+            com.airticket.util.AppLog.error("Error getting user count: " + e.getMessage());
             stats.setUserCount(0);
         }
         
@@ -102,7 +102,7 @@ public class ResetService {
             var tickets = ticketMapper.findAll();
             stats.setTicketCount(tickets != null ? tickets.size() : 0);
         } catch (Exception e) {
-            System.err.println("Error getting ticket count: " + e.getMessage());
+            com.airticket.util.AppLog.error("Error getting ticket count: " + e.getMessage());
             stats.setTicketCount(0);
         }
         
@@ -110,7 +110,7 @@ public class ResetService {
             var flights = flightMapper.findAll();
             stats.setFlightCount(flights != null ? flights.size() : 0);
         } catch (Exception e) {
-            System.err.println("Error getting flight count: " + e.getMessage());
+            com.airticket.util.AppLog.error("Error getting flight count: " + e.getMessage());
             stats.setFlightCount(0);
         }
         
@@ -118,7 +118,7 @@ public class ResetService {
             var airlines = airlineMapper.findAll();
             stats.setAirlineCount(airlines != null ? airlines.size() : 0);
         } catch (Exception e) {
-            System.err.println("Error getting airline count: " + e.getMessage());
+            com.airticket.util.AppLog.error("Error getting airline count: " + e.getMessage());
             stats.setAirlineCount(0);
         }
         
@@ -126,7 +126,7 @@ public class ResetService {
             var approvals = adminApprovalRequestMapper.findAll();
             stats.setApprovalRequestCount(approvals != null ? approvals.size() : 0);
         } catch (Exception e) {
-            System.err.println("Error getting approval request count: " + e.getMessage());
+            com.airticket.util.AppLog.error("Error getting approval request count: " + e.getMessage());
             stats.setApprovalRequestCount(0);
         }
         

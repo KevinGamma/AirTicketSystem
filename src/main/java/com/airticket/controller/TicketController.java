@@ -239,7 +239,7 @@ public class TicketController {
             Long newFlightId = Long.valueOf(request.get("newFlightId").toString());
             String reason = (String) request.get("reason");
             
-            Ticket changedTicket = ticketService.changeTicket(id, newFlightId, reason);
+            Ticket changedTicket = ticketService.changeTicket(id, newFlightId);
             return ResponseEntity.ok(ApiResponse.success("Ticket changed successfully", changedTicket));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Failed to change ticket: " + e.getMessage()));
@@ -534,19 +534,20 @@ public class TicketController {
             }
             
             
-            BigDecimal paymentAmount = request.getTotalAmount();
-            
-            
-            if (paymentAmount == null || paymentAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                logger.info("Debug - TotalAmount not available in request, calculating from fee info");
-                try {
-                    RescheduleFeeInfo feeInfo = adminApprovalService.getApprovalRequestFeeInfo(request.getId());
-                    paymentAmount = feeInfo.getTotalAdditionalCost();
-                    logger.info("Debug - Calculated payment amount: {}", paymentAmount);
-                } catch (Exception e) {
-                    logger.error("Debug - Failed to calculate fee info: {}", e.getMessage());
-                    return ResponseEntity.badRequest().body(ApiResponse.error("Unable to calculate payment amount for this reschedule"));
+            BigDecimal paymentAmount;
+
+            try {
+                RescheduleFeeInfo feeInfo = adminApprovalService.getApprovalRequestFeeInfo(request.getId());
+                paymentAmount = feeInfo.getTotalAdditionalCost();
+                logger.info("Debug - Recalculated payment amount from current fee info: {}", paymentAmount);
+
+                if (request.getTotalAmount() != null && request.getTotalAmount().compareTo(paymentAmount) != 0) {
+                    logger.warn("Debug - Stored request totalAmount {} differs from recalculated amount {} for request {}",
+                            request.getTotalAmount(), paymentAmount, request.getId());
                 }
+            } catch (Exception e) {
+                logger.error("Debug - Failed to calculate fee info: {}", e.getMessage());
+                return ResponseEntity.badRequest().body(ApiResponse.error("Unable to calculate payment amount for this reschedule"));
             }
             
             if (paymentAmount == null || paymentAmount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -558,7 +559,7 @@ public class TicketController {
             paymentRequest.setTicketId(id);
             paymentRequest.setAmount(paymentAmount);
             paymentRequest.setPaymentMethod("ALIPAY");
-            paymentRequest.setUseSandbox(true);
+            paymentRequest.setUseSandbox(alipayService.isSandboxEnabled());
             paymentRequest.setReturnUrl("http://localhost:3000/tickets/" + id + "/reschedule-success");
             
             logger.info("Debug - Creating payment for amount: {}", paymentAmount);
