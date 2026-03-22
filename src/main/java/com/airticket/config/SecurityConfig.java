@@ -1,5 +1,6 @@
 package com.airticket.config;
 
+import com.airticket.service.TokenBlacklistService;
 import com.airticket.service.UserService;
 import com.airticket.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +30,13 @@ public class SecurityConfig {
 
     private UserService userService;
     private JwtUtil jwtUtil;
+    private TokenBlacklistService tokenBlacklistService;
 
     @Autowired
-    public SecurityConfig(UserService userService, JwtUtil jwtUtil) {
+    public SecurityConfig(UserService userService, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
 
@@ -52,7 +55,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtUtil, userService);
+        return new JwtAuthenticationFilter(jwtUtil, userService, tokenBlacklistService);
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package com.airticket.config;
 
+import com.airticket.service.TokenBlacklistService;
 import com.airticket.service.UserService;
 import com.airticket.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -20,10 +21,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService, TokenBlacklistService tokenBlacklistService) {
         this.jwtUtil = jwtUtil;
         this.userService = userService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -37,6 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
+            if (tokenBlacklistService.isBlacklisted(jwtToken)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"success\":false,\"message\":\"Token has been invalidated\",\"error\":\"Token has been invalidated\"}");
+                return;
+            }
             try {
                 username = jwtUtil.extractUsername(jwtToken);
             } catch (Exception e) {

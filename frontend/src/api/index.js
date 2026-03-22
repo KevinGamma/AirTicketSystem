@@ -27,6 +27,9 @@ api.interceptors.response.use(
     return response
   },
   error => {
+    if (error.config?.skipAuthRedirect) {
+      return Promise.reject(error)
+    }
     if (error.response) {
       switch (error.response.status) {
         case 401:

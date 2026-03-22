@@ -97,7 +97,15 @@ export default createStore({
       }
     },
     
-    logout({ commit }) {
+    async logout({ commit, state }) {
+      if (state.token) {
+        try {
+          await api.post('/auth/logout', null, { skipAuthRedirect: true })
+        } catch (error) {
+          console.error('Logout request failed:', error)
+        }
+      }
+
       commit('SET_TOKEN', null)
       commit('SET_USER', null)
     },

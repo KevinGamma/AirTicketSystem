@@ -8,8 +8,10 @@ import com.airticket.model.User;
 import com.airticket.service.FileStorageService;
 import com.airticket.service.MessageService;
 import com.airticket.service.AuthenticatedUserPrincipal;
+import com.airticket.service.TokenBlacklistService;
 import com.airticket.service.UserService;
 import com.airticket.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +44,9 @@ public class AuthController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@Valid @RequestBody LoginRequest loginRequest) {
@@ -90,6 +95,16 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(messageService.getMessage("auth.register.failed", e.getMessage())));
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
+            tokenBlacklistService.blacklistToken(token);
+        }
+        return ResponseEntity.ok(ApiResponse.success("Logout successful", null));
     }
 
     @GetMapping("/me")
