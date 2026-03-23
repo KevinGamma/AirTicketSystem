@@ -31,6 +31,8 @@ public class AuthenticatedUserPrincipal implements UserDetails {
         safeUser.setPhone(user.getPhone());
         safeUser.setRole(user.getRole());
         safeUser.setAvatarUrl(user.getAvatarUrl());
+        safeUser.setSavedPassengerName(user.getSavedPassengerName());
+        safeUser.setSavedPassengerIdNumber(user.getSavedPassengerIdNumber());
         safeUser.setBalance(user.getBalance());
         safeUser.setCreatedAt(user.getCreatedAt());
         safeUser.setUpdatedAt(user.getUpdatedAt());

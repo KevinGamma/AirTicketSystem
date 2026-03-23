@@ -131,6 +131,20 @@ public class UserService implements UserDetailsService {
         if (request.getPhone() != null) {
             existingUser.setPhone(request.getPhone());
         }
+
+        boolean savedPassengerProvided = request.getSavedPassengerName() != null
+            || request.getSavedPassengerIdNumber() != null;
+        if (savedPassengerProvided) {
+            String savedPassengerName = normalizeOptionalValue(request.getSavedPassengerName());
+            String savedPassengerIdNumber = normalizeOptionalValue(request.getSavedPassengerIdNumber());
+
+            if ((savedPassengerName == null) != (savedPassengerIdNumber == null)) {
+                throw new RuntimeException("Saved passenger name and ID number must be provided together");
+            }
+
+            existingUser.setSavedPassengerName(savedPassengerName);
+            existingUser.setSavedPassengerIdNumber(savedPassengerIdNumber);
+        }
         
         userMapper.updateProfile(existingUser);
         return userMapper.findByUsername(username);
@@ -144,5 +158,13 @@ public class UserService implements UserDetailsService {
         
         userMapper.updateAvatar(existingUser.getId(), avatarUrl);
         return userMapper.findByUsername(username);
+    }
+
+    private String normalizeOptionalValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmedValue = value.trim();
+        return trimmedValue.isEmpty() ? null : trimmedValue;
     }
 }

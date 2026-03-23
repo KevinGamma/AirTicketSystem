@@ -8,7 +8,9 @@ server:
 
 spring:
   profiles:
-    include: alipay
+    include:
+      - alipay
+      - local
   datasource:
     url: jdbc:mysql://localhost:3306/air_ticket_system?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
@@ -75,3 +77,12 @@ app:
     dir: uploads
   base:
     url: http://localhost:8080
+
+llm:
+  flight-assistant:
+    base-url: ${LLM_BASE_URL:https://api.siliconflow.cn/v1}
+    api-key: ${LLM_API_KEY:}
+    model-name: ${LLM_MODEL:Qwen/Qwen2.5-72B-Instruct}
+    temperature: 0.2
+    max-messages: 8
+    memory-ttl-seconds: 86400

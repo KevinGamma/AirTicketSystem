@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <AppHeader />
+    <AiChatWidget v-if="showAiChatWidget" />
 
     <div class="app-layout">
       <aside class="app-sidebar" v-if="isLoggedIn && showSidebar">
@@ -81,11 +82,13 @@
 import { mapState, mapGetters } from 'vuex'
 import { House, Location, Ticket, User, DataAnalysis, Document, Setting, Refresh } from '@element-plus/icons-vue'
 import AppHeader from './components/AppHeader.vue'
+import AiChatWidget from './components/AiChatWidget.vue'
 
 export default {
   name: 'App',
   components: {
     AppHeader,
+    AiChatWidget,
     House,
     Location,
     Ticket,
@@ -103,8 +106,11 @@ export default {
   computed: {
     ...mapState(['currentUser']),
     ...mapGetters(['isLoggedIn', 'isAdmin']),
+    showAiChatWidget() {
+      const authRoutes = ['/login', '/register']
+      return this.isLoggedIn && !this.isAdmin && !authRoutes.includes(this.$route.path)
+    },
     showSidebar() {
-      
       const authRoutes = ['/login', '/register']
       return !authRoutes.includes(this.$route.path)
     }

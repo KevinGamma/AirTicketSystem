@@ -14,6 +14,8 @@ public class User {
     private String phone;
     private String role;
     private String avatarUrl;
+    private String savedPassengerName;
+    private String savedPassengerIdNumber;
     private BigDecimal balance;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -106,6 +108,22 @@ public class User {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public String getSavedPassengerName() {
+        return savedPassengerName;
+    }
+
+    public void setSavedPassengerName(String savedPassengerName) {
+        this.savedPassengerName = savedPassengerName;
+    }
+
+    public String getSavedPassengerIdNumber() {
+        return savedPassengerIdNumber;
+    }
+
+    public void setSavedPassengerIdNumber(String savedPassengerIdNumber) {
+        this.savedPassengerIdNumber = savedPassengerIdNumber;
     }
 
     public BigDecimal getBalance() {

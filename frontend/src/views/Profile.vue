@@ -30,8 +30,19 @@
         <el-form-item :label="$t('auth.phone')" prop="phone">
           <el-input v-model="profileForm.phone"></el-input>
         </el-form-item>
-        <el-form-item :label="$t('auth.role')">
-          <el-input v-model="profileForm.role" disabled></el-input>
+        <div class="saved-passenger-section">
+          <h3>乘机人信息</h3>
+          <p class="saved-passenger-tip">可保存一组常用乘机人信息，订票时可直接带入。</p>
+        </div>
+        <el-form-item label="乘机人姓名">
+          <el-input v-model="profileForm.savedPassengerName" placeholder="请输入乘机人姓名"></el-input>
+        </el-form-item>
+        <el-form-item label="身份证号" prop="savedPassengerIdNumber">
+          <el-input
+            v-model="profileForm.savedPassengerIdNumber"
+            placeholder="请输入身份证号"
+            maxlength="18"
+          ></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="updateProfile" :loading="loading">
@@ -61,8 +72,9 @@ export default {
         email: '',
         fullName: '',
         phone: '',
-        role: '',
-        avatarUrl: ''
+        avatarUrl: '',
+        savedPassengerName: '',
+        savedPassengerIdNumber: ''
       },
       loading: false,
       rules: {
@@ -72,6 +84,9 @@ export default {
         ],
         fullName: [
           { required: true, message: '', trigger: 'blur' }
+        ],
+        savedPassengerIdNumber: [
+          { pattern: /^$|^\d{17}[\dXx]$/, message: '请输入正确的身份证号', trigger: 'blur' }
         ]
       }
     }
@@ -105,21 +120,31 @@ export default {
           email: this.currentUser.email,
           fullName: this.currentUser.fullName,
           phone: this.currentUser.phone || '',
-          role: this.currentUser.role,
-          avatarUrl: this.currentUser.avatarUrl || ''
+          avatarUrl: this.currentUser.avatarUrl || '',
+          savedPassengerName: this.currentUser.savedPassengerName || '',
+          savedPassengerIdNumber: this.currentUser.savedPassengerIdNumber || ''
         }
       }
     },
     
     async updateProfile() {
       try {
+        const savedPassengerName = this.profileForm.savedPassengerName.trim()
+        const savedPassengerIdNumber = this.profileForm.savedPassengerIdNumber.trim()
+        if ((savedPassengerName && !savedPassengerIdNumber) || (!savedPassengerName && savedPassengerIdNumber)) {
+          ElMessage.error('乘机人姓名和身份证号需要同时填写')
+          return
+        }
+
         await this.$refs.profileFormRef.validate()
         this.loading = true
         
         const response = await api.put('/auth/profile', {
           email: this.profileForm.email,
           fullName: this.profileForm.fullName,
-          phone: this.profileForm.phone
+          phone: this.profileForm.phone,
+          savedPassengerName,
+          savedPassengerIdNumber
         })
         
         if (response.data.success) {
@@ -142,6 +167,7 @@ export default {
       this.rules.email[0].message = this.$t('auth.emailRequired')
       this.rules.email[1].message = this.$t('auth.emailInvalid')
       this.rules.fullName[0].message = this.$t('auth.fullNameRequired')
+      this.rules.savedPassengerIdNumber[0].message = '请输入正确的身份证号'
     },
 
     onAvatarUpdated(updatedUser) {
@@ -182,5 +208,21 @@ export default {
   padding: 20px;
   background: #fafafa;
   border-radius: 8px;
+}
+
+.saved-passenger-section {
+  margin-bottom: 8px;
+}
+
+.saved-passenger-section h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #303133;
+}
+
+.saved-passenger-tip {
+  margin: 0;
+  font-size: 13px;
+  color: #909399;
 }
 </style>

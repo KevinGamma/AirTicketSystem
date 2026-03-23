@@ -60,6 +60,7 @@ public class DataInitializer {
     @Bean
     public ApplicationRunner init() {
         return args -> {
+            ensureUserProfileColumnsExist();
             User adminUser = userService.findByUsername("admin");
             if (adminUser == null) {
                 System.out.println("Creating admin user...");
@@ -407,6 +408,7 @@ public class DataInitializer {
 
     public void reinitializeData() {
         try {
+            ensureUserProfileColumnsExist();
             User adminUser = userService.findByUsername("admin");
             if (adminUser == null) {
                 System.out.println("Creating admin user...");
@@ -458,5 +460,21 @@ public class DataInitializer {
             long basePrice,
             long priceStep,
             String aircraftType) {
+    }
+
+    private void ensureUserProfileColumnsExist() {
+        try {
+            userMapper.addSavedPassengerNameColumn();
+            System.out.println("Added saved_passenger_name column to users table");
+        } catch (Exception e) {
+            System.out.println("saved_passenger_name column already exists or could not be added: " + e.getMessage());
+        }
+
+        try {
+            userMapper.addSavedPassengerIdNumberColumn();
+            System.out.println("Added saved_passenger_id_number column to users table");
+        } catch (Exception e) {
+            System.out.println("saved_passenger_id_number column already exists or could not be added: " + e.getMessage());
+        }
     }
 }

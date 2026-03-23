@@ -249,6 +249,22 @@
                   <div class="passenger-header">
                     <h4>乘客信息</h4>
                   </div>
+                  <div class="passenger-source">
+                    <el-radio-group
+                      v-model="passenger.inputMode"
+                      size="large"
+                      class="passenger-source-group"
+                      @change="handlePassengerModeChange(index)"
+                    >
+                      <el-radio-button label="manual">手动填写</el-radio-button>
+                      <el-radio-button label="saved" :disabled="!hasSavedPassenger">
+                        使用已保存乘机人
+                      </el-radio-button>
+                    </el-radio-group>
+                    <p v-if="!hasSavedPassenger" class="saved-passenger-empty-tip">
+                      暂无已保存乘机人信息，请先到个人资料中保存。
+                    </p>
+                  </div>
                   <div class="form-grid">
                     <el-form-item 
                       label="姓名" 
@@ -256,6 +272,7 @@
                     >
                       <el-input
                         v-model="passenger.name"
+                        :disabled="passenger.inputMode === 'saved'"
                         placeholder="请输入乘客姓名"
                       />
                     </el-form-item>
@@ -265,6 +282,7 @@
                     >
                       <el-input
                         v-model="passenger.idCard"
+                        :disabled="passenger.inputMode === 'saved'"
                         placeholder="请输入身份证号"
                       />
                     </el-form-item>
@@ -337,6 +355,18 @@ export default {
     }
   },
   computed: {
+    savedPassenger() {
+      const currentUser = this.$store.state.currentUser || {}
+      return {
+        name: currentUser.savedPassengerName || '',
+        idCard: currentUser.savedPassengerIdNumber || ''
+      }
+    },
+
+    hasSavedPassenger() {
+      return Boolean(this.savedPassenger.name && this.savedPassenger.idCard)
+    },
+
     
     cabinPriceMultiplier() {
       const multipliers = {
@@ -373,6 +403,17 @@ export default {
     }
   },
   methods: {
+    async fetchCurrentUser() {
+      try {
+        const response = await api.get('/auth/me')
+        if (response.data.success) {
+          this.$store.commit('SET_USER', response.data.data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch current user:', error)
+      }
+    },
+
     
     getCityTimezone(city) {
       const timezoneMap = {
@@ -499,7 +540,8 @@ export default {
       for (let i = 0; i < this.passengers; i++) {
         this.bookingForm.passengers.push({
           name: '',
-          idCard: ''
+          idCard: '',
+          inputMode: 'manual'
         })
         
         
@@ -511,6 +553,16 @@ export default {
           { pattern: /^\d{17}[\dXx]$/, message: '请输入正确的身份证号', trigger: 'blur' }
         ]
       }
+    },
+
+    handlePassengerModeChange(index) {
+      const passenger = this.bookingForm.passengers[index]
+      if (!passenger || passenger.inputMode !== 'saved' || !this.hasSavedPassenger) {
+        return
+      }
+
+      passenger.name = this.savedPassenger.name
+      passenger.idCard = this.savedPassenger.idCard
     },
 
     async submitBooking() {
@@ -616,7 +668,8 @@ export default {
     }
   },
 
-  mounted() {
+  async mounted() {
+    await this.fetchCurrentUser()
     this.loadFlightDetails()
   }
 }
@@ -1228,6 +1281,22 @@ export default {
 
 .passenger-card:last-child {
   margin-bottom: 0;
+}
+
+.passenger-source {
+  margin-bottom: 1rem;
+}
+
+.passenger-source-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.saved-passenger-empty-tip {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: #909399;
 }
 
 .passenger-header h4 {

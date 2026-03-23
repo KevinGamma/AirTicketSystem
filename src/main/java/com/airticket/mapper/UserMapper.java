@@ -17,16 +17,18 @@ public interface UserMapper {
     @Select("SELECT * FROM users")
     List<User> findAll();
     
-    @Insert("INSERT INTO users (username, password, email, full_name, phone, role, avatar_url) " +
-            "VALUES (#{username}, #{password}, #{email}, #{fullName}, #{phone}, #{role}, #{avatarUrl})")
+    @Insert("INSERT INTO users (username, password, email, full_name, phone, role, avatar_url, saved_passenger_name, saved_passenger_id_number) " +
+            "VALUES (#{username}, #{password}, #{email}, #{fullName}, #{phone}, #{role}, #{avatarUrl}, #{savedPassengerName}, #{savedPassengerIdNumber})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(User user);
     
-    @Update("UPDATE users SET password = #{password}, email = #{email}, full_name = #{fullName}, phone = #{phone}, role = #{role}, avatar_url = #{avatarUrl} " +
+    @Update("UPDATE users SET password = #{password}, email = #{email}, full_name = #{fullName}, phone = #{phone}, role = #{role}, avatar_url = #{avatarUrl}, " +
+            "saved_passenger_name = #{savedPassengerName}, saved_passenger_id_number = #{savedPassengerIdNumber} " +
             "WHERE id = #{id}")
     int update(User user);
     
-    @Update("UPDATE users SET email = #{email}, full_name = #{fullName}, phone = #{phone} " +
+    @Update("UPDATE users SET email = #{email}, full_name = #{fullName}, phone = #{phone}, " +
+            "saved_passenger_name = #{savedPassengerName}, saved_passenger_id_number = #{savedPassengerIdNumber} " +
             "WHERE id = #{id}")
     int updateProfile(User user);
 
@@ -54,4 +56,10 @@ public interface UserMapper {
     
     @Update("ALTER TABLE users ADD COLUMN balance DECIMAL(10,2) DEFAULT 0.00")
     void addBalanceColumn();
+
+    @Update("ALTER TABLE users ADD COLUMN saved_passenger_name VARCHAR(100) NULL")
+    void addSavedPassengerNameColumn();
+
+    @Update("ALTER TABLE users ADD COLUMN saved_passenger_id_number VARCHAR(30) NULL")
+    void addSavedPassengerIdNumberColumn();
 }
