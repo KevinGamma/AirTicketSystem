@@ -1,37 +1,45 @@
 package com.airticket.service;
 
 import com.airticket.util.JwtUtil;
+import io.jsonwebtoken.JwtException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
+import java.util.Optional;
 
 @Service
 public class TokenBlacklistService {
 
-    private final JwtUtil jwtUtil;
-    private final Map<String, Instant> blacklistedTokens = new ConcurrentHashMap<>();
+    private static final String BLACKLIST_KEY_PREFIX = "jwt:blacklist:";
 
-    public TokenBlacklistService(JwtUtil jwtUtil) {
+    private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    public TokenBlacklistService(JwtUtil jwtUtil, RedisTemplate<String, Object> redisTemplate) {
         this.jwtUtil = jwtUtil;
+        this.redisTemplate = redisTemplate;
     }
 
-    public void blacklistToken(String token) {
+    public void logout(String token) {
         if (token == null || token.isBlank()) {
             return;
         }
 
-        cleanupExpiredTokens();
-
-        Instant expiresAt;
         try {
-            expiresAt = jwtUtil.extractExpiration(token).toInstant();
-        } catch (Exception ex) {
-            expiresAt = Instant.now();
-        }
+            Duration remainingValidity = jwtUtil.getRemainingValidity(token);
+            if (remainingValidity.isZero() || remainingValidity.isNegative()) {
+                return;
+            }
 
-        blacklistedTokens.put(token, expiresAt);
+            redisTemplate.opsForValue().set(buildBlacklistKey(token), "LOGGED_OUT", remainingValidity);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new RuntimeException("Invalid JWT token", ex);
+        }
+    }
+
+    public void blacklistToken(String token) {
+        logout(token);
     }
 
     public boolean isBlacklisted(String token) {
@@ -39,21 +47,10 @@ public class TokenBlacklistService {
             return false;
         }
 
-        Instant expiresAt = blacklistedTokens.get(token);
-        if (expiresAt == null) {
-            return false;
-        }
-
-        if (expiresAt.isAfter(Instant.now())) {
-            return true;
-        }
-
-        blacklistedTokens.remove(token);
-        return false;
+        return Optional.ofNullable(redisTemplate.hasKey(buildBlacklistKey(token))).orElse(false);
     }
 
-    private void cleanupExpiredTokens() {
-        Instant now = Instant.now();
-        blacklistedTokens.entrySet().removeIf(entry -> !entry.getValue().isAfter(now));
+    private String buildBlacklistKey(String token) {
+        return BLACKLIST_KEY_PREFIX + token;
     }
 }

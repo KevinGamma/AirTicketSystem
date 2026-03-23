@@ -99,12 +99,16 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
-            tokenBlacklistService.blacklistToken(token);
+        try {
+            String authorizationHeader = request.getHeader("Authorization");
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                String token = authorizationHeader.substring(7);
+                tokenBlacklistService.logout(token);
+            }
+            return ResponseEntity.ok(ApiResponse.success("Logout successful", null));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Logout failed: " + ex.getMessage()));
         }
-        return ResponseEntity.ok(ApiResponse.success("Logout successful", null));
     }
 
     @GetMapping("/me")

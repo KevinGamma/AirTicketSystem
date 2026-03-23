@@ -94,6 +94,10 @@ public interface FlightMapper {
     
     @Update("UPDATE flights SET available_seats = available_seats - #{seats} WHERE id = #{flightId}")
     int decreaseAvailableSeats(@Param("flightId") Long flightId, @Param("seats") int seats);
+
+    @Update("UPDATE flights SET available_seats = available_seats - #{seats} " +
+            "WHERE id = #{flightId} AND available_seats >= #{seats}")
+    int decreaseAvailableSeatsSafely(@Param("flightId") Long flightId, @Param("seats") int seats);
     
     @Update("UPDATE flights SET available_seats = available_seats + #{seats} WHERE id = #{flightId}")
     int increaseAvailableSeats(@Param("flightId") Long flightId, @Param("seats") int seats);

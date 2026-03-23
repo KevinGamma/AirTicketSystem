@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +37,15 @@ public class JwtUtil {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    public Instant extractExpirationInstant(String token) {
+        return extractExpiration(token).toInstant();
+    }
+
+    public Duration getRemainingValidity(String token) {
+        Duration remaining = Duration.between(Instant.now(), extractExpirationInstant(token));
+        return remaining.isNegative() ? Duration.ZERO : remaining;
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -51,7 +62,6 @@ public class JwtUtil {
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
-
 
     public String generateToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
@@ -73,5 +83,4 @@ public class JwtUtil {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
-
 }
