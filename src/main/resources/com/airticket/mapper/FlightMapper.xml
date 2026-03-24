@@ -72,7 +72,7 @@
           AND f.departure_time >= #{departureTimeStart}
           <![CDATA[AND f.departure_time < #{departureTimeEnd}]]>
           AND f.departure_time > NOW()
-          AND f.status != 'CANCELLED'
+          AND f.status IN ('SCHEDULED', 'DELAYED')
         ORDER BY f.departure_time ASC
     </select>
 
@@ -98,6 +98,7 @@
         )
           AND f.departure_time >= #{departureTimeStart}
           <![CDATA[AND f.departure_time < #{departureTimeEnd}]]>
+          AND f.status IN ('SCHEDULED', 'DELAYED')
         ORDER BY f.departure_time ASC
     </select>
 
@@ -124,6 +125,7 @@
           AND f.departure_time >= #{departureTimeStart}
           <![CDATA[AND f.departure_time < #{departureTimeEnd}]]>
           AND f.departure_time >= #{earliestDepartureTime}
+          AND f.status IN ('SCHEDULED', 'DELAYED')
         ORDER BY f.departure_time ASC
     </select>
 
@@ -156,6 +158,7 @@
           AND f.departure_time >= #{departureTimeStart}
           <![CDATA[AND f.departure_time < #{departureTimeEnd}]]>
           AND f.departure_time >= #{earliestDepartureTime}
+          AND f.status IN ('SCHEDULED', 'DELAYED')
         ORDER BY f.departure_time ASC
     </select>
 </mapper>

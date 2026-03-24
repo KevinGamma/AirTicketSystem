@@ -86,12 +86,18 @@ public interface TicketMapper {
     @Delete("DELETE FROM tickets")
     int deleteAll();
     
-    @Select("SELECT t.* FROM tickets t " +
-            "LEFT JOIN flights f ON t.flight_id = f.id " +
+    @Select("SELECT * FROM (" +
+            "SELECT t.* FROM tickets t " +
             "WHERE t.status = 'BOOKED' " +
             "AND t.booking_time IS NOT NULL " +
-            "AND (t.booking_time < DATE_SUB(#{currentTime}, INTERVAL 10 MINUTE) " +
-            "OR f.departure_time < DATE_ADD(#{currentTime}, INTERVAL 40 MINUTE))")
+            "AND t.booking_time < DATE_SUB(#{currentTime}, INTERVAL 10 MINUTE) " +
+            "UNION " +
+            "SELECT t.* FROM tickets t " +
+            "INNER JOIN flights f ON t.flight_id = f.id " +
+            "WHERE t.status = 'BOOKED' " +
+            "AND t.booking_time IS NOT NULL " +
+            "AND f.departure_time < DATE_ADD(#{currentTime}, INTERVAL 40 MINUTE)" +
+            ") expired_tickets")
     List<Ticket> findExpiredBookedTickets(@Param("currentTime") java.time.Instant currentTime);
     
     @Select("SELECT * FROM tickets WHERE status = #{status}")

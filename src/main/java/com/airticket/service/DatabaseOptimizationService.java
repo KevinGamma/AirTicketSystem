@@ -54,6 +54,11 @@ public class DatabaseOptimizationService {
             "idx_tickets_status_flight_id",
             "CREATE INDEX idx_tickets_status_flight_id ON tickets (status, flight_id)"
         );
+        ensureIndex(
+            "ticket_connecting_flights",
+            "idx_ticket_connecting_flights_ticket_sequence",
+            "CREATE INDEX idx_ticket_connecting_flights_ticket_sequence ON ticket_connecting_flights (ticket_id, sequence_number)"
+        );
 
         ensureIndex(
             "notifications",
@@ -69,6 +74,31 @@ public class DatabaseOptimizationService {
             "notifications",
             "idx_notifications_ticket_type",
             "CREATE INDEX idx_notifications_ticket_type ON notifications (ticket_id, notification_type)"
+        );
+        ensureIndex(
+            "notifications",
+            "idx_notifications_user_sent_created_at",
+            "CREATE INDEX idx_notifications_user_sent_created_at ON notifications (user_id, sent_time, created_at)"
+        );
+        ensureIndex(
+            "admin_approval_requests",
+            "idx_admin_approval_requests_status_request_time",
+            "CREATE INDEX idx_admin_approval_requests_status_request_time ON admin_approval_requests (status, request_time)"
+        );
+        ensureIndex(
+            "admin_approval_requests",
+            "idx_admin_approval_requests_user_request_time",
+            "CREATE INDEX idx_admin_approval_requests_user_request_time ON admin_approval_requests (user_id, request_time)"
+        );
+        ensureIndex(
+            "admin_approval_requests",
+            "idx_admin_approval_requests_ticket_status",
+            "CREATE INDEX idx_admin_approval_requests_ticket_status ON admin_approval_requests (ticket_id, status)"
+        );
+        ensureIndex(
+            "payments",
+            "idx_payments_ticket_created_at",
+            "CREATE INDEX idx_payments_ticket_created_at ON payments (ticket_id, created_at)"
         );
         ensureUniqueIndex(
             "payments",
