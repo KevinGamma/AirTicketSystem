@@ -78,6 +78,15 @@ app:
   base:
     url: http://localhost:8080
 
+chatbi:
+  datasource:
+    url: ${CHATBI_DATASOURCE_URL:${spring.datasource.url}}
+    username: ${CHATBI_DATASOURCE_USERNAME:}
+    password: ${CHATBI_DATASOURCE_PASSWORD:}
+    driver-class-name: ${CHATBI_DATASOURCE_DRIVER_CLASS_NAME:${spring.datasource.driver-class-name}}
+    maximum-pool-size: ${CHATBI_DATASOURCE_MAXIMUM_POOL_SIZE:5}
+    minimum-idle: ${CHATBI_DATASOURCE_MINIMUM_IDLE:1}
+
 llm:
   flight-assistant:
     base-url: ${LLM_BASE_URL:https://api.siliconflow.cn/v1}

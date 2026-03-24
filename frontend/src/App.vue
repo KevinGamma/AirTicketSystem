@@ -36,6 +36,10 @@
                 <el-icon><DataAnalysis /></el-icon>
                 <span>{{ $t('nav.statistics') }}</span>
               </el-menu-item>
+              <el-menu-item index="/admin/chat-bi">
+                <el-icon><DataAnalysis /></el-icon>
+                <span>智能经营看板</span>
+              </el-menu-item>
               <el-menu-item index="/admin/approval-requests">
                 <el-icon><Document /></el-icon>
                 <span>{{ $t('nav.approvalRequests') }}</span>

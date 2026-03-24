@@ -65,6 +65,12 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/admin/chat-bi',
+    name: 'AdminChatBi',
+    component: () => import('../views/admin/SmartDashboard.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/admin/approval-requests',
     name: 'AdminApprovalRequests',
     component: () => import('../views/admin/ApprovalRequests.vue'),

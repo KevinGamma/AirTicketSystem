@@ -66,6 +66,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/ai/flight-assistant/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/flights/search").permitAll()
                 .requestMatchers("/airports/**").permitAll()
                     .requestMatchers("/api/flights/search/connecting").permitAll()

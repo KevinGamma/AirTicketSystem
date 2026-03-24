@@ -96,6 +96,9 @@ public interface TicketMapper {
     
     @Select("SELECT * FROM tickets WHERE status = #{status}")
     List<Ticket> findByStatus(String status);
+
+    @Select("SELECT * FROM tickets WHERE original_ticket_id IS NOT NULL AND status = #{status}")
+    List<Ticket> findRescheduledTicketsByStatus(@Param("status") String status);
     
     
     @Select("SELECT DISTINCT user_id FROM tickets WHERE flight_id = #{flightId} AND status IN ('PAID', 'BOOKED')")

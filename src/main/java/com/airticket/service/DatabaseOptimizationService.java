@@ -70,6 +70,12 @@ public class DatabaseOptimizationService {
             "idx_notifications_ticket_type",
             "CREATE INDEX idx_notifications_ticket_type ON notifications (ticket_id, notification_type)"
         );
+        ensureUniqueIndex(
+            "payments",
+            "payment_number",
+            "uk_payments_payment_number",
+            "CREATE UNIQUE INDEX uk_payments_payment_number ON payments (payment_number)"
+        );
     }
 
     private void normalizeExistingData() {
@@ -115,6 +121,38 @@ public class DatabaseOptimizationService {
         if (existingIndexes != null && existingIndexes == 0) {
             jdbcTemplate.execute(createIndexSql);
         }
+    }
+
+    private void ensureUniqueIndex(String tableName, String columnName, String indexName, String createIndexSql) {
+        Integer existingUniqueIndexes = jdbcTemplate.queryForObject(
+            "SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics " +
+                "WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ? AND non_unique = 0",
+            Integer.class,
+            tableName,
+            columnName
+        );
+
+        if (existingUniqueIndexes != null && existingUniqueIndexes > 0) {
+            return;
+        }
+
+        Integer duplicateValues = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM (" +
+                "SELECT " + columnName + " FROM " + tableName + " " +
+                "WHERE " + columnName + " IS NOT NULL " +
+                "GROUP BY " + columnName + " HAVING COUNT(*) > 1" +
+            ") duplicated_values",
+            Integer.class
+        );
+
+        if (duplicateValues != null && duplicateValues > 0) {
+            throw new IllegalStateException(
+                "Cannot create unique index " + indexName + " on " + tableName + "." + columnName +
+                    " because duplicate values already exist"
+            );
+        }
+
+        jdbcTemplate.execute(createIndexSql);
     }
 
     private void ensureColumn(String tableName, String columnName, String alterTableSql) {

@@ -50,6 +50,9 @@ public class AdminApprovalService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private PaymentReconciliationService paymentReconciliationService;
+
     public List<AdminApprovalRequest> getAllRequests() {
         return adminApprovalRequestMapper.findAll();
     }
@@ -213,6 +216,7 @@ public class AdminApprovalService {
 
                     Ticket newTicket = ticketService.rescheduleTicketWithPendingStatus(request.getTicketId(), request.getNewFlightId(), request.getReason(), BigDecimal.ZERO);
                     ticketService.updateTicketStatus(newTicket.getId(), "PAID", Instant.now());
+                    paymentReconciliationService.ensureRescheduleTransferPayment(ticketService.getTicketById(newTicket.getId()));
                     processRescheduleRefund(request, feeInfo.getTotalRefund());
 
                     try {
@@ -231,6 +235,7 @@ public class AdminApprovalService {
                     );
                     Ticket newTicket = ticketService.rescheduleTicketWithPendingStatus(request.getTicketId(), request.getNewFlightId(), request.getReason(), BigDecimal.ZERO);
                     ticketService.updateTicketStatus(newTicket.getId(), "PAID", Instant.now());
+                    paymentReconciliationService.ensureRescheduleTransferPayment(ticketService.getTicketById(newTicket.getId()));
 
                     try {
                         Ticket originalTicket = ticketService.getTicketById(request.getTicketId());
@@ -250,12 +255,14 @@ public class AdminApprovalService {
                 if (feeInfo.getTotalRefund().compareTo(BigDecimal.ZERO) > 0) {
                     Ticket newTicket = ticketService.rescheduleTicketWithPendingStatus(request.getTicketId(), request.getNewFlightId(), request.getReason(), BigDecimal.ZERO);
                     ticketService.updateTicketStatus(newTicket.getId(), "PAID", Instant.now());
+                    paymentReconciliationService.ensureRescheduleTransferPayment(ticketService.getTicketById(newTicket.getId()));
                     processRescheduleRefund(request, feeInfo.getTotalRefund());
                 } else if (feeInfo.getTotalAdditionalCost().compareTo(BigDecimal.ZERO) > 0) {
                     ticketService.rescheduleTicketWithPendingStatus(request.getTicketId(), request.getNewFlightId(), request.getReason(), feeInfo.getTotalAdditionalCost());
                 } else {
                     Ticket newTicket = ticketService.rescheduleTicketWithPendingStatus(request.getTicketId(), request.getNewFlightId(), request.getReason(), BigDecimal.ZERO);
                     ticketService.updateTicketStatus(newTicket.getId(), "PAID", Instant.now());
+                    paymentReconciliationService.ensureRescheduleTransferPayment(ticketService.getTicketById(newTicket.getId()));
                 }
 
                 logger.info("Reschedule approved with fee info - AdditionalCost: {}, Refund: {}, requestId: {}",
@@ -481,6 +488,7 @@ public class AdminApprovalService {
                                             newTicket.getId(), feeInfo.getTotalRefund());
 
                                     ticketService.updateTicketStatus(newTicket.getId(), "PAID", Instant.now());
+                                    paymentReconciliationService.ensureRescheduleTransferPayment(ticketService.getTicketById(newTicket.getId()));
 
                                     processRescheduleRefund(request, feeInfo.getTotalRefund());
 
@@ -488,6 +496,7 @@ public class AdminApprovalService {
                                 } else if (feeInfo.getTotalAdditionalCost().compareTo(BigDecimal.ZERO) == 0) {
                                     logger.info("Fixing ticket {} - no payment required", newTicket.getId());
                                     ticketService.updateTicketStatus(newTicket.getId(), "PAID", Instant.now());
+                                    paymentReconciliationService.ensureRescheduleTransferPayment(ticketService.getTicketById(newTicket.getId()));
                                     logger.info("Successfully fixed ticket {} - set to PAID", newTicket.getId());
                                 } else {
                                     logger.info("Ticket {} correctly requires additional payment of ¥{}",
